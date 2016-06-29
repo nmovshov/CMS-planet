@@ -19,5 +19,7 @@ classdef (Abstract) Barotrope
     % Required methods for any derived subclass
     methods (Abstract)
         test(obj)
+        P(obj,rho)
+        rho(obj,P)
     end
 end
