@@ -4,11 +4,12 @@ classdef (Abstract) Barotrope
     %   named constants and define syntax for interface to specialized
     %   subclasses.
     
+    %% Properties
     properties (Constant)
         
     end
     
-    % Constructor
+    %% Constructor
     methods
         function obj = Barotrope()
         % ABC constructor called implicitly with no arguments by subclass.
@@ -16,11 +17,11 @@ classdef (Abstract) Barotrope
         end
     end
     
-    % Required methods for any derived subclass
+    %% Required methods for any derived subclass
+    % NOTE: MATLAB does NOT enforce the signature of abstract methods on the
+    % corresponding concrete method in subclasses. However it is best practice
+    % to pretend that it does.
     methods (Abstract)
-        % NOTE: MATLAB does NOT enforce the signature of abstract methods on
-        % the corresponding concrete method in subclasses. However it is best
-        % practice to pretend that it does.
         test(obj)
         pressure(obj, rho)
         density(obj, P)

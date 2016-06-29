@@ -1,17 +1,16 @@
 classdef ConstPressure < barotropes.Barotrope
     %CONSTPRESSURE A test implementation of constant pressure barotrope.
     
-    properties (Access = private)
-        P0 = 0;
+    properties (Access = public)
+        P0; % reference pressure
     end
     
     % The constructor
     methods
-        function obj = ConstPressure(p)
+        function obj = ConstPressure(P)
             if nargin > 0
-                assert(isscalar(p))
-                assert(isnumeric(p))
-                obj.P0 = p;
+                assert(isnumeric(P) && isscalar(P))
+                obj.P0 = P;
             end
         end
     end
