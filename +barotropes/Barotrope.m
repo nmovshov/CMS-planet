@@ -18,8 +18,11 @@ classdef (Abstract) Barotrope
     
     % Required methods for any derived subclass
     methods (Abstract)
+        % NOTE: MATLAB does NOT enforce the signature of abstract methods on
+        % the corresponding concrete method in subclasses. However it is best
+        % practice to pretend that it does.
         test(obj)
-        P(obj,rho)
-        rho(obj,P)
+        pressure(obj, rho)
+        density(obj, P)
     end
 end

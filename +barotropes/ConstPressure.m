@@ -1,7 +1,7 @@
-classdef ConstPressure < barotrope.Barotrope
+classdef ConstPressure < barotropes.Barotrope
     %CONSTPRESSURE A test implementation of constant pressure barotrope.
     
-    properties
+    properties (Access = private)
         P0 = 0;
     end
     
@@ -22,12 +22,12 @@ classdef ConstPressure < barotrope.Barotrope
             disp(obj)
         end
         
-        function y = P(obj,~)
-            y = obj.P0;
+        function P = pressure(obj,~)
+            P = obj.P0;
         end
         
-        function y = rho(~,~)
-            y = NaN;
+        function rho = density(~,~)
+            rho = NaN;
         end
     end
     
