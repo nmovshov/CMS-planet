@@ -8,12 +8,10 @@ function options = cmsset(varargin)
 %   CMSSET with no input arguments displays all property names and their
 %   possible values.
 %
-%CMSSET PROPERTIES
+%KNOWN PROPERTIES
 %
 %nlayers - Number of constant density layers [positive integer {512}]
-%
 %nangles - Number of colatitude points used to define level surfaces [positive integer {48}]
-%
 %nmoments - Degree to carry out mulitpole expansion of gravity moments [positive even {12}]
 %
 %   Note: defaults chosen to match Hubbard (2013) example.
@@ -43,8 +41,5 @@ validateattributes(x,{'numeric'},{'positive','integer','scalar'})
 end
 
 function print_usage()
-fprintf('CMS-PLANET OPTIONS:\n');
-fprintf('  nlayers: [positive scalar integer {512}]\n');
-fprintf('  nangles: [positive scalar integer {48}]\n');
-fprintf('  nmoments: [positive scalar even {12}]\n');
+help(mfilename)
 end
