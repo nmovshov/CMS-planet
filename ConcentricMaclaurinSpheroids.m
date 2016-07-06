@@ -1,17 +1,17 @@
 classdef ConcentricMaclaurinSpheroids
     %CONCENTRICMACLAURINSPHEROIDS Implementation of CMS shape model.
     %   This class implements the iterative relaxation of concentric Maclaurin
-    %   spheroids with given (dimensionless) radii and densities to a
+    %   spheroids from starting (dimensionless) radii and densities to a
     %   self-consistent hydrostatic equilibrium shape, as explained in Hubbard
     %   (2013).
     
     %% Properties
     properties (GetAccess = public, SetAccess = private)
-        opts
-        lambdas
-        deltas
-        zetas
-        Js
+        opts % holds CMS project-wide options
+        lambdas % normalized layer equatorial radii
+        deltas % normalized density steps
+        zetas % normalized and scaled level-surface radii
+        Js % rescaled dimensionless gravity moments
     end
     
     %% The constructor
@@ -21,7 +21,10 @@ classdef ConcentricMaclaurinSpheroids
                 opts = cmsset();
             end
             obj.lambdas = linspace(1, 1/opts.nlayers, opts.nlayers)';
-            obj.zetas = repmat(obj.lambdas, 1, opts.nangles);
+            obj.zetas = ones(opts.nlayers, opts.nangles);
+            obj.Js.tilde = zeros(opts.nlayers, opts.nmoments);
+            obj.Js.tilde_prime = zeros(opts.nlayers, opts.nmoments);
+            obj.Js.pprime = zeros(opts.nlayers, 1);
             obj.opts = opts;
         end
     end
