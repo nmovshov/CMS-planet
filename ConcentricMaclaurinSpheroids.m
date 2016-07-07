@@ -7,11 +7,11 @@ classdef ConcentricMaclaurinSpheroids
     
     %% Properties
     properties (GetAccess = public, SetAccess = private)
-        opts % holds CMS project-wide options
+        opts    % holds CMS project-wide options
         lambdas % normalized layer equatorial radii
-        deltas % normalized density steps
-        zetas % normalized and scaled level-surface radii
-        Js % rescaled dimensionless gravity moments
+        deltas  % normalized density steps
+        zetas   % normalized and scaled level-surface radii
+        Js      % rescaled dimensionless gravity moments
     end
     
     %% The constructor
@@ -20,7 +20,9 @@ classdef ConcentricMaclaurinSpheroids
             if nargin == 0
                 opts = cmsset();
             end
-            obj.lambdas = linspace(1, 1/opts.nlayers, opts.nlayers)';
+            obj.lambdas = linspace(1, opts.rcore, opts.nlayers)';
+            obj.deltas = zeros(opts.nlayers, 1);
+            obj.deltas(1) = 1;
             obj.zetas = ones(opts.nlayers, opts.nangles);
             obj.Js.tilde = zeros(opts.nlayers, opts.nmoments);
             obj.Js.tilde_prime = zeros(opts.nlayers, opts.nmoments);
