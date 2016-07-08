@@ -33,7 +33,13 @@ classdef ConcentricMaclaurinSpheroids
     
     %% Ordinary methods
     methods
-        %function y = foo(obj, x) ...
+        function zeta_i = lvl_surf(obj,ilayer,mu)
+            if ilayer == 0
+                disp 'use eq. 50'
+            else
+                disp 'use eq. 51'
+            end
+        end
     end
     
     %% Static methods
@@ -43,3 +49,35 @@ classdef ConcentricMaclaurinSpheroids
     
 end % End of classdef
 
+%% Class-related functions
+function y = eq50(zeta0,mu,q,Jtwiddle,lambda,N,kmax)
+% Equation 50 in Hubbard (2013)
+x1 = 0;
+for ii=1:N
+    for kk=1:kmax
+        k2 = 2*kk;
+        x1 = x1 + Jtwiddle(ii,k2)*lambda(ii)^k2;
+    end
+end
+x2 = 0;
+for ii=1:N
+    for kk=1:kmax
+        k2 = 2*kk;
+        x2 = x2 + Jtwiddle(ii,k2)*lambda(ii)^k2*zeta0^(-k2)*Pn(k2,mu);
+    end
+end
+U0 = 1 + 0.5*q - x1;
+U = 1/zeta0*(1 - x2) + 1/3*q*zeta0^2*(1 - Pn(2,mu));
+y = U - U0;
+end
+
+function y = eq51(mu)
+% Equation 51 in Hubbard (2013)
+
+end
+
+function y = Pn(n,x)
+% Ordinary fully normalized Legendre polynomial
+Pnm = legendre(n,x);
+y = Pnm(1);
+end
