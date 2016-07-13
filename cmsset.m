@@ -14,6 +14,7 @@ function options = cmsset(varargin)
 %nangles - Number of colatitude points used to define level surfaces [positive integer {48}]
 %nmoments - Degree to carry out mulitpole expansion of gravity moments [positive even {12}]
 %rcore - Core radius, normalized
+%qrot - Dimensionless rotation parameter
 %
 %   Note: defaults chosen to match Hubbard (2013) example.
 
@@ -31,11 +32,20 @@ p.addParameter('nlayers',512,@isposintscalar)
 p.addParameter('nangles',48,@isposintscalar)
 p.addParameter('nmoments',12,@isposintscalar)
 p.addParameter('rcore',0.15,@isposnormalscalar)
+p.addParameter('qrot',0,@isnonnegscalar)
 
 % Parse name-value pairs and return.
 p.parse(varargin{:})
 options = p.Results;
 
+end
+
+function isposscalar(x)
+validateattributes(x,{'numeric'},{'positive','scalar'})
+end
+
+function isnonnegscalar(x)
+validateattributes(x,{'numeric'},{'nonnegative','scalar'})
 end
 
 function isposintscalar(x)
