@@ -1,4 +1,4 @@
-classdef ConcentricMaclaurinSpheroids
+classdef ConcentricMaclaurinSpheroids < handle
     %CONCENTRICMACLAURINSPHEROIDS Implementation of CMS shape model.
     %   This class implements the iterative relaxation of concentric Maclaurin
     %   spheroids from starting (dimensionless) radii and densities to a
@@ -35,12 +35,9 @@ classdef ConcentricMaclaurinSpheroids
     
     %% Ordinary methods
     methods
-        function y = zeta_i_of_mu(obj,ilayer,mu)
-            if ilayer == 0
-                disp 'use eq. 50'
-            else
-                disp 'use eq. 51'
-            end
+        function update_zetas(obj)
+            % Solve for zeta(mu) using current value of Js.
+            obj.zetas = zeros(2,2);
         end
     end
     
