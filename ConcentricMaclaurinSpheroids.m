@@ -10,8 +10,9 @@ classdef ConcentricMaclaurinSpheroids
         opts    % holds CMS project-wide options
         lambdas % normalized layer equatorial radii
         deltas  % normalized density steps
+        mus     % colatitude cosines
         zetas   % normalized and scaled level-surface radii
-        mus     % colatitude cosines        Js      % rescaled dimensionless gravity moments
+        Js      % rescaled dimensionless gravity moments
     end
     
     %% The constructor
@@ -23,7 +24,8 @@ classdef ConcentricMaclaurinSpheroids
             obj.lambdas = linspace(1, opts.rcore, opts.nlayers)';
             obj.deltas = zeros(opts.nlayers, 1);
             obj.deltas(1) = 1;
-            obj.mus = linspace(0,1,opts.nangles);            obj.zetas = ones(opts.nlayers, opts.nangles);
+            obj.mus = linspace(0,1,opts.nangles);
+            obj.zetas = ones(opts.nlayers, opts.nangles);
             obj.Js.tilde = zeros(opts.nlayers, opts.nmoments);
             obj.Js.tilde_prime = zeros(opts.nlayers, opts.nmoments);
             obj.Js.pprime = zeros(opts.nlayers, 1);
@@ -34,7 +36,7 @@ classdef ConcentricMaclaurinSpheroids
     %% Ordinary methods
     methods
         function y = zeta_i_of_mu(obj,ilayer,mu)
-            % Solve for single zeta_i(mu) based on current Js.            assert((mu >= -1) && (mu <= 1))            if ilayer == 0
+            if ilayer == 0
                 disp 'use eq. 50'
             else
                 disp 'use eq. 51'
