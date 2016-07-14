@@ -26,8 +26,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.deltas(1) = 1;
             obj.mus = linspace(0,1,opts.nangles);
             obj.zetas = ones(opts.nlayers, opts.nangles);
-            obj.Js.tilde = zeros(opts.nlayers, opts.nmoments);
-            obj.Js.tilde_prime = zeros(opts.nlayers, opts.nmoments);
+            obj.Js.tilde = zeros(opts.nlayers, (opts.kmax+1));
+            obj.Js.tilde_prime = zeros(opts.nlayers, (opts.kmax+1));
             obj.Js.pprime = zeros(opts.nlayers, 1);
             obj.opts = opts;
         end
@@ -36,8 +36,58 @@ classdef ConcentricMaclaurinSpheroids < handle
     %% Ordinary methods
     methods
         function update_zetas(obj)
-            % Solve for zeta(mu) using current value of Js.
-            obj.zetas = zeros(2,2);
+            % Update level surfaces using current value of Js.
+            for ii=1:size(obj.zetas, 1)
+                for alfa=1:length(obj.mus)
+                    obj.zeta_j_of_mu(ii, obj.mus(alfa));
+                end
+            end
+        end       
+    end
+    
+    methods
+        function y = zeta_j_of_mu(obj,ilayer,mu)
+            % Find lvl surface of ith layer at colat mu.
+            assert(ilayer > 0 && ilayer < obj.opts.nlayers)
+            assert(mu >= 0 && mu <=1)
+            if ilayer == 1
+                fun = @(x)obj.eq50(x,mu,obj.Js.tilde,obj.lambdas);
+                y = fzero(fun, [0.2, 1]);
+            else
+                disp 'use eq.51'
+            end
+        end
+        function y = eq50(obj,zeta0,mu,Jt,lambda)
+            % Equation 50 in Hubbard (2013)
+            
+            % Legendre polynomials at 0 and mu
+            P0(obj.opts.kmax+1) = 0;
+            Pmu(obj.opts.kmax+1) = 0;
+            for k=0:obj.opts.kmax
+                P0(k+1) = Pn(k, 0);
+                Pmu(k+1) = Pn(k, mu);
+            end
+            
+            % Double sum in eq. (47)
+            x1 = 0;
+            for ii=1:obj.opts.nlayers
+                for kk=2:obj.opts.kmax % (note ind shift, start ind, odd J=0)
+                    x1 = x1 + Jt(ii,kk+1)*lambda(ii)^kk*P0(kk+1);
+                end
+            end
+            
+            % Double sum in eq. (50)
+            x2 = 0;
+            for ii=1:obj.opts.nlayers
+                for kk=2:obj.opts.kmax % (note ind shift, start ind, odd J=0)
+                    x2 = x2 + Jt(ii,kk+1)*lambda(ii)^kk*zeta0^(-kk)*Pmu(kk+1);
+                end
+            end
+            
+            % And combine
+            U0 = 1 + 0.5*obj.opts.qrot - x1;
+            U = (1/zeta0)*(1 - x2) + 1/3*obj.opts.qrot*zeta0^2*(1 - Pmu(3));
+            y = U - U0;
         end
     end
     
@@ -49,26 +99,6 @@ classdef ConcentricMaclaurinSpheroids < handle
 end % End of classdef
 
 %% Class-related functions
-function y = eq50(zeta0,mu,q,Jtwiddle,lambda,N,kmax)
-% Equation 50 in Hubbard (2013)
-x1 = 0;
-for ii=1:N
-    for kk=1:kmax
-        k2 = 2*kk;
-        x1 = x1 + Jtwiddle(ii,k2)*lambda(ii)^k2;
-    end
-end
-x2 = 0;
-for ii=1:N
-    for kk=1:kmax
-        k2 = 2*kk;
-        x2 = x2 + Jtwiddle(ii,k2)*lambda(ii)^k2*zeta0^(-k2)*Pn(k2,mu);
-    end
-end
-U0 = 1 + 0.5*q - x1;
-U = 1/zeta0*(1 - x2) + 1/3*q*zeta0^2*(1 - Pn(2,mu));
-y = U - U0;
-end
 
 function y = eq51(mu)
 % Equation 51 in Hubbard (2013)
