@@ -12,7 +12,7 @@ function options = cmsset(varargin)
 %
 %nlayers - Number of constant density layers [positive integer {512}]
 %nangles - Number of colatitude points used to define level surfaces [positive integer {48}]
-%nmoments - Degree to carry out mulitpole expansion of gravity moments [positive even {12}]
+%kmax - Degree to carry out mulitpole expansion of gravity moments [positive even {12}]
 %rcore - Core radius, normalized
 %qrot - Dimensionless rotation parameter
 %
@@ -30,7 +30,7 @@ p.FunctionName = mfilename;
 
 p.addParameter('nlayers',512,@isposintscalar)
 p.addParameter('nangles',48,@isposintscalar)
-p.addParameter('nmoments',12,@isposintscalar)
+p.addParameter('kmax',12,@isposintscalar)
 p.addParameter('rcore',0.15,@isposnormalscalar)
 p.addParameter('qrot',0,@isnonnegscalar)
 
