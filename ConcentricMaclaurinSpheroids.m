@@ -6,7 +6,7 @@ classdef ConcentricMaclaurinSpheroids < handle
     %   (2013).
     
     %% Properties
-    properties (GetAccess = public, SetAccess = private)
+    properties (GetAccess = public, SetAccess = public)
         opts    % holds CMS project-wide options
         lambdas % normalized layer equatorial radii
         deltas  % normalized density steps
@@ -34,7 +34,7 @@ classdef ConcentricMaclaurinSpheroids < handle
     end
     
     %% Ordinary methods
-    methods
+    methods (Access = public)
         function update_zetas(obj)
             % Update level surfaces using current value of Js.
             for ii=1:size(obj.zetas, 1)
@@ -43,52 +43,24 @@ classdef ConcentricMaclaurinSpheroids < handle
                 end
             end
         end       
-    end
+    end % public methods
     
-    methods
-        function y = zeta_j_of_mu(obj,ilayer,mu)
-            % Find lvl surface of ith layer at colat mu.
-            assert(ilayer > 0 && ilayer < obj.opts.nlayers)
+    methods (Access = public) % to become private
+        function y = zeta_j_of_mu(obj,jlayer,mu)
+            % Find lvl surface of jth layer at colat mu.
+            assert(jlayer > 0 && jlayer <= obj.opts.nlayers)
             assert(mu >= 0 && mu <=1)
-            if ilayer == 1
-                fun = @(x)obj.eq50(x,mu,obj.Js.tilde,obj.lambdas);
+            if jlayer == 1
+                fun = @(x)eq50(x,mu,obj.Js.tilde,obj.lambdas,obj.opts.qrot);
                 y = fzero(fun, [0.2, 1]);
             else
                 disp 'use eq.51'
             end
         end
-        function y = eq50(obj,zeta0,mu,Jt,lambda)
-            % Equation 50 in Hubbard (2013)
-            
-            % Legendre polynomials at 0 and mu
-            P0(obj.opts.kmax+1) = 0;
-            Pmu(obj.opts.kmax+1) = 0;
-            for k=0:obj.opts.kmax
-                P0(k+1) = Pn(k, 0);
-                Pmu(k+1) = Pn(k, mu);
-            end
-            
-            % Double sum in eq. (47)
-            x1 = 0;
-            for ii=1:obj.opts.nlayers
-                for kk=2:obj.opts.kmax % (note ind shift, start ind, odd J=0)
-                    x1 = x1 + Jt(ii,kk+1)*lambda(ii)^kk*P0(kk+1);
-                end
-            end
-            
-            % Double sum in eq. (50)
-            x2 = 0;
-            for ii=1:obj.opts.nlayers
-                for kk=2:obj.opts.kmax % (note ind shift, start ind, odd J=0)
-                    x2 = x2 + Jt(ii,kk+1)*lambda(ii)^kk*zeta0^(-kk)*Pmu(kk+1);
-                end
-            end
-            
-            % And combine
-            U0 = 1 + 0.5*obj.opts.qrot - x1;
-            U = (1/zeta0)*(1 - x2) + 1/3*obj.opts.qrot*zeta0^2*(1 - Pmu(3));
-            y = U - U0;
-        end
+    end % private methods
+    
+    methods % temporary - move to class-related
+        
     end
     
     %% Static methods
@@ -99,9 +71,106 @@ classdef ConcentricMaclaurinSpheroids < handle
 end % End of classdef
 
 %% Class-related functions
+function y = eq50(zeta0,mu,Jt,lambda,qrot)
+% Equation 50 in Hubbard (2013)
 
-function y = eq51(mu)
+% summation limits
+nlayers = length(lambda);
+kmax = size(Jt, 2) - 1;
+
+% Legendre polynomials at 0 and mu
+P0(kmax+1) = 0;
+Pmu(kmax+1) = 0;
+for k=0:kmax
+    P0(k+1) = Pn(k, 0);
+    Pmu(k+1) = Pn(k, mu);
+end
+
+% Double sum in eq. (47)
+x1 = 0;
+for ii=1:nlayers
+    for kk=2:kmax % (note ind shift, start ind, odd J=0)
+        x1 = x1 + Jt(ii,kk+1)*lambda(ii)^kk*P0(kk+1);
+    end
+end
+
+% Double sum in eq. (50)
+x2 = 0;
+for ii=1:nlayers
+    for kk=2:kmax % (note ind shift, start ind, odd J=0)
+        x2 = x2 + Jt(ii,kk+1)*lambda(ii)^kk*zeta0^(-kk)*Pmu(kk+1);
+    end
+end
+
+% And combine
+U0 = 1 + 0.5*qrot - x1;
+U = (1/zeta0)*(1 - x2) + 1/3*qrot*zeta0^2*(1 - Pmu(3));
+y = U - U0;
+end
+
+function y = eq51(zeta_j,jj,mu,Jt,Jtp,Jpp,lambda,qrot)
 % Equation 51 in Hubbard (2013)
+
+% summation limits
+nlayers = length(lambda);
+kmax = size(Jt, 2) - 1;
+
+% Legendre polynomials at 0 and mu
+P0(kmax+1) = 0;
+Pmu(kmax+1) = 0;
+for k=0:kmax
+    P0(k+1) = Pn(k, 0);
+    Pmu(k+1) = Pn(k, mu);
+end
+
+% Double sum, row 1
+x1 = 0;
+for ii=jj:nlayers
+    for kk=0:kmax % (note ind shift, start ind, odd J=0)
+        x1 = x1 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*zeta_j^(-kk)*Pmu(kk+1);
+    end
+end
+
+% Double sum, row 2
+x2 = 0;
+for ii=1:jj-1
+    for kk=0:kmax
+        x2 = x2 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*zeta_j^(kk+1)*Pmu(kk+1);
+    end
+end
+
+% Single sum, row 2
+x3 = 0;
+for ii=1:jj-1
+    x3 = x3 + Jpp(ii)*lambda(jj)^3*zeta_j^3;
+end
+
+% Double sum, row 3
+x4 = 0;
+for ii=jj:nlayers
+    for kk=0:kmax
+        x4 = x4 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*P0(kk+1);
+    end
+end
+
+% Double sum, row 4
+x5 = 0;
+for ii=1:jj-1
+    for kk=0:kmax
+        x5 = x5 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*P0(kk+1);
+    end
+end
+
+% Single sum, row 4
+x6 = 0;
+for ii=1:jj-1
+    x6 = x6 + Jpp(ii)*lambda(jj)^3;
+end
+
+% And combine
+y = -(1/zeta_j)*(x1 + x2 + x3) + ...
+    (1/3)*qrot*lambda(jj)^3*zeta_j^2*(1 - Pmu(3)) + ...
+    (x4 + x5 + x6) - 0.5*qrot*lambda(jj)^3;
 
 end
 
