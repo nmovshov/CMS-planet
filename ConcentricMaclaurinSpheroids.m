@@ -21,6 +21,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             if nargin == 0
                 opts = cmsset();
             end
+            
+            % Pre-allocation and simple assignments
             obj.lambdas = linspace(1, opts.rcore, opts.nlayers)';
             obj.deltas = zeros(opts.nlayers, 1);
             obj.deltas(1) = 1;
@@ -30,6 +32,16 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.tilde_prime = zeros(opts.nlayers, (opts.kmax+1));
             obj.Js.pprime = zeros(opts.nlayers, 1);
             obj.opts = opts;
+            
+            % Approximate degree 0 Js
+            den = sum(obj.deltas.*obj.lambdas.^3);
+            obj.Js.tilde(:,1) = -(obj.deltas.*obj.lambdas.^3)/den;
+            obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
+            obj.Js.pprime(:) = 0.5*obj.deltas/den;
+            
+            %TODO: setup zero-order Js
+            %TODO: setup better deltas
+            %TODO: setup better mus?
         end
     end
     
@@ -38,8 +50,8 @@ classdef ConcentricMaclaurinSpheroids < handle
         function update_zetas(obj)
             % Update level surfaces using current value of Js.
             for ii=1:size(obj.zetas, 1)
-                for alfa=1:length(obj.mus)
-                    obj.zeta_j_of_mu(ii, obj.mus(alfa));
+                for alfa=1:size(obj.zetas, 2)
+                    obj.zetas(ii,alfa) = obj.zeta_j_of_mu(ii, obj.mus(alfa));
                 end
             end
         end       
@@ -52,17 +64,13 @@ classdef ConcentricMaclaurinSpheroids < handle
             assert(mu >= 0 && mu <=1)
             if jlayer == 1
                 fun = @(x)eq50(x,mu,obj.Js.tilde,obj.lambdas,obj.opts.qrot);
-                y = fzero(fun, [0.2, 1]);
             else
-                disp 'use eq.51'
+                fun = @(x)eq51(x,jlayer,mu,obj.Js.tilde,obj.Js.tilde_prime,obj.Js.pprime,obj.lambdas,obj.opts.qrot);
             end
+            y = fzero(fun, [0.2, 1]);
         end
     end % private methods
-    
-    methods % temporary - move to class-related
         
-    end
-    
     %% Static methods
     methods (Static)
         
