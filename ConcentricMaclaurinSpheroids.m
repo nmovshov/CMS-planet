@@ -39,7 +39,6 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
             obj.Js.pprime(:) = 0.5*obj.deltas/den;
             
-            %TODO: setup zero-order Js
             %TODO: setup better deltas
             %TODO: setup better mus?
         end
@@ -67,7 +66,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             else
                 fun = @(x)eq51(x,jlayer,mu,obj.Js.tilde,obj.Js.tilde_prime,obj.Js.pprime,obj.lambdas,obj.opts.qrot);
             end
-            y = fzero(fun, [0.2, 1]);
+           %y = fzero(fun, [0.6, 1.02]);
+            y = fzero(fun, 1);
         end
     end % private methods
         
