@@ -48,9 +48,12 @@ classdef ConcentricMaclaurinSpheroids < handle
     methods (Access = public)
         function update_zetas(obj)
             % Update level surfaces using current value of Js.
+            progressbar
+            nbz = numel(obj.zetas);
             for ii=1:size(obj.zetas, 1)
                 for alfa=1:size(obj.zetas, 2)
                     obj.zetas(ii,alfa) = obj.zeta_j_of_mu(ii, obj.mus(alfa));
+                    progressbar(((ii -1)*obj.opts.nangles + alfa)/nbz);
                 end
             end
         end       
