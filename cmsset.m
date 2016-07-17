@@ -15,6 +15,7 @@ function options = cmsset(varargin)
 %kmax - Degree to carry out mulitpole expansion of gravity moments [positive even {12}]
 %rcore - Core radius, normalized
 %qrot - Dimensionless rotation parameter
+%verbosity - Level of runtime messages [0 {1} 2] 
 %
 %   Note: defaults chosen to match Hubbard (2013) example.
 
@@ -33,6 +34,7 @@ p.addParameter('nangles',48,@isposintscalar)
 p.addParameter('kmax',12,@isposintscalar)
 p.addParameter('rcore',0.15,@isposnormalscalar)
 p.addParameter('qrot',0,@isnonnegscalar)
+p.addParameter('verbosity',1,@isnonnegintscalar)
 
 % Parse name-value pairs and return.
 p.parse(varargin{:})
@@ -50,6 +52,10 @@ end
 
 function isposintscalar(x)
 validateattributes(x,{'numeric'},{'positive','integer','scalar'})
+end
+
+function isnonnegintscalar(x)
+validateattributes(x,{'numeric'},{'nonnegative','integer','scalar'})
 end
 
 function isposnormalscalar(x)
