@@ -65,11 +65,36 @@ classdef ConcentricMaclaurinSpheroids < handle
         
         function update_Js(obj)
             % Do a single-pass update of gravitational moments
+            pbar = (obj.opts.verbosity > 1);
+            if pbar, progressbar('updating Js'), end
+            nbJ = numel(obj.Js.tilde) + numel(obj.Js.tilde_prime) + ...
+                  numel(obj.Js.pprime);
+            
+            % Do common denominator in eqs. (40-43)
+            denom = 0;
+            for j=1:obj.opts.nlayers
+                fun = @(mu)obj.zeta_j_of_mus(j, mu).^3;
+                I = integral(fun, 0, 1, 'RelTol', obj.opts.IntTol);
+                denom = denom + obj.deltas(j)*obj.lambdas(j)^3*I;
+            end
+            
+            % Do J tilde
+            new_tilde = nan(size(obj.Js.tilde));
+            for ii = 1:obj.opts.nlayers
+                for kk = 0:obj.opts.kmax
+                    if rem(kk, 2), continue, end
+                    fun = @(mu)Pn(kk,mu).*obj.zeta_j_of_mus(ii, mu).^(kk+3);
+                    I = integral(fun, 0, 1, 'RelTol', obj.opts.IntTol);
+                    new_tilde(ii,kk+1) = -(3/(2*kk + 3))*obj.deltas(ii)*obj.lambdas(ii)^3*I;
+                end
+            end
+            
+            %TODO: continue here
         end
         
     end % public methods
     
-    methods (Access = public) % to become private
+    methods (Access = public) % to become private        
         function y = zeta_j_of_mu(obj,jlayer,mu)
             % Find lvl surface of jth layer at colat mu.
             assert(jlayer > 0 && jlayer <= obj.opts.nlayers)
@@ -81,6 +106,20 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
            %y = fzero(fun, [0.6, 1.02]);
             y = fzero(fun, 1);
+        end
+        
+        function y = zeta_j_of_mus(obj,jlayer,mus)
+            % ML quad requires y=f(x) take and return vector...
+            y = nan(size(mus));
+            for alfa=1:length(mus)
+                if jlayer == 1
+                    fun = @(x)eq50(x,mus(alfa),obj.Js.tilde,obj.lambdas,obj.opts.qrot);
+                else
+                    fun = @(x)eq51(x,jlayer,mus(alfa),obj.Js.tilde,obj.Js.tilde_prime,obj.Js.pprime,obj.lambdas,obj.opts.qrot);
+                end
+                %y = fzero(fun, [0.6, 1.02]);
+                y(alfa) = fzero(fun, 1);
+            end
         end
     end % private methods
         
@@ -198,5 +237,5 @@ end
 function y = Pn(n,x)
 % Ordinary fully normalized Legendre polynomial
 Pnm = legendre(n,x);
-y = Pnm(1);
+y = Pnm(1,:);
 end

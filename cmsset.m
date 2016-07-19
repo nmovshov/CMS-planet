@@ -17,7 +17,8 @@ function options = cmsset(varargin)
 %qrot - Dimensionless rotation parameter [ {0} ]
 %J_integration_method - Choice of integration algorithm to compute J moments [ {'adaptive'} | 'gaussian' ]
 %zetas_in_J_integrals - How to obtain values of zeta inside J integrals [ {'rootfind'} | 'interp' ]
-%verbosity - Level of runtime messages [0 {1} 2] 
+%verbosity - Level of runtime messages [0 {1} 2]
+%IntTol - Relative tolerance for adaptive integrals [ positive real {1e-9} ]
 %
 %   Note: defaults chosen to match Hubbard (2013) example.
 
@@ -39,6 +40,7 @@ p.addParameter('qrot',0,@isnonnegscalar)
 p.addParameter('verbosity',1,@isnonnegintscalar)
 p.addParameter('J_integration_method','adaptive',@isvalidintmethod)
 p.addParameter('zetas_in_J_integrals','rootfind',@isvalidzetasmethod)
+p.addParameter('IntTol',1e-9,@isposscalar)
 
 % Parse name-value pairs and return.
 p.parse(varargin{:})
