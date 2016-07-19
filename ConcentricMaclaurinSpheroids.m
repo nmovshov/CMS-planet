@@ -61,7 +61,12 @@ classdef ConcentricMaclaurinSpheroids < handle
                     end
                 end
             end
-        end       
+        end
+        
+        function update_Js(obj)
+            % Do a single-pass update of gravitational moments
+        end
+        
     end % public methods
     
     methods (Access = public) % to become private

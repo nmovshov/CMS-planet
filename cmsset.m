@@ -10,11 +10,13 @@ function options = cmsset(varargin)
 %
 %KNOWN PROPERTIES
 %
-%nlayers - Number of constant density layers [positive integer {512}]
-%nangles - Number of colatitude points used to define level surfaces [positive integer {48}]
-%kmax - Degree to carry out mulitpole expansion of gravity moments [positive even {12}]
-%rcore - Core radius, normalized
-%qrot - Dimensionless rotation parameter
+%nlayers - Number of constant density layers [ positive integer {512} ]
+%nangles - Number of colatitude points used to define level surfaces [ positive integer {48} ]
+%kmax - Degree to carry out mulitpole expansion of gravity moments [ positive even {12} ]
+%rcore - Core radius, normalized [ {0.15} ]
+%qrot - Dimensionless rotation parameter [ {0} ]
+%J_integration_method - Choice of integration algorithm to compute J moments [ {'adaptive'} | 'gaussian' ]
+%zetas_in_J_integrals - How to obtain values of zeta inside J integrals [ {'rootfind'} | 'interp' ]
 %verbosity - Level of runtime messages [0 {1} 2] 
 %
 %   Note: defaults chosen to match Hubbard (2013) example.
@@ -35,6 +37,8 @@ p.addParameter('kmax',12,@isposintscalar)
 p.addParameter('rcore',0.15,@isposnormalscalar)
 p.addParameter('qrot',0,@isnonnegscalar)
 p.addParameter('verbosity',1,@isnonnegintscalar)
+p.addParameter('J_integration_method','adaptive',@isvalidintmethod)
+p.addParameter('zetas_in_J_integrals','rootfind',@isvalidzetasmethod)
 
 % Parse name-value pairs and return.
 p.parse(varargin{:})
@@ -60,6 +64,20 @@ end
 
 function isposnormalscalar(x)
 validateattributes(x,{'numeric'},{'nonnegative','scalar','<=',1})
+end
+
+function isvalidintmethod(x)
+validateattributes(x,{'char'},{'row'})
+if ~any(strcmpi(x,{'adaptive'}))
+    error('Integration method %s not implemented.',x)
+end
+end
+
+function isvalidzetasmethod(x)
+validateattributes(x,{'char'},{'row'})
+if ~any(strcmpi(x,{'rootfind','interp'}))
+    error('Zetas in J integrals method %s not implemented.',x)
+end
 end
 
 function print_usage()
