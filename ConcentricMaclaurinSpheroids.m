@@ -63,7 +63,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
         end
         
-        function update_Js(obj)
+        function dJ = update_Js(obj)
             % Do a single-pass update of gravitational moments
             pbar = (obj.opts.verbosity > 1);
             if pbar, progressbar('updating Js'), end
@@ -78,18 +78,57 @@ classdef ConcentricMaclaurinSpheroids < handle
                 denom = denom + obj.deltas(j)*obj.lambdas(j)^3*I;
             end
             
-            % Do J tilde
-            new_tilde = nan(size(obj.Js.tilde));
-            for ii = 1:obj.opts.nlayers
-                for kk = 0:obj.opts.kmax
+            % Do J tilde, eq. (40)
+            new_tilde = zeros(size(obj.Js.tilde));
+            for ii=1:obj.opts.nlayers
+                for kk=0:obj.opts.kmax
                     if rem(kk, 2), continue, end
                     fun = @(mu)Pn(kk,mu).*obj.zeta_j_of_mus(ii, mu).^(kk+3);
                     I = integral(fun, 0, 1, 'RelTol', obj.opts.IntTol);
-                    new_tilde(ii,kk+1) = -(3/(2*kk + 3))*obj.deltas(ii)*obj.lambdas(ii)^3*I;
+                    new_tilde(ii,kk+1) = -(3/(2*kk + 3))*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
                 end
             end
             
-            %TODO: continue here
+            % Do J tilde prime, eqs. (41,42)
+            new_tprime = zeros(size(obj.Js.tilde_prime));
+            for ii=1:obj.opts.nlayers
+                for kk=0:obj.opts.kmax
+                    if rem(kk, 2), continue, end
+                    if kk == 2
+                        % eq. (42)
+                        fun = @(mu)Pn(2,mu).*log(obj.zeta_j_of_mus(ii, mu));
+                        I = integral(fun, 0, 1, 'RelTol', obj.opts.IntTol);
+                        new_tprime(ii,kk+1) = -3*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
+                    else
+                        % eq. (41)
+                        fun = @(mu)Pn(kk,mu).*obj.zeta_j_of_mus(ii, mu).^(2 - kk);
+                        I = integral(fun, 0, 1, 'RelTol', obj.opts.IntTol);
+                        new_tprime(ii,kk+1) = -(3/(2 - kk))*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
+                    end
+                end
+            end
+            
+            % Do J double prime, eq. (27)
+            new_pprime = zeros(size(obj.Js.pprime));
+            denom = 0;
+            for j=1:obj.opts.nlayers
+                fun = @(mu)obj.zeta_j_of_mus(j, mu).^3;
+                I = obj.lambdas(j)*integral(fun, 0, 1, 'RelTol', obj.opts.IntTol);
+                denom = denom + obj.deltas(j)*I;
+            end
+            denom = 2*denom;
+            for ii=1:obj.opts.nlayers
+                new_pprime(ii) = obj.deltas(ii)/denom;
+            end
+            
+            % Return max change in Js and update Js in obj.
+            dJ = max(abs(new_tilde(:) - obj.Js.tilde(:)));
+            dJ = max(dJ, max(abs(new_tprime(:) - obj.Js.tilde_prime(:))));
+            dJ = max(dJ, max(abs(new_pprime(:) - obj.Js.pprime(:))));
+            
+            obj.Js.tilde = new_tilde;
+            obj.Js.tilde_prime = new_tprime;
+            obj.Js.pprime = new_pprime;
         end
         
     end % public methods
