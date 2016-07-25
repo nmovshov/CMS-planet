@@ -64,7 +64,26 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function dJ = update_Js(obj)
-            % Do a single-pass update of gravitational moments
+            % Single-pass update of gravitational moments (dispatcher).
+            
+            t_J_pass = tic;
+            
+            % Dispatch based on chosen integration method.
+            switch lower(obj.opts.J_integration_method)
+                case 'adaptive'
+                    dJ = obj.update_Js_adaptive();
+                otherwise
+                    error('Unknown integration method: %s.',obj.opts.J_integration_method)
+            end
+            
+            toc(t_J_pass)            
+        end
+        
+    end % public methods
+    
+    methods (Access = public) % to become private
+        function dJ = update_Js_adaptive(obj)
+            % Single-pass update of gravitational moments using built-in integral.
             
             pbar = (obj.opts.verbosity > 1);
             if pbar, progressbar('updating Js'), end
@@ -132,9 +151,6 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.pprime = new_pprime;
         end
         
-    end % public methods
-    
-    methods (Access = public) % to become private        
         function y = zeta_j_of_mu(obj,jlayer,mu)
             % Find lvl surface of jth layer at colat mu.
             assert(jlayer > 0 && jlayer <= obj.opts.nlayers)
@@ -274,10 +290,16 @@ y = -(1/zeta_j)*(x1 + x2 + x3) + ...
 
 end
 
-function y = Pn(n,x)
-% Ordinary fully normalized Legendre polynomial
+function y = Pn_builtin(n,x)
+% Ordinary fully normalized Legendre polynomial using built-in legendre (slow).
 assert(isvector(x))
 Pnm = legendre(n,x);
 y = Pnm(1,:);
 if ~isrow(x), y = y'; end
+end
+
+function y = Pn(n,x)
+% Ordinary fully normalized Legendre polynomial of order n at x in [0,1].
+y = ones(size(x));
+
 end
