@@ -65,6 +65,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         
         function dJ = update_Js(obj)
             % Do a single-pass update of gravitational moments
+            
             pbar = (obj.opts.verbosity > 1);
             if pbar, progressbar('updating Js'), end
             nbJ = numel(obj.Js.tilde) + numel(obj.Js.tilde_prime) + ...
@@ -275,6 +276,8 @@ end
 
 function y = Pn(n,x)
 % Ordinary fully normalized Legendre polynomial
+assert(isvector(x))
 Pnm = legendre(n,x);
 y = Pnm(1,:);
+if ~isrow(x), y = y'; end
 end
