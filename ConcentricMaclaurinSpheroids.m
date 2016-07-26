@@ -43,8 +43,10 @@ classdef ConcentricMaclaurinSpheroids < handle
             %TODO: setup better deltas
             %TODO: setup better mus (for gauss quad)
             
-            % Precompute Legendre polynomials for fixed colatitudes
-            %TODO: implement
+            % Precompute Legendre polynomials for fixed colatitudes (gauss quad)
+            for k = 0:obj.opts.kmax
+                obj.Pnmu(k+1,:) = Pn(k, obj.mus);
+            end
             
         end
     end
