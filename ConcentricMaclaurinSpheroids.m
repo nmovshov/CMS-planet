@@ -27,7 +27,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.lambdas = linspace(1, opts.rcore, opts.nlayers)';
             obj.deltas = zeros(opts.nlayers, 1);
             obj.deltas(1) = 1;
-            obj.mus = linspace(0,1,opts.nangles);
+            obj.mus = linspace(0,1,opts.nangles); % may be modified by gauss
             obj.zetas = ones(opts.nlayers, opts.nangles);
             obj.Js.tilde = zeros(opts.nlayers, (opts.kmax+1));
             obj.Js.tilde_prime = zeros(opts.nlayers, (opts.kmax+1));
@@ -41,7 +41,11 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.pprime(:) = 0.5*obj.deltas/den;
             
             %TODO: setup better deltas
-            %TODO: setup better mus (for gauss quad)
+            
+            % Get mus and weights for Gaussian quadrature
+            if strcmpi(obj.opts.J_integration_method, 'gaussian')
+                obj.get_gauss_points();
+            end
             
             % Precompute Legendre polynomials for fixed colatitudes (gauss quad)
             for k = 0:obj.opts.kmax
@@ -74,21 +78,30 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Single-pass update of gravitational moments (dispatcher).
             
             t_J_pass = tic;
-            
+            fprintf('Updating J moments ...')
             % Dispatch based on chosen integration method.
             switch lower(obj.opts.J_integration_method)
                 case 'adaptive'
                     dJ = obj.update_Js_adaptive();
+                case 'adaptive_gauss'
+                    dJ = obj.update_Js_adgauss();
                 otherwise
                     error('Unknown integration method: %s.',obj.opts.J_integration_method)
             end
             
-            toc(t_J_pass)            
+            t_J_pass = toc(t_J_pass);
+            fprintf('Done. Elapsed time %g sec.\n', t_J_pass)
+            %TODO: calc and report meaningful dJ
         end
         
     end % public methods
     
     methods (Access = public) % to become private
+        function get_gauss_points(obj)
+            % Calculate abscisas and weights for gaussian quadrature
+            obj.mus = linspace(0,1,12); % TODO: implement
+        end
+        
         function dJ = update_Js_adaptive(obj)
             % Single-pass update of gravitational moments using built-in integral.
             
@@ -158,6 +171,75 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.pprime = new_pprime;
         end
         
+        function dJ = update_Js_adgauss(obj)
+            % Single-pass update of gravitational moments using adaptive gauss.
+            
+            pbar = (obj.opts.verbosity > 1);
+            if pbar, progressbar('updating Js'), end
+            nbJ = numel(obj.Js.tilde) + numel(obj.Js.tilde_prime) + ...
+                  numel(obj.Js.pprime);
+            
+            % Do common denominator in eqs. (40-43)
+            denom = 0;
+            for j=1:obj.opts.nlayers
+                fun = @(mu)obj.zeta_j_of_mus(j, mu).^3;
+                I = gaussquad(fun, 0, 1, obj.opts.IntTol);
+                denom = denom + obj.deltas(j)*obj.lambdas(j)^3*I;
+            end
+            
+            % Do J tilde, eq. (40)
+            new_tilde = zeros(size(obj.Js.tilde));
+            for ii=1:obj.opts.nlayers
+                for kk=0:obj.opts.kmax
+                    if rem(kk, 2), continue, end
+                    fun = @(mu)Pn(kk,mu).*obj.zeta_j_of_mus(ii, mu).^(kk+3);
+                    I = gaussquad(fun, 0, 1, obj.opts.IntTol);
+                    new_tilde(ii,kk+1) = -(3/(2*kk + 3))*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
+                end
+            end
+            
+            % Do J tilde prime, eqs. (41,42)
+            new_tprime = zeros(size(obj.Js.tilde_prime));
+            for ii=1:obj.opts.nlayers
+                for kk=0:obj.opts.kmax
+                    if rem(kk, 2), continue, end
+                    if kk == 2
+                        % eq. (42)
+                        fun = @(mu)Pn(2,mu).*log(obj.zeta_j_of_mus(ii, mu));
+                        I = gaussquad(fun, 0, 1, obj.opts.IntTol);
+                        new_tprime(ii,kk+1) = -3*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
+                    else
+                        % eq. (41)
+                        fun = @(mu)Pn(kk,mu).*obj.zeta_j_of_mus(ii, mu).^(2 - kk);
+                        I = gaussquad(fun, 0, 1, obj.opts.IntTol);
+                        new_tprime(ii,kk+1) = -(3/(2 - kk))*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
+                    end
+                end
+            end
+            
+            % Do J double prime, eq. (27)
+            new_pprime = zeros(size(obj.Js.pprime));
+            denom = 0;
+            for j=1:obj.opts.nlayers
+                fun = @(mu)obj.zeta_j_of_mus(j, mu).^3;
+                I = obj.lambdas(j)*gaussquad(fun, 0, 1, obj.opts.IntTol);
+                denom = denom + obj.deltas(j)*I;
+            end
+            denom = 2*denom;
+            for ii=1:obj.opts.nlayers
+                new_pprime(ii) = obj.deltas(ii)/denom;
+            end
+            
+            % Return max change in Js and update Js in obj.
+            dJ = max(abs(new_tilde(:) - obj.Js.tilde(:)));
+            dJ = max(dJ, max(abs(new_tprime(:) - obj.Js.tilde_prime(:))));
+            dJ = max(dJ, max(abs(new_pprime(:) - obj.Js.pprime(:))));
+            
+            obj.Js.tilde = new_tilde;
+            obj.Js.tilde_prime = new_tprime;
+            obj.Js.pprime = new_pprime;
+        end
+        
         function y = zeta_j_of_mu(obj,jlayer,mu)
             % Find lvl surface of jth layer at colat mu.
             assert(jlayer > 0 && jlayer <= obj.opts.nlayers)
@@ -174,7 +256,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         function y = zeta_j_of_mus(obj,jlayer,mus)
             % ML quad requires y=f(x) take and return vector...
             y = nan(size(mus));
-            for alfa=1:length(mus)
+            for alfa=1:numel(mus)
                 if jlayer == 1
                     fun = @(x)eq50(x,mus(alfa),obj.Js.tilde,obj.lambdas,obj.opts.qrot);
                 else
