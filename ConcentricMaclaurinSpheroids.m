@@ -13,7 +13,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         mus     % colatitude cosines
         zetas   % normalized and scaled level-surface radii
         Js      % rescaled dimensionless gravity moments
-        Pn      % coefficients of Legendre polynomials
+        Pnmu    % values of Legendre polynomials at fixed colatitudes
     end
     
     %% The constructor
@@ -41,9 +41,10 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.pprime(:) = 0.5*obj.deltas/den;
             
             %TODO: setup better deltas
-            %TODO: setup better mus?
+            %TODO: setup better mus (for gauss quad)
             
-            % Precompute Legendre polynomial coefficients up to degree kmax
+            % Precompute Legendre polynomials for fixed colatitudes
+            %TODO: implement
             
         end
     end
@@ -294,16 +295,39 @@ y = -(1/zeta_j)*(x1 + x2 + x3) + ...
 
 end
 
-function y = Pn_builtin(n,x)
-% Ordinary fully normalized Legendre polynomial using built-in legendre (slow).
-assert(isvector(x))
-Pnm = legendre(n,x);
-y = Pnm(1,:);
-if ~isrow(x), y = y'; end
-end
-
 function y = Pn(n,x)
-% Ordinary fully normalized Legendre polynomial of order n at x in [0,1].
-y = ones(size(x));
-
+% Fast implementation of ordinary Legendre polynomials of low degree.
+switch n
+    case 0
+        y = ones(size(x));
+    case 1
+        y = x;
+    case 2
+        y = 0.5*(3*x.^2 - 1);
+    case 3
+        y = 0.5*(5*x.^3 - 3*x);
+    case 4
+        y = (1/8)*(35*x.^4 - 30*x.^2 + 3);
+    case 5
+        y = (1/8)*(63*x.^5 - 70*x.^3 + 15*x);
+    case 6
+        y = (1/16)*(231*x.^6 - 315*x.^4 + 105*x.^2 - 5);
+    case 7
+        y = (1/16)*(429*x.^7 - 693*x.^5 + 315*x.^3 - 35*x);
+    case 8
+        y = (1/128)*(6435*x.^8 - 12012*x.^6 + 6930*x.^4 - 1260*x.^2 + 35);
+    case 9
+        y = (1/128)*(12155*x.^9 - 25740*x.^7 + 18018*x.^5 - 4620*x.^3 + 315*x);
+    case 10
+        y = (1/256)*(46189*x.^10 - 109395*x.^8 + 90090*x.^6 - 30030*x.^4 + 3465*x.^2 - 63);
+    case 11
+        y = (1/256)*(88179*x.^11 - 230945*x.^9 + 218790*x.^7 - 90090*x.^5 + 15015*x.^3 - 693*x);
+    case 12
+        y = (1/1024)*(676039*x.^12 - 1939938*x.^10 + 2078505*x.^8 - 1021020*x.^6 + 225225*x.^4 - 18018*x.^2 + 231);
+    otherwise
+        assert(isvector(x))
+        Pnm = legendre(n,x);
+        y = Pnm(1,:);
+        if ~isrow(x), y = y'; end
+end
 end
