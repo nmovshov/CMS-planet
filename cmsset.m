@@ -15,7 +15,7 @@ function options = cmsset(varargin)
 %kmax - Degree to carry out mulitpole expansion of gravity moments [ positive even {12} ]
 %rcore - Core radius, normalized [ {0.15} ]
 %qrot - Dimensionless rotation parameter [ {0} ]
-%J_integration_method - Choice of integration algorithm to compute J moments [ {'adaptive'} | 'gaussian' ]
+%J_integration_method - Choice of integration algorithm to compute J moments [ {'adaptive'} | 'gauss' | 'adaptive_gauss' ]
 %zetas_in_J_integrals - How to obtain values of zeta inside J integrals [ {'rootfind'} | 'interp' ]
 %verbosity - Level of runtime messages [0 {1} 2]
 %IntTol - Relative tolerance for adaptive integrals [ positive real {1e-9} ]
@@ -70,7 +70,7 @@ end
 
 function isvalidintmethod(x)
 validateattributes(x,{'char'},{'row'})
-if ~any(strcmpi(x,{'adaptive'}))
+if ~any(strcmpi(x,{'adaptive','gauss','adaptive_gauss'}))
     error('Integration method %s not implemented.',x)
 end
 end
