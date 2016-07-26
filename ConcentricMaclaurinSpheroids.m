@@ -13,6 +13,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         mus     % colatitude cosines
         zetas   % normalized and scaled level-surface radii
         Js      % rescaled dimensionless gravity moments
+        Pn      % coefficients of Legendre polynomials
     end
     
     %% The constructor
@@ -41,6 +42,9 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             %TODO: setup better deltas
             %TODO: setup better mus?
+            
+            % Precompute Legendre polynomial coefficients up to degree kmax
+            
         end
     end
     
