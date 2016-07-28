@@ -78,10 +78,17 @@ classdef ConcentricMaclaurinSpheroids < handle
         function dJ = update_Js(obj)
             % Single-pass update of gravitational moments (dispatcher).
             
-            t_J_pass = tic;
-            fprintf('Updating J moments ...')
+            % Optional communication
+            verb = obj.opts.verbosity;
+            if (verb > 0)
+                t_J_pass = tic;
+                fprintf('Updating J moments ...')
+            end
+            
             % Dispatch based on chosen integration method.
             switch lower(obj.opts.J_integration_method)
+                case 'gauss'
+                    dJ = obj.update_Js_gauss();
                 case 'adaptive'
                     dJ = obj.update_Js_adaptive();
                 case 'adaptive_gauss'
@@ -89,10 +96,11 @@ classdef ConcentricMaclaurinSpheroids < handle
                 otherwise
                     error('Unknown integration method: %s.',obj.opts.J_integration_method)
             end
-            
-            t_J_pass = toc(t_J_pass);
-            fprintf('Done. Elapsed time %g sec.\n', t_J_pass)
-            %TODO: calc and report meaningful dJ
+            % Optional communication
+            if (verb > 0)
+                t_J_pass = toc(t_J_pass);
+                fprintf('Done. Elapsed time %g sec.\n', t_J_pass)
+            end
         end
         
     end % public methods
