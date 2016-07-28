@@ -38,7 +38,7 @@ p.addParameter('kmax',12,@isposintscalar)
 p.addParameter('rcore',0.15,@isposnormalscalar)
 p.addParameter('qrot',0,@isnonnegscalar)
 p.addParameter('verbosity',1,@isnonnegintscalar)
-p.addParameter('J_integration_method','adaptive',@isvalidintmethod)
+p.addParameter('J_integration_method','gauss',@isvalidintmethod)
 p.addParameter('zetas_in_J_integrals','rootfind',@isvalidzetasmethod)
 p.addParameter('IntTol',1e-9,@isposscalar)
 
