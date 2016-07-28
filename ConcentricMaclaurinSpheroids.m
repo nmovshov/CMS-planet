@@ -7,13 +7,14 @@ classdef ConcentricMaclaurinSpheroids < handle
     
     %% Properties
     properties (GetAccess = public, SetAccess = public)
-        opts    % holds CMS project-wide options
+        opts    % holds CMS user configurable options
         lambdas % normalized layer equatorial radii
         deltas  % normalized density steps
         mus     % colatitude cosines
         zetas   % normalized and scaled level-surface radii
         Js      % rescaled dimensionless gravity moments
         Pnmu    % values of Legendre polynomials at fixed colatitudes
+        gws     % weight factors for Gauss integration (correspond to mus)
     end
     
     %% The constructor
@@ -43,8 +44,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             %TODO: setup better deltas
             
             % Get mus and weights for Gaussian quadrature
-            if strcmpi(obj.opts.J_integration_method, 'gaussian')
-                obj.get_gauss_points();
+            if strcmpi(obj.opts.J_integration_method, 'gauss')
+                [obj.mus, obj.gws] = gauleg(0, 1, obj.opts.nangles);
             end
             
             % Precompute Legendre polynomials for fixed colatitudes (gauss quad)
@@ -97,9 +98,76 @@ classdef ConcentricMaclaurinSpheroids < handle
     end % public methods
     
     methods (Access = public) % to become private
-        function get_gauss_points(obj)
-            % Calculate abscisas and weights for gaussian quadrature
-            obj.mus = linspace(0,1,12); % TODO: implement
+        function dJ = update_Js_gauss(obj)
+            % Single-pass update of gravitational moments by Gaussian quad.
+            
+            pbar = (obj.opts.verbosity > 1);
+            if pbar, progressbar('updating Js'), end
+            nbJ = numel(obj.Js.tilde) + numel(obj.Js.tilde_prime) + ...
+                  numel(obj.Js.pprime);
+            
+            % First update zeta values based on current J values
+            obj.update_zetas();
+            
+            % Do common denominator in eqs. (40-43)
+            denom = 0;
+            for j=1:obj.opts.nlayers
+                fun = obj.zetas(j,:).^3;
+                I = 0.5*obj.gws*fun'; % gauss quad formula
+                denom = denom + obj.deltas(j)*obj.lambdas(j)^3*I;
+            end
+            
+            % Do J tilde, eq. (40)
+            new_tilde = zeros(size(obj.Js.tilde));
+            for ii=1:obj.opts.nlayers
+                for kk=0:obj.opts.kmax
+                    if rem(kk, 2), continue, end
+                    fun = obj.Pnmu(kk+1,:).*obj.zetas(ii,:).^(kk+3);
+                    I = 0.5*obj.gws*fun'; % gauss quad formula
+                    new_tilde(ii,kk+1) = -(3/(2*kk + 3))*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
+                end
+            end
+            
+            % Do J tilde prime, eqs. (41,42)
+            new_tprime = zeros(size(obj.Js.tilde_prime));
+            for ii=1:obj.opts.nlayers
+                for kk=0:obj.opts.kmax
+                    if rem(kk, 2), continue, end
+                    if kk == 2
+                        % eq. (42)
+                        fun = obj.Pnmu(3,:).*log(obj.zetas(ii,:));
+                        I = 0.5*obj.gws*fun'; % gauss quad formula
+                        new_tprime(ii,kk+1) = -3*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
+                    else
+                        % eq. (41)
+                        fun = obj.Pnmu(kk+1,:).*obj.zetas(ii,:).^(2 - kk);
+                        I = 0.5*obj.gws*fun'; % gauss quad formula
+                        new_tprime(ii,kk+1) = -(3/(2 - kk))*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
+                    end
+                end
+            end
+            
+            % Do J double prime, eq. (27)
+            new_pprime = zeros(size(obj.Js.pprime));
+            denom = 0;
+            for j=1:obj.opts.nlayers
+                fun = obj.zetas(j,:).^3;
+                I = obj.lambdas(j)*0.5*obj.gws*fun';
+                denom = denom + obj.deltas(j)*I;
+            end
+            denom = 2*denom;
+            for ii=1:obj.opts.nlayers
+                new_pprime(ii) = obj.deltas(ii)/denom;
+            end
+            
+            % Return max change in Js and update Js in obj.
+            dJ = max(abs(new_tilde(:) - obj.Js.tilde(:)));
+            dJ = max(dJ, max(abs(new_tprime(:) - obj.Js.tilde_prime(:))));
+            dJ = max(dJ, max(abs(new_pprime(:) - obj.Js.pprime(:))));
+            
+            obj.Js.tilde = new_tilde;
+            obj.Js.tilde_prime = new_tprime;
+            obj.Js.pprime = new_pprime;
         end
         
         function dJ = update_Js_adaptive(obj)
