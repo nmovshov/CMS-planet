@@ -58,6 +58,20 @@ classdef ConcentricMaclaurinSpheroids < handle
     
     %% Ordinary methods
     methods (Access = public)
+        function relax(obj)
+            % Iterate calculation of gravitational moments until converged.
+            
+            %TODO: implement optional communications
+            
+            % Main loop
+            dJ = Inf;
+            iter = 0;
+            while (dJ > obj.opts.dJtol) && (iter < obj.opts.MaxIter)
+                dJ = obj.update_Js();
+                iter = iter + 1;
+            end
+        end
+        
         function update_zetas(obj)
             % Update level surfaces using current value of Js.
             pbar = (obj.opts.verbosity > 1);
