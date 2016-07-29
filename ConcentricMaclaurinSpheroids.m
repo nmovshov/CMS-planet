@@ -78,18 +78,33 @@ classdef ConcentricMaclaurinSpheroids < handle
         
         function update_zetas(obj)
             % Update level surfaces using current value of Js.
-            pbar = (obj.opts.verbosity > 1);
-            if pbar
-                progressbar('updating zetas')
+
+            % Optional communication
+            verb = obj.opts.verbosity;
+            if (verb > 0)
+                t_z_pass = tic;
+                fprintf('Updating zetas....')
             end
-            nbz = numel(obj.zetas);
-            for ii=1:size(obj.zetas, 1)
-                for alfa=1:size(obj.zetas, 2)
+            if (verb > 1)
+                progressbar('updating zetas...')
+            end
+            
+            % Loop over layers (outer) and colatitudes (inner)
+            nlayers = size(obj.zetas, 1);
+            nangles = size(obj.zetas, 2);
+            for ii=1:nlayers
+                for alfa=1:nangles
                     obj.zetas(ii,alfa) = obj.zeta_j_of_mu(ii, obj.mus(alfa));
-                    if pbar
-                        progressbar(((ii -1)*obj.opts.nangles + alfa)/nbz);
-                    end
                 end
+                if (verb > 1)
+                    progressbar(ii/nlayers);
+                end
+            end
+            
+            % Optional communication
+            if (verb > 0)
+                t_z_pass = toc(t_z_pass);
+                fprintf('Done. Elapsed time %g sec.\n', t_z_pass)
             end
         end
         
@@ -100,7 +115,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             verb = obj.opts.verbosity;
             if (verb > 0)
                 t_J_pass = tic;
-                fprintf('Updating Js ...')
+                fprintf('Updating Js....')
             end
             
             % Dispatch based on chosen integration method.
@@ -112,6 +127,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 otherwise
                     error('Unknown integration method: %s.',obj.opts.J_integration_method)
             end
+            
             % Optional communication
             if (verb > 0)
                 t_J_pass = toc(t_J_pass);
@@ -124,15 +140,7 @@ classdef ConcentricMaclaurinSpheroids < handle
     methods (Access = public) % to become private
         function dJ = update_Js_gauss(obj)
             % Single-pass update of gravitational moments by Gaussian quad.
-            
-            pbar = (obj.opts.verbosity > 1);
-            if pbar, progressbar('updating Js'), end
-            nbJ = numel(obj.Js.tilde) + numel(obj.Js.tilde_prime) + ...
-                  numel(obj.Js.pprime);
-            
-            % First update zeta values based on current J values
-            obj.update_zetas();
-            
+                        
             % Do common denominator in eqs. (40-43)
             denom = 0;
             for j=1:obj.opts.nlayers
@@ -196,11 +204,6 @@ classdef ConcentricMaclaurinSpheroids < handle
         
         function dJ = update_Js_adaptive(obj)
             % Single-pass update of gravitational moments using built-in integral.
-            
-            pbar = (obj.opts.verbosity > 1);
-            if pbar, progressbar('updating Js'), end
-            nbJ = numel(obj.Js.tilde) + numel(obj.Js.tilde_prime) + ...
-                  numel(obj.Js.pprime);
             
             % Do common denominator in eqs. (40-43)
             denom = 0;
