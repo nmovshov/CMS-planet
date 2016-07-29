@@ -61,7 +61,11 @@ classdef ConcentricMaclaurinSpheroids < handle
         function relax(obj)
             % Iterate calculation of gravitational moments until converged.
             
-            %TODO: implement optional communications
+            % Optional communication
+            verb = obj.opts.verbosity;
+            if (verb > 0)
+                fprintf('Converging to a self-consistent density structure.\n')
+            end
             
             % Main loop
             dJ = Inf;
@@ -96,7 +100,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             verb = obj.opts.verbosity;
             if (verb > 0)
                 t_J_pass = tic;
-                fprintf('Updating J moments ...')
+                fprintf('Updating Js ...')
             end
             
             % Dispatch based on chosen integration method.
