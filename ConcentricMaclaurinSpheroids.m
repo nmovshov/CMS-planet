@@ -62,17 +62,37 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Iterate calculation of gravitational moments until converged.
             
             % Optional communication
+            t_rlx = tic;
             verb = obj.opts.verbosity;
             if (verb > 0)
-                fprintf('Converging to a self-consistent density structure.\n')
+                fprintf('Relaxing CMS to self-consistent level surfaces...\n\n')
+            end
+            if (verb > 1)
+                progressbar('Relaxing CMS...')
             end
             
             % Main loop
             dJ = Inf;
-            iter = 0;
-            while (dJ > obj.opts.dJtol) && (iter < obj.opts.MaxIter)
+            iter = 1;
+            while (dJ > obj.opts.dJtol) && (iter <= obj.opts.MaxIter)
+                t_pass = tic;
+                if (verb > 0)
+                    fprintf('Pass %d (of %d max)...\n', iter, obj.opts.MaxIter)
+                end
+                obj.update_zetas;
                 dJ = obj.update_Js();
+                if (verb > 0)
+                    fprintf('Pass %d (of %d max)...done. (%g sec.)\n\n',...
+                        iter, obj.opts.MaxIter, toc(t_pass))
+                end
                 iter = iter + 1;
+            end
+            
+            % Optional communication
+            if (verb > 0)
+                msg = 'Relaxing CMS to self-consistent level surfaces...done.';
+                fprintf([msg, '\n'])
+                fprintf('Total elapsed time %g sec.\n', toc(t_rlx))
             end
         end
         
@@ -104,7 +124,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Optional communication
             if (verb > 0)
                 t_z_pass = toc(t_z_pass);
-                fprintf('Done. Elapsed time %g sec.\n', t_z_pass)
+                fprintf('Done. (%g sec.)\n', t_z_pass)
             end
         end
         
@@ -131,7 +151,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Optional communication
             if (verb > 0)
                 t_J_pass = toc(t_J_pass);
-                fprintf('Done. Elapsed time %g sec.\n', t_J_pass)
+                fprintf('Done. (%g sec.)\n', t_J_pass)
             end
         end
     end % public methods
