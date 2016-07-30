@@ -472,3 +472,5 @@ end
 
 %TODO: Figure out if you want gauleg as a class-related function, global
 %function, seed for a +utils package, or what?
+
+%TODO: convert constructor to take varargin and pass it to cmsset
