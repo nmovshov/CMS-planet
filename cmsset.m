@@ -1,5 +1,5 @@
 function options = cmsset(varargin)
-%CMSSET Create options structure for CMS-planet.
+%CMSSET Create options structure used by CMS class methods.
 %   OPTIONS = CMSSET('NAME1',VALUE1,'NAME2',VALUE2,...) creates an options
 %   structure OPTIONS in which the named properties have the specified values.
 %   Any unspecified properties have default values. Case is ignored for property

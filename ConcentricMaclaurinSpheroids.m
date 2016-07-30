@@ -19,21 +19,30 @@ classdef ConcentricMaclaurinSpheroids < handle
     
     %% The constructor
     methods
-        function obj = ConcentricMaclaurinSpheroids(opts)
+        function obj = ConcentricMaclaurinSpheroids(varargin)
+            %CONCENTRICMACLAURINSPHEROIDS Class constructor.
+            
             if nargin == 0
-                opts = cmsset();
+                % Use all default options
+                op = cmsset();
+            elseif (nargin == 1) && (isstruct(varargin{1}))
+                % Use options struct returned by cmsset()
+                op = varargin{1};
+            else
+                % Use Name/Value pairs
+                op = cmsset(varargin{:});
             end
             
             % Pre-allocation and simple assignments
-            obj.lambdas = linspace(1, opts.rcore, opts.nlayers)';
-            obj.deltas = zeros(opts.nlayers, 1);
+            obj.lambdas = linspace(1, op.rcore, op.nlayers)';
+            obj.deltas = zeros(op.nlayers, 1);
             obj.deltas(1) = 1;
-            obj.mus = linspace(0,1,opts.nangles); % may be modified by gauss
-            obj.zetas = ones(opts.nlayers, opts.nangles);
-            obj.Js.tilde = zeros(opts.nlayers, (opts.kmax+1));
-            obj.Js.tilde_prime = zeros(opts.nlayers, (opts.kmax+1));
-            obj.Js.pprime = zeros(opts.nlayers, 1);
-            obj.opts = opts;
+            obj.mus = linspace(0,1,op.nangles); % may be modified by gauss
+            obj.zetas = ones(op.nlayers, op.nangles);
+            obj.Js.tilde = zeros(op.nlayers, (op.kmax+1));
+            obj.Js.tilde_prime = zeros(op.nlayers, (op.kmax+1));
+            obj.Js.pprime = zeros(op.nlayers, 1);
+            obj.opts = op;
             
             % Approximate degree 0 Js
             den = sum(obj.deltas.*obj.lambdas.^3);
@@ -473,4 +482,3 @@ end
 %TODO: Figure out if you want gauleg as a class-related function, global
 %function, seed for a +utils package, or what?
 
-%TODO: convert constructor to take varargin and pass it to cmsset
