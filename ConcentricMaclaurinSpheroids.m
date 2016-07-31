@@ -153,7 +153,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Optional communication
             if (verb > 1)
                 t_J_pass = toc(t_J_pass);
-                fprintf(' (%g sec).\n', t_J_pass)
+                fprintf('done. (%g sec).\n', t_J_pass)
             elseif (verb > 0)
                 fprintf('done.\n')
             end
