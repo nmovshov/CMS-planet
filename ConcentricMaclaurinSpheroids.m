@@ -117,6 +117,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             nangles = size(obj.zetas, 2);
             for ii=1:nlayers
                 for alfa=1:nangles
+                    %obj.zetas(ii,alfa) = obj.zeta_j_alfa(ii,alfa);
                     obj.zetas(ii,alfa) = obj.zeta_j_of_mu(ii, obj.mus(alfa));
                 end
             end
@@ -303,8 +304,15 @@ classdef ConcentricMaclaurinSpheroids < handle
             y = fzero(fun, 1);
         end
         
+        function y = zeta_j_alfa(obj,jlayer,alfa)
+            % Find lvl surface of jth layer at colat mu(alfa).
+            y = 1;
+        end
+        
         function y = zeta_j_of_mus(obj,jlayer,mus)
             % ML quad requires y=f(x) take and return vector...
+            assert(jlayer > 0 && jlayer <= obj.opts.nlayers)
+            assert(all(mus >= 0) && all(mus <=1))
             y = nan(size(mus));
             for alfa=1:numel(mus)
                 if jlayer == 1
