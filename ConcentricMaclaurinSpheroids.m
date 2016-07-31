@@ -14,6 +14,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         zetas   % normalized and scaled level-surface radii
         Js      % rescaled dimensionless gravity moments
         Pnmu    % values of Legendre polynomials at fixed colatitudes
+        Pnzero  % values of Legendre polynomials at equator
         gws     % weight factors for Gauss integration (correspond to mus)
     end
     
@@ -60,6 +61,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Precompute Legendre polynomials for fixed colatitudes (gauss quad)
             for k = 0:obj.opts.kmax
                 obj.Pnmu(k+1,:) = Pn(k, obj.mus);
+                obj.Pnzero(k+1,1) = Pn(k, 0);
             end
             
         end
