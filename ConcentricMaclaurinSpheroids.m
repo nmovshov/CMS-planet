@@ -663,10 +663,3 @@ end
 assert(all(isfinite(x)))
 assert(all(isfinite(w)))
 end
-
-%TODO: Gauss-Legendre abscissas do not include end points. Do some special
-%treatment to calculate zeta(equator) and zeta(north pole).
-
-%TODO: calls to Pn(k,mu) inside eq50() and eq51() are using cycles and are
-%unnecessary for gauss method. Figure out if where we can branch away from
-%adaptive integrals, or if we even want to keep adaptive option.
