@@ -119,8 +119,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             nangles = size(obj.zetas, 2);
             for ii=1:nlayers
                 for alfa=1:nangles
-                    %obj.zetas(ii,alfa) = obj.zeta_j_alfa(ii,alfa);
-                    obj.zetas(ii,alfa) = obj.zeta_j_of_mu(ii, obj.mus(alfa));
+                    obj.zetas(ii,alfa) = obj.zeta_j_of_alfa(ii,alfa);
+                    %obj.zetas(ii,alfa) = obj.zeta_j_of_mu(ii, obj.mus(alfa));
                 end
             end
             
@@ -306,9 +306,116 @@ classdef ConcentricMaclaurinSpheroids < handle
             y = fzero(fun, 1);
         end
         
-        function y = zeta_j_alfa(obj,jlayer,alfa)
+        function y = zeta_j_of_alfa(obj,jlayer,alfa)
             % Find lvl surface of jth layer at colat mu(alfa).
-            y = 1;
+            assert(jlayer > 0 && jlayer <= obj.opts.nlayers)
+            assert(alfa > 0 && alfa <= obj.opts.nangles)
+            if jlayer == 1
+                fun = @(x)obj.eq50_alfa(x,alfa);
+            else
+                fun = @(x)obj.eq51_alfa(x,jlayer,alfa);
+            end
+           %y = fzero(fun, [0.6, 1.02]);
+            y = fzero(fun, 1);
+        end
+        
+        function y = eq50_alfa(obj,zeta0,alfa)
+            % Equation 50 in Hubbard (2013) for fixed colatitudes.
+            
+            % Local variables
+            nlayers = obj.opts.nlayers;
+            kmax = obj.opts.kmax;
+            Jt = obj.Js.tilde;
+            lambda = obj.lambdas;
+            qrot = obj.opts.qrot;
+            P0 = obj.Pnzero;
+            Pmu = obj.Pnmu(:,alfa);
+            
+            % Double sum in eq. (47)
+            x1 = 0;
+            for ii=1:nlayers
+                for kk=2:kmax % (note ind shift, start ind, odd J=0)
+                    x1 = x1 + Jt(ii,kk+1)*lambda(ii)^kk*P0(kk+1);
+                end
+            end
+            
+            % Double sum in eq. (50)
+            x2 = 0;
+            for ii=1:nlayers
+                for kk=2:kmax % (note ind shift, start ind, odd J=0)
+                    x2 = x2 + Jt(ii,kk+1)*lambda(ii)^kk*zeta0^(-kk)*Pmu(kk+1);
+                end
+            end
+            
+            % And combine
+            U0 = 1 + 0.5*qrot - x1;
+            U = (1/zeta0)*(1 - x2) + 1/3*qrot*zeta0^2*(1 - Pmu(3));
+            y = U - U0;
+        end
+
+        function y = eq51_alfa(obj,zeta_j,jj,alfa)
+            % Equation 51 in Hubbard (2013) for fixed colatitudes.
+            
+            % Local variables
+            nlayers = obj.opts.nlayers;
+            kmax = obj.opts.kmax;
+            Jt = obj.Js.tilde;
+            Jtp = obj.Js.tilde_prime;
+            Jpp = obj.Js.pprime;
+            lambda = obj.lambdas;
+            qrot = obj.opts.qrot;
+            P0 = obj.Pnzero;
+            Pmu = obj.Pnmu(:,alfa);
+            
+            % Double sum, row 1
+            x1 = 0;
+            for ii=jj:nlayers
+                for kk=0:kmax % (note ind shift, start ind, odd J=0)
+                    x1 = x1 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*zeta_j^(-kk)*Pmu(kk+1);
+                end
+            end
+            
+            % Double sum, row 2
+            x2 = 0;
+            for ii=1:jj-1
+                for kk=0:kmax
+                    x2 = x2 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*zeta_j^(kk+1)*Pmu(kk+1);
+                end
+            end
+            
+            % Single sum, row 2
+            x3 = 0;
+            for ii=1:jj-1
+                x3 = x3 + Jpp(ii)*lambda(jj)^3*zeta_j^3;
+            end
+            
+            % Double sum, row 3
+            x4 = 0;
+            for ii=jj:nlayers
+                for kk=0:kmax
+                    x4 = x4 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*P0(kk+1);
+                end
+            end
+            
+            % Double sum, row 4
+            x5 = 0;
+            for ii=1:jj-1
+                for kk=0:kmax
+                    x5 = x5 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*P0(kk+1);
+                end
+            end
+            
+            % Single sum, row 4
+            x6 = 0;
+            for ii=1:jj-1
+                x6 = x6 + Jpp(ii)*lambda(jj)^3;
+            end
+            
+            % And combine
+            y = -(1/zeta_j)*(x1 + x2 + x3) + ...
+                (1/3)*qrot*lambda(jj)^3*zeta_j^2*(1 - Pmu(3)) + ...
+                (x4 + x5 + x6) - 0.5*qrot*lambda(jj)^3;
+            
         end
         
         function y = zeta_j_of_mus(obj,jlayer,mus)
