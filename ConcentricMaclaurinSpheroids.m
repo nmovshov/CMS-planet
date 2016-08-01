@@ -104,6 +104,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 end
                 iter = iter + 1;
             end
+            if (iter < obj.opts.MaxIter), obj.cooked = true; end % converged!
             
             % Optional communication
             if (verb > 0)
