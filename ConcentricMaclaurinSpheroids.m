@@ -13,9 +13,12 @@ classdef ConcentricMaclaurinSpheroids < handle
         mus     % colatitude cosines
         zetas   % normalized and scaled level-surface radii
         Js      % rescaled dimensionless gravity moments
+    end
+    properties (Access = public) % to become private
         Pnmu    % values of Legendre polynomials at fixed colatitudes
         Pnzero  % values of Legendre polynomials at equator
         gws     % weight factors for Gauss integration (correspond to mus)
+        cooked = false  % flag indicating successful convergence
     end
     
     %% The constructor
