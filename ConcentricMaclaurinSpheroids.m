@@ -90,8 +90,14 @@ classdef ConcentricMaclaurinSpheroids < handle
                 obj.update_zetas;
                 dJ = obj.update_Js();
                 if (verb > 0)
-                    fprintf('Pass %d (of %d max)...done. (%g sec.)\n\n',...
+                    fprintf('Pass %d (of %d max)...done. (%g sec.)\n',...
                         iter, obj.opts.MaxIter, toc(t_pass))
+                    if (verb > 1)
+                        fprintf('dJ = %g; required tolerance = %g.\n\n',...
+                            dJ, obj.opts.dJtol)
+                    else
+                        fprintf('\n')
+                    end
                 end
                 iter = iter + 1;
             end
