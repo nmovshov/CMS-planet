@@ -14,7 +14,7 @@ function options = cmsset(varargin)
 %nangles - Number of colatitude points used to define level surfaces [ positive integer {48} ]
 %kmax - Degree to carry out mulitpole expansion of gravity moments [ positive even {12} ]
 %dJtol - Convergence tolerance for gravity moments [ positive real {1e-12} ]
-%MaxIter - Maximum number of iterations allowed [ positive integer {40} ]
+%MaxIter - Maximum number of iterations allowed [ positive integer {60} ]
 %rcore - Core radius, normalized [ {0.15} ]
 %qrot - Dimensionless rotation parameter [ {0} ]
 %J_integration_method - Choice of integration algorithm to compute J moments [ 'adaptive' | {'gauss'} ]
@@ -38,7 +38,7 @@ p.addParameter('nlayers',512,@isposintscalar)
 p.addParameter('nangles',48,@isposintscalar)
 p.addParameter('kmax',12,@isposintscalar)
 p.addParameter('dJtol',1e-12,@isposscalar)
-p.addParameter('MaxIter',40,@isposintscalar)
+p.addParameter('MaxIter',60,@isposintscalar)
 p.addParameter('rcore',0.15,@isposnormalscalar)
 p.addParameter('qrot',0,@isnonnegscalar)
 p.addParameter('verbosity',1,@isnonnegintscalar)

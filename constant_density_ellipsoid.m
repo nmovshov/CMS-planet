@@ -8,10 +8,9 @@ close all
 
 %% Set up a CMS object to mimic constant density case
 opts = cmsset;
-opts.nlayers = 2;
-opts.rcore = 0.0001;
+opts.nlayers = 12;
+opts.rcore = 0.01;
 opts.qrot = 0.1;
-opts.MaxIter = 40;
 opts.kmax = 30;
 opts.verbosity = 2;
 cms = ConcentricMaclaurinSpheroids(opts);
@@ -38,7 +37,8 @@ for k=1:20
     m = q*s_Mac^3; % m=q*s^3/a^3, a=1
 end
 fprintf('m=%g; l=%g\n',m,el)
-xi_ell = 1./sqrt((1 + (el.^2).*(mu.^2)));
+el = sqrt(1/b^2 - 1);
+xi_ell = 1./sqrt((1 + (el^2).*(mu.^2)));
 
 %% Compare
 dxi = xi_cms - xi_ell;
