@@ -39,6 +39,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Pre-allocation and simple assignments
             obj.lambdas = linspace(1, op.rcore, op.nlayers)';
+            if (op.nlayers == 1), obj.lambdas = 1; end % N=1 special case
             obj.deltas = zeros(op.nlayers, 1);
             obj.deltas(1) = 1;
             obj.mus = linspace(0,1,op.nangles); % may be modified by gauss
@@ -66,9 +67,8 @@ classdef ConcentricMaclaurinSpheroids < handle
                 obj.Pnmu(k+1,:) = Pn(k, obj.mus);
                 obj.Pnzero(k+1,1) = Pn(k, 0);
             end
-            
-        end
-    end
+        end % Constructor
+    end % Constructor block
     
     %% Public methods
     methods (Access = public)
@@ -444,7 +444,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
         end
     end % private methods
-        
+
     %% Static methods
     methods (Static)
         
