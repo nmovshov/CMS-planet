@@ -193,7 +193,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                     if rem(kk, 2), continue, end
                     fun = obj.Pnmu(kk+1,:).*obj.zetas(ii,:).^(kk+3);
                     I = obj.gws*fun'; % gauss quad formula
-                    new_tilde(ii,kk+1) = -(3/(2*kk + 3))*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
+                    new_tilde(ii,kk+1) = -(3/(kk + 3))*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
                 end
             end
             
@@ -257,7 +257,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                     if rem(kk, 2), continue, end
                     fun = @(mu)Pn(kk,mu).*obj.zeta_j_of_mus(ii, mu).^(kk+3);
                     I = integral(fun, 0, 1, 'RelTol', obj.opts.IntTol);
-                    new_tilde(ii,kk+1) = -(3/(2*kk + 3))*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
+                    new_tilde(ii,kk+1) = -(3/(kk + 3))*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
                 end
             end
             
