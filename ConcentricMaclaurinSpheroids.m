@@ -182,7 +182,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             denom = 0;
             for j=1:obj.opts.nlayers
                 fun = obj.zetas(j,:).^3;
-                I = 0.5*obj.gws*fun'; % gauss quad formula
+                I = obj.gws*fun'; % gauss quad formula
                 denom = denom + obj.deltas(j)*obj.lambdas(j)^3*I;
             end
             
@@ -192,7 +192,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 for kk=0:obj.opts.kmax
                     if rem(kk, 2), continue, end
                     fun = obj.Pnmu(kk+1,:).*obj.zetas(ii,:).^(kk+3);
-                    I = 0.5*obj.gws*fun'; % gauss quad formula
+                    I = obj.gws*fun'; % gauss quad formula
                     new_tilde(ii,kk+1) = -(3/(2*kk + 3))*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
                 end
             end
@@ -205,12 +205,12 @@ classdef ConcentricMaclaurinSpheroids < handle
                     if kk == 2
                         % eq. (42)
                         fun = obj.Pnmu(3,:).*log(obj.zetas(ii,:));
-                        I = 0.5*obj.gws*fun'; % gauss quad formula
+                        I = obj.gws*fun'; % gauss quad formula
                         new_tprime(ii,kk+1) = -3*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
                     else
                         % eq. (41)
                         fun = obj.Pnmu(kk+1,:).*obj.zetas(ii,:).^(2 - kk);
-                        I = 0.5*obj.gws*fun'; % gauss quad formula
+                        I = obj.gws*fun'; % gauss quad formula
                         new_tprime(ii,kk+1) = -(3/(2 - kk))*obj.deltas(ii)*obj.lambdas(ii)^3*I/denom;
                     end
                 end
@@ -221,7 +221,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             denom = 0;
             for j=1:obj.opts.nlayers
                 fun = obj.zetas(j,:).^3;
-                I = obj.lambdas(j)*0.5*obj.gws*fun';
+                I = obj.lambdas(j)*obj.gws*fun';
                 denom = denom + obj.deltas(j)*I;
             end
             denom = 2*denom;
@@ -600,7 +600,7 @@ function [x,w] = gauleg(x1,x2,n)
 %   by an (2n - 1) degree polynomial in the interval [x1,x2] using the
 %   Gauss-Legendre formula:
 %
-%       I = (x2 - x1)/2 * sum(w.*f(x))
+%       I = sum(w.*f(x))
 %
 %   Algorithm
 %     This function is based on the C++ implementation of a routine with the
@@ -613,7 +613,7 @@ function [x,w] = gauleg(x1,x2,n)
 %     fun = @(x)sin(x);
 %     [x,w] = gauleg(0,pi,6);
 %     I_adaptive = integral(fun,0,pi)
-%     I_gaussleg = (pi/2)*sum(w.*fun(x))
+%     I_gaussleg = sum(w.*fun(x))
 %         
 % Author: Naor Movshovitz (nmovshov at google dot com)
 %         Earth and Planetary Sciences, UC Santa Cruz
@@ -665,7 +665,7 @@ for j=1:m
     % Now use j-th root to get 2 abscissas and weights
     x(j)     = xmid - z*dx/2; % Scaled abscissa left of center
     x(n+1-j) = xmid + z*dx/2; % Scaled abscissa right of center
-    w(j)     = 2/((1 - z^2)*pp^2);
+    w(j)     = dx/((1 - z^2)*pp^2);
     w(n+1-j) = w(j);
 end
 
