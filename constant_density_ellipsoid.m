@@ -8,10 +8,11 @@ close all
 
 %% Set up a CMS object to mimic constant density case
 opts = cmsset;
-opts.nlayers = 12;
+opts.nlayers = 1;
 opts.rcore = 0.01;
 opts.qrot = 0.1;
-opts.kmax = 30;
+opts.kmax = 32;
+opts.dJtol = 1e-14;
 opts.verbosity = 2;
 cms = ConcentricMaclaurinSpheroids(opts);
 
@@ -28,13 +29,13 @@ assert(abs(a - 1) < 1e-12)
 %% Construct Maclaurin ellipsoid
 % Iterate to converge on Maclaurin ell parameter (?!?!)
 q = opts.qrot;
-m = 0.001;
+m = q;
 for k=1:20
     lfun = @(x)(3./(2*x.^3)).*((3 + x.^2).*atan(x) - 3*x) - m;
     el = fzero(lfun,0.5);
     b_Mac = sqrt(1/(1 + el^2));
-    s_Mac = b_Mac; % s=b*a^2, a=1
-    m = q*s_Mac^3; % m=q*s^3/a^3, a=1
+    s3_Mac = b_Mac; % s^3=b*a^2, a=1
+    m = q*s3_Mac; % m=q*s^3/a^3, a=1
 end
 fprintf('m=%g; l=%g\n',m,el)
 el = sqrt(1/b^2 - 1);
