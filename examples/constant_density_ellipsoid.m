@@ -1,10 +1,33 @@
-%% Maclaurin ellipsoid
-% Use CMS to reproduce the constant-density Maclaurin ellipsoid
+%% MACLAURIN ELLIPSOID WITH CMS
+% The Maclaurin spheroid is a closed analytic solution for the shape of a
+% rotating *constant density* self-gravitating fluid. This script compares the
+% numerical CMS solution with the expected analytic solution.
+
+%% Maclaurin's solution
+% The equillibrium shape of a constant density rotating fluid can be shown
+% (although not by me) to be an ellipsoid of revolution such that the radius $r$
+% follows
+% 
+% $$r^2(\mu) = \frac{a^2}{1 + l^2\mu^2}$$
+% 
+% where $a$ is the equatorial radius, $\mu$ is the cosine of the angle from the
+% rotation axis (the colatitude), $b$ is the polar radius and
+%
+% $$l^2 = \frac{a^2}{b^2} - 1.$$
+%
+% The ellipticity parameter $l$ is related to a dimensionless rotation
+% parameter $m=\omega^2s^3/GM$ by the trancendental equation
+%
+% $$ m = \frac{3}{2l^3}[(3 + l^2)\arctan{l} - 3l]. $$
+% 
+% The rotation parameter $m$ is given in terms of the ellipsoid's *mean* radius
+% $s$. For an oblate ellipsoid the radii are related by $s^3=ba^2$.
 
 %% Prepare workspace
 clear
 clc
 close all
+addpath(fullfile(pwd,'..'))
 
 %% Set up a CMS object to mimic constant density case
 opts = cmsset;
