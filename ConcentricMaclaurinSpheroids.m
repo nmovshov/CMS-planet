@@ -6,7 +6,7 @@ classdef ConcentricMaclaurinSpheroids < handle
     %   (2013).
     
     %% Properties
-    properties (GetAccess = public, SetAccess = private)
+    properties (GetAccess = public, SetAccess = public)
         opts    % holds CMS user configurable options
         lambdas % normalized layer equatorial radii
         deltas  % normalized density steps
