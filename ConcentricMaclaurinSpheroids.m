@@ -6,15 +6,16 @@ classdef ConcentricMaclaurinSpheroids < handle
     %   (2013).
     
     %% Properties
-    properties (GetAccess = public, SetAccess = public)
+    properties (GetAccess = public, SetAccess = private)
         opts    % holds CMS user configurable options
         lambdas % normalized layer equatorial radii
         deltas  % normalized density steps
         mus     % colatitude cosines
         zetas   % normalized and scaled level-surface radii
         Js      % rescaled dimensionless gravity moments
+        b       % polar radius
     end
-    properties (Access = public) % to become private
+    properties (Access = private)
         Pnmu    % values of Legendre polynomials at fixed colatitudes
         Pnzero  % values of Legendre polynomials at equator
         gws     % weight factors for Gauss integration (correspond to mus)
@@ -170,6 +171,31 @@ classdef ConcentricMaclaurinSpheroids < handle
             elseif (verb > 0)
                 fprintf('done.\n')
             end
+        end
+        
+        function TF = validate(obj)
+            % Try to pass some simple sanity checks.
+            TF = false;
+            
+            % Don't bother if obj is not even cooked
+            if (~obj.cooked)
+                warning('Object may not have fully converged; run obj.relax()')
+                return
+            end
+            
+            % Check for properly normalized zetas
+            for j=1:obj.opts.nlayers
+                er = abs(1 - obj.zeta_j_of_mu(j,0));
+                if er > 1e-14
+                    warning('Layer %d equatorial radius is %g',j,er)
+                    return
+                end
+            end
+            
+            % TODO: more checks
+            
+            % If you can read this you passed.
+            TF = true;
         end
     end % public methods
     
@@ -444,6 +470,17 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
         end
     end % private methods
+    
+    %% Access methods
+    methods
+        function val = get.b(obj)
+            if obj.cooked
+                val = obj.zeta_j_of_mu(1,1);
+            else
+                val = NaN;
+            end
+        end
+    end % access methods
 
     %% Static methods
     methods (Static)
