@@ -76,6 +76,7 @@ catch
 end
 
 %% Compare numerical and analytic solutions
+% Compare the level surface radii
 dxi = xi_cms - xi_exact(mu);
 lh = semilogy(mu, abs(dxi));
 ah = lh.Parent;
@@ -85,6 +86,26 @@ ah.Title.Interpreter = 'latex';
 ah.XLabel.String = '$\mu = \cos(\theta)$';
 ah.YLabel.String = '$d\xi$';
 ah.Title.String = '$d\xi = \xi(\mu) - 1/\sqrt{1 + l^2\mu^2}$';
-
 xi_err = max(abs(dxi));
 b_err = b_cms - b_exact;
+
+% Compare the J values
+n = 0:2:opts.kmax;
+J_exact = (-1).^(1 + n/2).*(3./((n + 1).*(n + 3))).*(el^2/(1 + el^2)).^(n/2);
+J_cms = cms.Js.tilde(n+1);
+dJ = J_cms - J_exact;
+subplot(2,1,1,ah);
+subplot(2,1,2);
+lh = stem(n, abs(dJ));
+ah = lh.Parent;
+ah.YScale = 'log';
+ah.XTick = n(1:2:end);
+ah.XMinorTick = 'on';
+ah.XLabel.Interpreter = 'latex';
+ah.YLabel.Interpreter = 'latex';
+ah.Title.Interpreter = 'latex';
+ah.XLabel.String = '$n = 0,2,4,\ldots$';
+ah.YLabel.String = '$dJ_n$';
+sform = '$dJ_n = J_n - \frac{3(-1)^{1+n/2}}{(n+1)(n+3)}\left(\frac{l^2}{1+l^2}\right)^{n/2}$';
+ah.Title.String = sform;
+J_err = max(abs(dJ));
