@@ -1,0 +1,312 @@
+\documentclass[amsmath,amsfonts,rmp,letterpaper]{revtex4}
+\usepackage{graphicx}
+\usepackage{amsthm}
+\usepackage{silence}
+% ----------------------------------------------------------------
+\vfuzz2pt % Don't report over-full v-boxes if over-edge is small
+\hfuzz2pt % Don't report over-full h-boxes if over-edge is small
+% NUMBERING ------------------------------------------------------
+%\numberwithin{equation}{section}
+% MATH MODE COMMANDS ---------------------------------------------
+\newcommand{\V}[1]{\mathbf{#1}} % bold vector or matrix
+\newcommand{\sub}[1]{_{\text{#1}}} % text subscript
+\newcommand{\di}{\partial} % partial derivative
+\newcommand{\unit}[1]{\;\mathrm{#1}} % attach units
+\newcommand{\kros}{\times} % vector product
+\newcommand{\grad}{\boldsymbol{\nabla}} % gradient operator
+\newcommand{\divergenz}{\boldsymbol{\nabla}\cdot} % divergence operator
+\newcommand{\curl}{\boldsymbol{\nabla}\kros} % curl (rot) operator
+\newcommand{\abs}[1]{\left\vert#1\right\vert} % generic absolute value
+\newcommand{\set}[1]{\left\{#1\right\}} % put elements between { }
+\newcommand{\Real}{\mathbb R} % Real numbers field
+\newcommand{\Cmplx}{\mathbb C} % Complex numbers field
+\newcommand{\eps}{\varepsilon} % variirtes epsilon
+\newcommand{\mean}[1]{\langle #1 \rangle} % physics mean
+\newcommand{\about}{\sim\!}
+\newcommand{\arr}{\V{r}}
+\newcommand{\arp}{\V{r'}}
+\newcommand{\om}{\omega}
+\newcommand{\red}[1]{\textbf{\textcolor{red}{#1}}}
+%\DeclareMathOperator{\XXX}{xxx} % \int like operators
+%\DeclareMathOperator*{\XXX}{xxx} % \lim like operators
+% HYPER REF OPTIONS ----------------------------------------------
+\usepackage[dvipsnames,usenames]{color}
+\usepackage[pdftex,bookmarks=false,pdfstartview=FitH,colorlinks]{hyperref}
+\hypersetup{linkcolor=Sepia,citecolor=Sepia}% additional options
+% LENGTH PARAMETERS ----------------------------------------------
+\addtolength{\textwidth}{-0.8in}% the default in one column is too wide
+\addtolength{\oddsidemargin}{0.4in}
+%\setlength{\parskip}{0.5ex plus 0.2ex minus 0.2ex}
+% ----------------------------------------------------------------
+\begin{document}
+
+\title{Concentric Maclaurin Spheroids: theory and practice}%
+\author{}
+\begin{abstract}
+Summary of the theory and practice of modeling rotating fluid planets by Hubbard's
+Concentric Maclaurin Spheroids technique. These notes provide the mathematical
+basis for using gravity measurements to learn about planetary interiors.
+Mathematical statements are checked to my satisfaction unless otherwise noted
+(important exception is the addition theorem). Primary references are
+\citep{Zharkov1978} for the mathematical foundation, and \citep{Hubbard2013} and
+Bill's personal notes for the CMS theory.
+\end{abstract}
+\maketitle
+\tableofcontents
+
+\section{Definitions and notation}\label{sec:definitions}
+Given a density distribution $\rho(\arp)$ inside the planet, the \emph{total
+potential} is defined as
+\begin{equation}
+U(\arr) = V(\arr) + Q(\arr)
+\end{equation}
+where
+\begin{equation}\label{eq:gravpot}
+V(\arr) = G\int{\rho(\arp)/\abs{\arr - \arp}\,d\tau'}
+\end{equation}
+is the gravitational potential and
+\begin{equation}\label{eq:cetrifugal_potential}
+Q(\arr) = \frac{1}{2}\omega^2r^2\sin^2\theta
+\end{equation}
+is the centrifugal potential; we will use $d\tau$ for a volume element, $\omega$
+is the angular rotation velocity (assumed constant and usually about a principal
+axis), $r=\abs{\arr}$, and $\theta$ is the angle from the rotation axis.
+\emph{Note that Hubbard and Zharkov and Trubitsyn use an unusual positive
+potential presumably for algebraic convenience. This also means accelerations are
+given by the positive gradient of potential.}
+
+When the planet is in hydrostatic equilibrium the level surfaces of potential are
+also level surfaces of pressure and of density. Including the free surface where
+the pressure $p=0$. This can be shown rigorously \citep[e.g.][]{Batchelor1967} and
+is also fairly intuitive. Finding the shape of the planet is therefore reduced to
+the problem of finding the level surfaces $U(\arr)=\text{constant}$. This problem
+is easy to state but hard to solve, essentially because the volume of space over
+which the integral above is taken is unknown and must be found as part of the
+self-consistent solution.
+
+Equilibrium figures which differ only slightly from spheres are called \emph
+{spheroids}. A dimensionless parameter describing the importance of rotation is
+\begin{equation}\label{eq:smallq}
+q = \frac{\omega^2a^3}{GM}
+\end{equation}
+where $M$ is the planet's mass and $a$ is the \emph{equatorial radius}.
+% section definitions (end)
+
+\section{Decomposition of potential into spherical harmonics}
+\label{sec:spherical_harmonics}
+The expression for the gravitational potential, eq.~(\ref{eq:gravpot}) can be
+written as a sum of powers of $r$ using the decomposition of $1/\abs{\arr-\arp}$
+in Legendre polynomials (see \textsc{legendre.pdf}):
+\begin{equation}\label{eq:lege_exp}
+\begin{split}
+\frac{1}{\abs{\arr-\arp}} &= \frac{1}{r\sqrt{1 - 2t(r'/r) + (r'/r)^2}} = \\
+&=
+\begin{cases}
+\frac{1}{r}\sum_{n=0}^{\infty}(\frac{r'}{r})^nP_n(t),&\qquad r>r',\\
+\frac{1}{r}\sum_{n=0}^{\infty}(\frac{r'}{r})^{-n-1}P_n(t),&\qquad r<r',
+\end{cases}
+\end{split}
+\end{equation}
+where $\gamma$ is the angle between the radius vectors $\arr$ and $\arp$ and
+$t=\cos\gamma$. If $r>r'$ for all points where $\rho(\arp)>0$ (i.e.~inside the
+planet) then the potential is called \emph{external}. The Legendre polynomials are
+given by Rodrigues's formula:
+\begin{equation}\label{eq:rodrigues}
+P_n(x) = \frac{1}{2^nn!}\frac{d^n}{dx^n}(x^2 - 1)^n
+\end{equation}
+(although this is not the easiest way to obtain them explicitly) for
+$x\in{[-1,1]}$ and luckily there is no confusion about normalization. It will be
+useful to remember that
+\begin{equation*}
+P_0 = 1, \qquad P_2(t) = \frac{3}{2}t^2 - \frac{1}{2}
+\end{equation*}
+and that $P_n(1)=1$.
+The gravitational potential in terms of Legendre polynomials is
+\begin{equation}\label{eq:lege_gravity}
+V(\arr) = \frac{G}{r}\sum_{n=0}^\infty\int\rho(\arp)P_n(t)(r'/r)^k\,d\tau'
+\end{equation}
+where
+\begin{equation*}
+k=
+\begin{cases}
+n,&\qquad r>r',\\
+-(n+1),&\qquad r<r',
+\end{cases}
+\end{equation*}
+and the integration is over the (as yet unknown) volume of the planet.
+
+The expansion in Legendre polynomials is compact and neat but it is of little
+utility because it does not separate terms arising from the mass distribution from
+those arising from the location where the potential is to be evaluated. In
+spherical polar coordinates the variable
+\begin{equation*}
+t = \cos\gamma = \cos\theta\cos\theta' + \sin\theta\sin\theta'\cos(\varphi -
+\varphi')
+\end{equation*}
+mixes the colatitude $\theta$ and longitude $\varphi$ of the integration
+variable and the point of measurement. The salvation comes from the \emph{addition
+theorem for spherical harmonics} (\red{which I can't derive}):
+\begin{equation}\label{eq:addition}
+P_n(\cos\psi) = P_n(\cos\theta)P_n(\cos\theta') +
+2\sum_{m=1}^{n}\frac{(n - m)!}{(n + m)!}P_n^m(\cos\theta)P_n^m(\cos\theta')
+\cos\bigl[m(\varphi - \varphi')\bigr],
+\end{equation}
+with the associated Legendre functions
+\begin{equation}\label{eq:assoc_lege}
+P_n^m(x) = (-1)^m(1 - x^2)^{m/2}\frac{d^m}{dx^m}P_n(x).
+\end{equation}
+Unfortunately there is not a universal consensus on the exact form of the $P_n^m$
+functions. If a different normalization is used then the following expressions
+will all be somewhat different. With the aid of the addition theorem we can
+decompose the potential as\WarningsOff\footnote{Note typo in Z\&T.}\WarningsOn
+\begin{equation}\label{eq:spherical_gravity}
+\begin{split}
+V(\arr) = \frac{G}{r}&\Biggl(
+\sum_{n=0}^\infty{}P_n(\cos\theta)\int_\tau{}\rho(\arp)P_n(\cos\theta')
+(r'/r)^k\,d\tau' \\
+&+ \sum_{n=1}^{\infty}\sum_{m=1}^{n}P_n^m(\cos\theta)\cos(m\varphi)\int_\tau\frac
+{2(n - m)!}{(n + m)!}\rho(\arp)P_n^m(\cos\theta')\cos(m\varphi')\Bigl(\frac
+{r'}{r}\Bigr)^k\,d\tau' \\
+&+ \sum_{n=1}^{\infty}\sum_{m=1}^{n}P_n^m(\cos\theta)\sin(m\varphi)\int_\tau\frac
+{2(n - m)!}{(n + m)!}\rho(\arp)P_n^m(\cos\theta')\sin(m\varphi')\Bigl(\frac
+{r'}{r}\Bigr)^k\,d\tau'
+\Biggr)
+\end{split}
+\end{equation}
+with $k$ as before.
+
+The above expansion is general, not requiring hydrostatic equilibrium or principal
+axis rotation. If the planet is fluid then at equilibrium the rotation will
+always be about a principal axis. If we take the polar axis (call it the $z$ axis)
+to coincide with the rotation axis then symmetry requires that $\rho(\arr)$ and
+therefor $V(\arr)$ cannot
+depend on longitude $\varphi$ and must include only even
+powers of $\cos\theta$ (for symmetry about the equator). In this case we write
+a simpler expansion involving only ordinary Legendre polynomials of only even
+degree:
+\begin{subequations}\label{eq:simp_sphe_gravity}
+\begin{equation}
+V(r,\theta)=\frac{G}{r}\sum_{n=0}^{\infty}\left(r^{-2n}D_{2n} + r^{2n +
+1}D'_{2n}\right)P_{2n}(\cos\theta)
+\end{equation}
+with
+\begin{align}
+D_n &= \int_{r'<r}\rho(\arp)(r')^nP_n(\cos\theta')\,d\tau',\\
+D'_n &= \int_{r'>r}\rho(\arp)(r')^{-n-1}P_n(\cos\theta')\,d\tau'.
+\end{align}
+\end{subequations}
+The coefficients $D_n$ are usually replaced with the non-dimensional coefficients
+$J_n=D_n/(Ma^n)$.
+
+% section spherical_harmonics (end)
+
+\section{The external potential}\label{sec:external_potential}
+
+If the potential is to be evaluated at a point exterior to the surface of the
+planet then $r>r'$ for all differential volume elements in the integral
+expressions above. The general form eq.~(\ref{eq:spherical_gravity}) can be
+rearranged slightly and rewritten in a form more convenient for comparison with
+measured quantities:
+\begin{subequations}\label{eq:external_potential}
+\begin{equation}
+\begin{split}
+V_e = \frac{GM}{r}\Bigg(1 &- \sum_{n=1}^{\infty}(a/r)^nJ_nP_n(\cos\theta)\;+ \\
+&+\sum_{n=1}^{\infty}\sum_{m=1}^{n}(a/r)^nP_n(\cos\theta)
+\Bigl[C_{nm}\cos(m\varphi) + S_{nm}\sin(m\varphi)\Bigr]\Biggr),
+\end{split}
+\end{equation}
+with the coefficients
+\begin{align}
+Ma^nJ_n &= -\int\rho(\arp)(r')^nP_n(\cos\theta')\,d\tau' = -D_n,\\
+Ma^nC_{nm} &= \frac{2(n - m)!}{(n + m)!}\int\rho(\arp)(r')^nP_n^m(\cos\theta')
+\cos(m\varphi')\,d\tau',\\
+Ma^nS_{nm} &= \frac{2(n - m)!}{(n + m)!}\int\rho(\arp)(r')^nP_n^m(\cos\theta')
+\sin(m\varphi')\,d\tau'.
+\end{align}
+\end{subequations}
+(Remember $M=\int\rho\,d\tau'$ is the planet's mass and $a$ is the equatorial
+radius.) Different normalizations of the associated Legendre functions are
+sometimes used leading to expansions with the same form but different meaning of
+the $J_n$, $C_{nm}$, and $S_{nm}$ coefficients. There is no easy way to guard
+against errors or guess which normalization was used if it is not explicitly
+given. The decomposition can also be carried out with the complex form of the
+Legendre functions leading to even more confusion.
+
+A natural choice of reference frame can eliminate many of the coefficients in the
+expansion~(\ref{eq:external_potential}). First, if the origin of coordinates is
+chosen at the center of mass of the planet, $\V{R}=(X,Y,Z)$ then
+\begin{align*}
+-MaJ_1 &= \int{z'\,dm'} = MZ = 0,\\
+MaC_{11} &= \int{x'\,dm'} = MX = 0,\text{ and}\\
+MaS_{11} &= \int{y'\,dm'} = MY = 0
+\end{align*}
+so that $J_1$, $C_{11}$, and $S_{11}$ vanish. Next, we can relate the expansion
+coefficients to the moments of inertia. We designate those:
+\begin{subequations}
+\begin{align}
+B &= \int_\tau\rho(\arp)(x'^2 + z'^2)\,d\tau',\\
+A &= \int_\tau\rho(\arp)(y'^2 + z'^2)\,d\tau',\\
+C &= \int_\tau\rho(\arp)(x'^2 + y'^2)\,d\tau',
+\end{align}
+for the principal moments and
+\begin{align}
+D &= \int_\tau\rho(\arp)\,y'z'\,d\tau',\\
+E &= \int_\tau\rho(\arp)\,x'z'\,d\tau',\\
+F &= \int_\tau\rho(\arp)\,x'y'\,d\tau',
+\end{align}
+for the diagonal, so-called \emph{products of inertia}, also called
+\emph{centrifugal moments}.
+\end{subequations}
+The relations with the expansion coefficients in eq.~(\ref{eq:external_potential})
+become clear by writing out the degree 2 Legendre functions in Cartesian
+coordinates. It is easy to show by direct comparison that
+\begin{subequations}
+\begin{equation}
+-a^2MJ_2 = \frac{A + B}{2} - C,\quad\text{and}\quad a^2MC_{22} = \frac{B - A}{4},
+\end{equation}
+and also that
+\begin{equation}
+D = a^2MS_{21},\quad{}E = a^2MC_{21},\quad\text{and}\quad{}F = 2a^2MS_{22}.
+\end{equation}
+\end{subequations}
+Usually $A=B<C$ so that $a^2MJ_2=(C-A)$. Also, if we align the coordinate axes
+with the planet's principal axes of inertia then the centrifugal moments vanish
+and
+\begin{equation}
+S_{21} = C_{21} = S_{22} = 0.
+\end{equation}
+And of course it is still true that for a fluid planet at equilibrium the density
+must be independent of longitude and symmetrical about the equator and therefore
+\begin{equation}
+D_{2n+1} = J_{2n+1} = 0,\quad\forall{n}.
+\end{equation}
+
+Finally, expressing the centrifugal potential~(\ref{eq:cetrifugal_potential}) in
+terms of $P_2$:
+\begin{equation}
+Q(\arr) = \frac{1}{3}\omega^2r^2\bigl[1 - P_2(\cos\theta)\bigr]
+\end{equation}
+and using the small parameter $q$ (\ref{eq:smallq}) the total external potential
+is
+\begin{equation}\label{eq:total_external_potential}
+V_e(\arr) = \frac{GM}{r}\left[1 - (a/r)^2J_2P_2 - (a/r)^4J_4P_4 -
+(a/r)^6J_6P_6 - \cdots + \frac{1}{3}(r/a)^3\bigl(1 - 
+P_2(\cos\theta)\bigr)\,q\right].
+\end{equation}
+
+% section external_potential (end)
+
+\section{A constant density spheroid} % (fold)
+\label{sec:a_constant_density_spheroid}
+
+% section a_constant_density_spheroid (end)
+
+% References
+\bibliographystyle{plainnat} % [plainnat|abbrvnat|agu08|agufull08|...]
+\bibliography{/users/naor/documents/library}
+
+% ----------------------------------------------------------------
+\end{document}
+% ----------------------------------------------------------------
+%END OF FILE
+%-----------------------------------------------------------------
