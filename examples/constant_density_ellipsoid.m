@@ -50,21 +50,20 @@ end
 %% Now set up a CMS object to mimic constant density case
 q = m/s3; % CMS method uses q=w^2a^3/GM as rotation parameter
 opts = cmsset('qrot', q,...
-              'nlayers', 1,... % can be any number though!
+              'nlayers', 2,... % can be any number though!
               'kmax', 32,...
               'verbosity', 2);
 cms = ConcentricMaclaurinSpheroids(opts);
 cms.deltas = [1, 0*(2:opts.nlayers)];
 
-%% Converge cms (this may take a minute if using many layers)
-cms.relax
+%% Converge cms
+cms.relax % (this may take a minute if using many layers)
+cms.validate;
 
 %% Get surface layer shape
-a_cms = cms.zeta_j_of_mu(1,0); % should be 1.0!
-assert(abs(a_cms - 1) < 1e-12)
-b_cms = cms.zeta_j_of_mu(1,1);
+b_cms = cms.bs(1);
 mu = [0, cms.mus, 1];
-xi_cms = [a_cms, cms.zetas(1,:), b_cms];
+xi_cms = [1, cms.zetas(1,:), b_cms];
 
 % Take a quick look for sanity check
 try % requires R2016a or later
@@ -76,6 +75,7 @@ catch
 end
 
 %% Compare numerical and analytic solutions
+
 % Compare the level surface radii
 dxi = xi_cms - xi_exact(mu);
 lh = semilogy(mu, abs(dxi));

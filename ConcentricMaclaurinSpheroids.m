@@ -6,14 +6,18 @@ classdef ConcentricMaclaurinSpheroids < handle
     %   (2013).
     
     %% Properties
-    properties (GetAccess = public, SetAccess = public)
+    properties (Access = public)
         opts    % holds CMS user configurable options
         lambdas % normalized layer equatorial radii
         deltas  % normalized density steps
+    end
+    properties (SetAccess = private)
         mus     % colatitude cosines
         zetas   % normalized and scaled level-surface radii
         Js      % rescaled dimensionless gravity moments
-        b       % polar radius
+        bs      % normalized polar radii
+        fs      % layer flattening (oblateness)
+        ars     % layer aspect ratio
     end
     properties (Access = private)
         Pnmu    % values of Legendre polynomials at fixed colatitudes
@@ -187,7 +191,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             for j=1:obj.opts.nlayers
                 er = abs(1 - obj.zeta_j_of_mu(j,0));
                 if er > 1e-14
-                    warning('Layer %d equatorial radius is %g',j,er)
+                    warning('Layer %d normalized radius deviates by %g',j,er)
                     return
                 end
             end
@@ -200,7 +204,7 @@ classdef ConcentricMaclaurinSpheroids < handle
     end % public methods
     
     %% Private methods
-    methods (Access = public) % to become private
+    methods (Access = private) % to become private
         function dJ = update_Js_gauss(obj)
             % Single-pass update of gravitational moments by Gaussian quad.
                         
@@ -473,11 +477,37 @@ classdef ConcentricMaclaurinSpheroids < handle
     
     %% Access methods
     methods
-        function val = get.b(obj)
+        function val = get.bs(obj)
+            obj.validate;
+            val = NaN(size(obj.lambdas));
             if obj.cooked
-                val = obj.zeta_j_of_mu(1,1);
-            else
-                val = NaN;
+                for j=1:obj.opts.nlayers
+                    val(j) = obj.zeta_j_of_mu(j,1)*obj.lambdas(j);
+                end
+            end
+        end
+        
+        function val = get.fs(obj)
+            obj.validate;
+            val = NaN(size(obj.lambdas));
+            if obj.cooked
+                for j=1:obj.opts.nlayers
+                    a = 1;
+                    b = obj.zeta_j_of_mu(j,1);
+                    val(j) = (a - b)/a;
+                end
+            end
+        end
+        
+        function val = get.ars(obj)
+            obj.validate;
+            val = NaN(size(obj.lambdas));
+            if obj.cooked
+                for j=1:obj.opts.nlayers
+                    a = 1;
+                    b = obj.zeta_j_of_mu(j,1);
+                    val(j) = b/a;
+                end
             end
         end
     end % access methods
