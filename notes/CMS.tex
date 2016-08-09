@@ -369,7 +369,14 @@ eqs.~\eqref{eq:Jn_maclaurin_ext}. When the integration routine requires the valu
 of $\xi$ at some point $\mu'$ we obtain it by numerically solving
 eq.~\eqref{eq:Maclaurin_sph_surface}, using the current values $J_n$. This results
 in updated values of $J_n$. We iterate this procedure until all $J_n$ values
-converge to the chosen tolerance -- usually to machine precision!
+converge to the chosen tolerance, usually to machine precision.
+
+A side note on practical implementation. The numerical integration of
+(\ref{eq:Jn_maclaurin_ext}) can be done in any way we prefer but in practice it is
+best to use a scheme that evaluates the integrand at a constant number of fixed
+points. Gauss-Legendre integration works well because $\xi(\mu)$ is expected to be
+a low-order polynomial, and a relatively manageable number of abscissas,
+$\mu_\alpha$, $\alpha=1,2,\ldots,L$ are needed to yield precise results.
 
 % section a_constant_density_spheroid (end)
 
