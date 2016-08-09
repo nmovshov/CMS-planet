@@ -26,6 +26,7 @@
 \newcommand{\arr}{\V{r}}
 \newcommand{\arp}{\V{r'}}
 \newcommand{\om}{\omega}
+\renewcommand{\inf}{\infty}
 \newcommand{\const}{\mathrm{const.}}
 \newcommand{\red}[1]{\textbf{\textcolor{red}{#1}}}
 %\DeclareMathOperator{\XXX}{xxx} % \int like operators
@@ -336,6 +337,39 @@ we have the general expression for $J_n$:
 J_n = -\frac{3}{n + 3}\frac{\int_{0}^{1}d\mu'\,P_n(\mu')\xi(\mu')^{n+3}}{\int_{0}^
 {1}d\mu'\,\xi(\mu')^3}.
 \end{equation}
+
+We can now write an implicit equation for $r(\mu)$ by requiring it to be a level
+surface, i.e.~to be an curve of constant potential. That is, constant \emph{total}
+potential, including the centrifugal term. The total potential at a point on the
+surface is (eq.~(\ref{eq:total_external_potential}))
+\begin{equation}
+U(r,\mu) = \frac{GM}{r} \Bigl[ 1 -
+\sum_{k=1}^{\infty}\left(\frac{a}{r}\right)^{2k} J_{2k}P_{2k}(\mu) \Bigr] + 
+\frac{1}{3}r^2\om^2[1 - P_2(\mu)].
+\end{equation}
+We require that the potential at any point on the surface equal the potential on
+the equator:
+\begin{equation}
+U(a,0) = \frac{GM}{a} \Bigl[1 - \sum_{k=1}^{\inf} J_{2k}P_{2k}(0) \Bigr] + 
+\frac{1}{2}a^2\om^2.
+\end{equation}
+In non-dimensional form the implicit equation for the equilibrium surface is
+\begin{equation}\label{eq:Maclaurin_sph_surface}
+\frac{1}{\xi}\Bigl[1 - \sum_{k=1}^{\inf} \xi^{-2k} J_{2k} P_{2k}(\mu)\Bigr] + 
+\frac{q}{3}\xi^2\bigl[1 - P_2(\mu)\bigl] - \frac{q}{2} - 1 +
+\sum_{k=1}^{\inf}J_{2k}P_{2k}(0) = 0.
+\end{equation}
+
+We have two sets of coupled equations. Equation~(\ref{eq:Maclaurin_sph_surface})
+for the shape of the surface given the gravity coefficients $J_n$, and equations 
+\eqref{eq:Jn_maclaurin_ext} for the gravity coefficients given the level surface
+$\xi(\mu)$. We proceed with an iterative solution. Given a value of $q$ and
+initial guesses for $J_n$ and/or $\xi$ we numerically integrate
+eqs.~\eqref{eq:Jn_maclaurin_ext}. When the integration routine requires the value
+of $\xi$ at some point $\mu'$ we obtain it by numerically solving
+eq.~\eqref{eq:Maclaurin_sph_surface}, using the current values $J_n$. This results
+in updated values of $J_n$. We iterate this procedure until all $J_n$ values
+converge to the chosen tolerance -- usually to machine precision!
 
 % section a_constant_density_spheroid (end)
 
