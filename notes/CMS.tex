@@ -26,6 +26,7 @@
 \newcommand{\arr}{\V{r}}
 \newcommand{\arp}{\V{r'}}
 \newcommand{\om}{\omega}
+\newcommand{\const}{\mathrm{const.}}
 \newcommand{\red}[1]{\textbf{\textcolor{red}{#1}}}
 %\DeclareMathOperator{\XXX}{xxx} % \int like operators
 %\DeclareMathOperator*{\XXX}{xxx} % \lim like operators
@@ -298,6 +299,43 @@ P_2(\cos\theta)\bigr)\,q\right].
 
 \section{A constant density spheroid} % (fold)
 \label{sec:a_constant_density_spheroid}
+In the special case where $\rho=\const$ the integrals in the definitions of the
+gravity coefficients \eqref{eq:simp_sphe_gravity} are greatly simplified. In fact
+this case there is a closed analytic solution showing that the equilibrium surface
+is an ellipsoid with ellipticity related to the dimensionless rotation parameter
+\begin{equation}
+m = \frac{3\om^2}{4\pi{G}\rho}.
+\end{equation}
+We are not interested so much in the closed form solution itself but rather in
+the simplified form of the gravity coefficients.
+
+For the external potential of a rotating fluid in equilibrium we can write
+eqs.~\eqref{eq:external_potential} in polar coordinates:
+\begin{equation}
+D_n = \rho\,\int_\tau (r')^nP_n(\cos\theta')\,d\tau' =
+2\pi\rho\int_{0}^{\pi}d\theta'\int_{0}^{r(\theta')}(r')^nP_n(\cos\theta')
+(r')^2\sin\theta'\,dr'
+\end{equation}
+and moving to the variable $\mu=\cos\theta$ we have
+\begin{equation}
+D_n = \frac{2\pi\rho}{n + 3}\int_{-1}^{1}d\mu'\,P_n(\mu')r(\mu')^{n + 3}.
+\end{equation}
+
+Moving now to the non-dimensional radius $\xi(\mu) = r(\mu)/a$ and remembering
+that only even degree coefficients contribute we can write
+\begin{equation}
+Ma^nJ_n = -D_n =
+-\frac{4\pi\rho{}a^{n + 3}}{n + 3}\int_{0}^{1}d\mu'\,P_n(\mu')\xi(\mu')^{n + 3}.
+\end{equation}
+And finally, remembering that
+\begin{equation}
+M = \frac{4\pi\rho{}a^3}{3}\int_{0}^{1}d\mu'\,\xi(\mu')^3,
+\end{equation}
+we have the general expression for $J_n$:
+\begin{equation}\label{eq:Jn_maclaurin_ext}
+J_n = -\frac{3}{n + 3}\frac{\int_{0}^{1}d\mu'\,P_n(\mu')\xi(\mu')^{n+3}}{\int_{0}^
+{1}d\mu'\,\xi(\mu')^3}.
+\end{equation}
 
 % section a_constant_density_spheroid (end)
 
