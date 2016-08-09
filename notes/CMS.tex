@@ -56,7 +56,9 @@ Bill's personal notes for the CMS theory.
 \maketitle
 \tableofcontents
 
-\section{Definitions and notation}\label{sec:definitions}
+\section{Theory}
+
+\subsection{Definitions and notation}\label{sec:definitions}
 Given a density distribution $\rho(\arp)$ inside the planet, the \emph{total
 potential} is defined as
 \begin{equation}
@@ -92,9 +94,9 @@ Equilibrium figures which differ only slightly from spheres are called \emph
 q = \frac{\omega^2a^3}{GM}
 \end{equation}
 where $M$ is the planet's mass and $a$ is the \emph{equatorial radius}.
-% section definitions (end)
+% subsection definitions (end)
 
-\section{Decomposition of potential into spherical harmonics}
+\subsection{Decomposition of potential into spherical harmonics}
 \label{sec:spherical_harmonics}
 The expression for the gravitational potential, eq.~(\ref{eq:gravpot}) can be
 written as a sum of powers of $r$ using the decomposition of $1/\abs{\arr-\arp}$
@@ -200,9 +202,9 @@ D'_n &= \int_{r'>r}\rho(\arp)(r')^{-n-1}P_n(\cos\theta')\,d\tau'.
 The coefficients $D_n$ are usually replaced with the non-dimensional coefficients
 $J_n=D_n/(Ma^n)$.
 
-% section spherical_harmonics (end)
+% subsection spherical_harmonics (end)
 
-\section{The external potential}\label{sec:external_potential}
+\subsection{The external potential}\label{sec:external_potential}
 
 If the potential is to be evaluated at a point exterior to the surface of the
 planet then $r>r'$ for all differential volume elements in the integral
@@ -296,9 +298,9 @@ V_e(\arr) = \frac{GM}{r}\left[1 - (a/r)^2J_2P_2 - (a/r)^4J_4P_4 -
 P_2(\cos\theta)\bigr)\,q\right].
 \end{equation}
 
-% section external_potential (end)
+% subsection external_potential (end)
 
-\section{A constant density spheroid} % (fold)
+\subsection{A constant density spheroid} % (fold)
 \label{sec:a_constant_density_spheroid}
 In the special case where $\rho=\const$ the integrals in the definitions of the
 gravity coefficients \eqref{eq:simp_sphe_gravity} are greatly simplified. In fact
@@ -378,7 +380,14 @@ points. Gauss-Legendre integration works well because $\xi(\mu)$ is expected to 
 a low-order polynomial, and a relatively manageable number of abscissas,
 $\mu_\alpha$, $\alpha=1,2,\ldots,L$ are needed to yield precise results.
 
-% section a_constant_density_spheroid (end)
+% subsection a_constant_density_spheroid (end)
+
+\subsection{Concentric Maclaurin spheroids}
+\label{sec:concentric_maclaurin_spheroids}
+
+% subsection concentric_maclaurin_spheroids (end)
+
+\section{Practice (to be continued)}
 
 % References
 \bibliographystyle{plainnat} % [plainnat|abbrvnat|agu08|agufull08|...]
