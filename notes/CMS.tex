@@ -133,11 +133,11 @@ P_0 = 1, \qquad P_2(t) = \frac{3}{2}t^2 - \frac{1}{2},
 and that $P_n(1)=1$.
 The gravitational potential in terms of Legendre polynomials is
 \begin{equation}\label{eq:lege_gravity}
-V(\arr) = \frac{G}{r}\sum_{n=0}^\infty\int\rho(\arp)P_n(t)(r'/r)^k\,d\tau'
+V(\arr) = \frac{G}{r}\sum_{n=0}^\infty\int\rho(\arp)P_n(t)(r'/r)^\alpha\,d\tau'
 \end{equation}
 where
 \begin{equation*}
-k=
+\alpha=
 \begin{cases}
 n,&\qquad r>r',\\
 -(n+1),&\qquad r<r',
@@ -173,17 +173,17 @@ decompose the potential as\WarningsOff\footnote{Note typo in Z\&T.}\WarningsOn
 \begin{split}
 V(\arr) = \frac{G}{r}&\Biggl(
 \sum_{n=0}^\infty{}P_n(\cos\theta)\int_\tau{}\rho(\arp)P_n(\cos\theta')
-(r'/r)^k\,d\tau' \\
+(r'/r)^\alpha\,d\tau' \\
 &+ \sum_{n=1}^{\infty}\sum_{m=1}^{n}P_n^m(\cos\theta)\cos(m\varphi)\int_\tau\frac
 {2(n - m)!}{(n + m)!}\rho(\arp)P_n^m(\cos\theta')\cos(m\varphi')\Bigl(\frac
-{r'}{r}\Bigr)^k\,d\tau' \\
+{r'}{r}\Bigr)^\alpha\,d\tau' \\
 &+ \sum_{n=1}^{\infty}\sum_{m=1}^{n}P_n^m(\cos\theta)\sin(m\varphi)\int_\tau\frac
 {2(n - m)!}{(n + m)!}\rho(\arp)P_n^m(\cos\theta')\sin(m\varphi')\Bigl(\frac
-{r'}{r}\Bigr)^k\,d\tau'
+{r'}{r}\Bigr)^\alpha\,d\tau'
 \Biggr)
 \end{split}
 \end{equation}
-with $k$ as before.
+with $\alpha$ as before.
 
 The above expansion is general, not requiring hydrostatic equilibrium or principal
 axis rotation. If the planet is fluid then at equilibrium the rotation will
@@ -319,8 +319,8 @@ m = \frac{3\om^2}{4\pi{G}\rho}.
 We are not interested so much in the closed form solution itself but rather in
 the simplified form of the gravity coefficients.
 
-For the external potential of a rotating fluid in equilibrium we can write
-eqs.~\eqref{eq:external_potential} in polar coordinates:
+For the \red{external} potential on the surface of a constant-density spheroid we
+can write eqs.~\eqref{eq:simp_sphe_gravity} in polar coordinates:
 \begin{equation}\label{eq:polar_integral}
 D_n = \rho\,\int_\tau (r')^nP_n(\cos\theta')\,d\tau' =
 2\pi\rho\int_{0}^{\pi}d\theta'\int_{0}^{r(\theta')}(r')^nP_n(\cos\theta')
@@ -441,7 +441,7 @@ D'_k &= \int_{r'>r}\rho(\arp)(r')^{-k-1}P_k(\mu')\,d\tau'.
 
 \subsubsection{The measurable $J_n$ coefficients are the sum of $J_{i,n}$}
 By the principal of superposition the total gravitational potential at a point
-$(r,\mu)$ external to the planet is
+$(r,\mu)$ \red{external} to the planet is
 \begin{equation}
 V\sub{ext} = \frac{G}{r}\left(\sum_{k=0}^{\inf}D_{0,2k}r^{-2k}P_{2k}(\mu) + 
 \sum_{k=0}^{\inf}D_{1,2k}r^{-2k}\ptk(\mu) + \cdots + 
@@ -490,10 +490,47 @@ spheroids, $\xi_i(\mu')$ in the integrands, will be numerically solved using
 current values of $J_{i,2k}$, and the process will continue until the coefficients
 $J_{i,2k}$ for all layers remain unchanged through successive iterations. However,
 unlike in the case of a single spheroid, the $J_{i,2k}$ are not sufficient to
-calculate the shape functions of interior spheroids. We next derive an expression
-for the total potential at an interior point on the boundary between spheroid $i$
-and spheroid $i-1$.
+calculate the shape functions of interior spheroids. We need an expression for the
+total potential at an interior point on the boundary between spheroid $i$ and
+spheroid $i-1$.
 
+\subsubsection{The potential at an interior point}
+Consider a point $B=(r_i(\mu),\mu)$ on the level surface of spheroid $i$. The
+contribution to the potential from any spheroid $j\ge{i}$ is the external
+potential:
+\begin{equation}
+V_{j\ge{i}}(r_i(\mu),\mu) = \frac{G}{r_i}\sumonk{D_{j,2k}}r_i(\mu)^{-2k}\ptk(\mu).
+\end{equation}
+The contribution from a spheroid $j<i$ has two parts. The external part, from the
+sphere of radius $r_i$ inside spheroid $j$:
+\begin{equation}
+V_{j<i,\mathrm{ext}}(r_i,\mu) = \frac{G}{r_i}\frac{4\pi}{3}\dro_j r_i(\mu)^3.
+\end{equation}
+And the internal part, from the oblate region in spheroid $j$ where $r'>r_i$:
+\begin{equation}
+V_{j<i,\mathrm{int}}(r_i,\mu) = \frac{G}{r_i(\mu)}\sumonk{r_i}(\mu)^{2k+1}\;
+2\pi\,\dro_j\intonmu{d}\mu'\,\ptk(\mu')\int_{r_i(\mu)}^{r_j(\mu')}dr'\,
+(r')^{-2k-1}(r')^2.
+\end{equation}
+
+The rest is just algebra but here are a few points to keep in mind while we work.
+First, since we now have $r'$ to a negative power in the innermost integrand we
+have to do the $k=1$ term, the integral of $(r')^{-1}$, separately. Second, the
+lower bound of the inner integral is independent or $\mu'$. This means that the
+outer integral will have a term that is simply a constant times $\ptk(\mu')$. This
+term is identically zero except when $k=0$. Then, for some reason, we will lump
+the $r_i^2$ term together with the $V_{j<i,\mathrm{ext}}$ contribution. And
+finally, we will switch to non-dimensional variables.
+
+With the above points in mind and after a few pages of algebra we have, for the
+potential at point $B$ on the surface of spheroid $i$:
+\begin{equation}
+V_B(\xi_i,\mu) = -\frac{GM}{a_0}\frac{1}{\xi_i(\mu)} \left[
+\sum_{j=i}^{N-1}\sumonk{J_{j,2k}}\xi_i(\mu)^{-2k}\ptk(\mu) + 
+\sum_{j=0}^{i-1}\sumonk{J'_{j,2k}\xi_i(\mu)^{2k+1}\ptk(\mu) + 
+\sum_{j=0}^{i-1}\,J''_{j,0}\xi_i(\mu)^3
+\right].
+\end{equation}
 
 
 % subsection concentric_maclaurin_spheroids (end)
