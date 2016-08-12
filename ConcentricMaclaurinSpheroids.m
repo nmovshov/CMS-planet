@@ -185,7 +185,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Don't bother if obj is not even cooked
             if (~obj.cooked)
-                warning('Object may not have fully converged; run obj.relax()')
+                warning(['Object may not be fully converged, try running',...
+                    ' %s.relax()'],inputname(1))
                 return
             end
             

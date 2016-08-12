@@ -92,7 +92,7 @@ b_err = b_cms - b_exact;
 % Compare the J values
 n = 0:2:opts.kmax;
 J_exact = (-1).^(1 + n/2).*(3./((n + 1).*(n + 3))).*(el^2/(1 + el^2)).^(n/2);
-J_cms = cms.Js.tilde(n+1);
+J_cms = sum(cms.Js.tilde(:,n+1),1);
 dJ = J_cms - J_exact;
 subplot(2,1,1,ah);
 subplot(2,1,2);
