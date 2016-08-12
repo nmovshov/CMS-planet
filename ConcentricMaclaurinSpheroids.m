@@ -481,6 +481,18 @@ classdef ConcentricMaclaurinSpheroids < handle
     
     %% Access methods
     methods
+        function set.opts(obj,val)
+            obj.opts = val;
+        end
+        
+        function set.lambdas(obj,val)
+            obj.lambdas = val;
+        end
+        
+        function set.deltas(obj,val)
+            obj.deltas = val;
+        end
+        
         function val = get.bs(obj)
             val = NaN(size(obj.lambdas));
             if obj.cooked
