@@ -178,8 +178,10 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function TF = validate(obj)
-            % Try to pass some simple sanity checks.
+            % Run a few simple sanity checks, warn if fail.
+            
             TF = false;
+            warning('off','backtrace')
             
             % Don't bother if obj is not even cooked
             if (~obj.cooked)
@@ -200,6 +202,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % If you can read this you passed.
             TF = true;
+            warning('on','backtrace')
         end
     end % public methods
     
@@ -478,7 +481,6 @@ classdef ConcentricMaclaurinSpheroids < handle
     %% Access methods
     methods
         function val = get.bs(obj)
-            obj.validate;
             val = NaN(size(obj.lambdas));
             if obj.cooked
                 for j=1:obj.opts.nlayers
@@ -488,7 +490,6 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function val = get.fs(obj)
-            obj.validate;
             val = NaN(size(obj.lambdas));
             if obj.cooked
                 for j=1:obj.opts.nlayers
@@ -500,7 +501,6 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function val = get.ars(obj)
-            obj.validate;
             val = NaN(size(obj.lambdas));
             if obj.cooked
                 for j=1:obj.opts.nlayers
