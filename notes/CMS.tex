@@ -212,7 +212,7 @@ $J_n=D_n/(Ma^n)$.
 
 \subsection{The external potential}\label{sec:external_potential}
 
-If the potential is to be evaluated at a point exterior to the surface of the
+If the potential is to be evaluated at a point away from the surface of the
 planet then $r>r'$ for all differential volume elements in the integral
 expressions above. The general form eq.~(\ref{eq:spherical_gravity}) can be
 rearranged slightly and rewritten in a form more convenient for comparison with
@@ -319,7 +319,7 @@ m = \frac{3\om^2}{4\pi{G}\rho}.
 We are not interested so much in the closed form solution itself but rather in
 the simplified form of the gravity coefficients.
 
-For the \red{external} potential on the surface of a constant-density spheroid we
+For the potential on the surface of a constant-density spheroid we
 can write eqs.~\eqref{eq:simp_sphe_gravity} in polar coordinates:
 \begin{equation}\label{eq:polar_integral}
 D_n = \rho\,\int_\tau (r')^nP_n(\cos\theta')\,d\tau' =
@@ -330,6 +330,7 @@ and moving to the variable $\mu=\cos\theta$ we have
 \begin{equation}
 D_n = \frac{2\pi\rho}{n + 3}\int_{-1}^{1}d\mu'\,P_n(\mu')r(\mu')^{n + 3}.
 \end{equation}
+\red{Note on convergence.}
 
 Moving now to the non-dimensional radius $\xi(\mu) = r(\mu)/a$ and remembering
 that only even degree coefficients contribute we can write
