@@ -34,6 +34,8 @@
 \newcommand{\sumoni}{\sum_{i=0}^{N-1}}
 \newcommand{\dro}{\delta\rho}
 \newcommand{\intonmu}{\int_{-1}^{1}}
+\newcommand{\mupint}{\int_{0}^{1}d\mu'\,}
+\newcommand{\tpi}{2\pi}
 %\DeclareMathOperator{\XXX}{xxx} % \int like operators
 %\DeclareMathOperator*{\XXX}{xxx} % \lim like operators
 % HYPER REF OPTIONS ----------------------------------------------
@@ -466,14 +468,13 @@ Ma_0^{2k}J_{i,2k} = -D_{i,2k}
 so that the external potential can be written as
 \begin{equation}
 V\sub{ext}(r,\mu) = \frac{GM}{r}\left(1 -
-\sumoni\sumonk{}J_{i,2k}(r/a_0)^{-2k}\ptk(\mu)\right).
+\sumoni\sum_{k=1}^{\inf}J_{i,2k}(r/a_0)^{-2k}\ptk(\mu)\right).
 \end{equation}
-Assuming for now that the infinite series on $k$ converges (which is not
-necessarily true for arbitrary $q$ but is true for Jovian $q$) we can change the
+\red{Assuming for now that the infinite series on $k$ converges} we can change the
 order of summation and write
 \begin{equation}
 V\sub{ext}(r,\mu) = \frac{GM}{r}\left(1 -
-\sumonk\left(\sumoni{}J_{i,2k}\right)(r/a_0)^{-2k}\ptk(\mu)\right),
+\sum_{k=1}^{\inf}\left(\sumoni{}J_{i,2k}\right)(r/a_0)^{-2k}\ptk(\mu)\right),
 \end{equation}
 which shows that the coefficients $J_n$ measurable by spacecraft are the simple
 algebraic sum of the individual $J_{i,2k}$, given by
@@ -499,7 +500,7 @@ spheroid $i-1$.
 Consider a point $B=(r_j(\mu),\mu)$ on the level surface of spheroid $j$. The
 contribution to the potential from any spheroid $i\ge{j}$ is the external
 potential:
-\begin{equation}
+\begin{equation}\label{eq:vigtj}
 V_{i\ge{j}}(r_j(\mu),\mu) = \frac{G}{r_j}\sumonk{D_{i,2k}}r_j(\mu)^{-2k}\ptk(\mu).
 \end{equation}
 The contribution from a spheroid $i<j$ has two parts. The external part, from the
@@ -509,19 +510,59 @@ V_{i<j,\mathrm{ext}}(r_j,\mu) = \frac{G}{r_j}\frac{4\pi}{3}\dro_i r_j(\mu)^3.
 \end{equation}
 And the internal part, from the oblate region in spheroid $i$ where $r'>r_j$:
 \begin{equation}
-V_{i<j,\mathrm{int}}(r_j,\mu) = \frac{G}{r_j(\mu)}\sumonk{r_j}(\mu)^{2k+1}\;
+V_{i<j,\mathrm{int}}(r_j,\mu) =
+\frac{G}{r_j(\mu)}\sumonk{}r_j(\mu)^{2k+1}\ptk(\mu)\;
 2\pi\,\dro_i\intonmu{d}\mu'\,\ptk(\mu')\int_{r_j(\mu)}^{r_i(\mu')}dr'\,
 (r')^{-2k-1}(r')^2.
 \end{equation}
 
 The rest is just algebra but here are a few points to keep in mind while we work.
-First, since we now have $r'$ to a negative power in the innermost integrand we
-have to do the $k=1$ term, the integral of $(r')^{-1}$, separately. Second, the
-lower bound of the inner integral is independent or $\mu'$. This means that the
-outer integral will have a term that is simply a constant times $\ptk(\mu')$. This
-term is identically zero except when $k=0$. Then, for some reason, we will lump
-the $r_j^2$ term together with the $V_{i<j,\mathrm{ext}}$ contribution. And
-finally, we will switch to non-dimensional variables.
+First, since we now have $r'$ to a negative power in the inner integrand we have
+to do the $k=1$ term, the integral of $(r')^{-1}$, separately. Second, the lower
+bound of the inner integral is independent or $\mu'$. This means that the outer
+integral will have a term that is simply a constant times $\ptk(\mu')$. This term
+is identically zero except when $k=0$, so we will also need to do the $k=0$ term
+separately. Third, we will lump an $r_j^2$ term together with the contribution
+from $V_{i<j,\mathrm{ext}}$. Also we will use the oblate symmetry to take the
+integrals over $\mu$ from $0$ to $1$. Here we go.
+
+\begin{multline}
+V_{i<j,\mathrm{int}}(r_j,\mu) =
+\tpi{G}\dro_i\mupint[r_i(\mu')^2 - r_j(\mu)^2]\; +\\
+4\pi{G}\dro_i\,r_j(\mu)^2{}P_2(\mu)\mupint{}P_2(\mu')[\ln{r_i(\mu')} -
+\ln{r_j(\mu)}\; + \\
+\tpi{G}\dro_i\,\sum_{k=2}^{\inf}r_j(\mu)^{2k}\ptk(\mu)\,\frac{2}{2 -2k}
+\mupint\ptk(\mu')[r_i(\mu')^{2 - 2k} - r_j(\mu)^{2 - 2k}]\; = \\
+\tpi{G}\dro_i\mupint{}r_i(\mu')^2 - \tpi{G}\dro_i{}r_j(\mu)^2\; + \\ 
+4\pi{G}\dro_i\,r_j(\mu)^2{}P_2(\mu)\mupint{}P_2(\mu')\ln{r_i(\mu')}\; + \\
+2\pi{G}\dro_i\,\sum_{k=2}^{\inf}r_j(\mu)\ptk(\mu)\,\frac{2}{2 - 2k}
+\mupint\ptk(\mu')r_i(\mu')^{2 - 2k}.
+\end{multline}
+And combined with the contribution $V_{i<j,\mathrm{ext}}$ we have
+\begin{multline}
+V_{i<j} = -\frac{2\pi{G}\dro_i}{3}r_j(\mu)^2 +
+2\pi{G}\dro_i\mupint{}r_i(\mu')^2\; + \\
+4\pi{G}\dro_i\,r_j(\mu)^2P_2{\mu}\,\mupint{}P_2(\mu')\ln{r_i(\mu')}\; + \\
+2\pi{G}\dro_i\,\sum_{k=2}^{\inf}r_j(\mu)^{2k}\ptk(\mu)\,
+\frac{2}{2 - 2k}\mupint\ptk(\mu')r_i(\mu')^{2 - 2k}.
+\end{multline}
+
+We can write the potential as a sum of powers of $r_j$ with $D$-like coefficients
+so that it looks more like eq.~\eqref{eq:vigtj}:
+\begin{subequations}\label{eq:viltj}
+\begin{equation}
+V_{i<j}(r_j(\mu),\mu) = G\sum_{k=0}^{\inf}D'_{i,2k}r_j(\mu)^{2k}\ptk(\mu) + 
+G\,D''_{i,0}\,r_j(\mu)^2,
+\end{equation}
+with
+\begin{align}
+D'_{i,2k} &= \frac{4\pi}{2 - 2k}\dro_i
+\mupint\ptk(\mu')r_i(\mu')^{2 - 2k}, & k\ne{1},\\
+D'_{i,2} &= 4\pi\dro_i\mupint{}P_2(\mu')\ln{r_i(\mu')}, & k=1,\\
+\intertext{and}
+D''_{i,0} &= -\frac{2\pi}{3}\dro_i.
+\end{align}
+\end{subequations}
 
 %With the above points in mind and after a few pages of algebra we have, for the
 %potential at point $B$ on the surface of spheroid $j$:
