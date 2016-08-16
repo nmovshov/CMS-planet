@@ -63,7 +63,7 @@ Mathematical statements are checked to my satisfaction unless otherwise noted
 \maketitle
 \tableofcontents
 
-\section{Theory}
+\section{Theory\label{part:theory}}
 
 \subsection{Definitions and notation}\label{sec:definitions}
 Given a density distribution $\rho(\arp)$ inside the planet, the \emph{total
@@ -604,7 +604,7 @@ V(\xi_j,\mu) =
 \end{split}
 \end{equation}
 With the coefficients
-\begin{subequations}
+\begin{subequations}\label{eq:J_menagerie}
 \begin{align}
 J_{i,2k} &= -\left(\frac{3}{2k + 3}\right)
 \frac{\dro_i\mupint\ptk(\mu')\xi_i(\mu')^{2k + 3}}
@@ -620,9 +620,50 @@ J''_{i,0} &= \frac{1}{2}\;
 \end{align}
 \end{subequations}
 
+\subsubsection{A self-consistent interior model}
+
+With eq.~\eqref{eq:VatB} at hand we can construct a self-consistent shape for an
+array of $N$ layers with densities $\rho_i$ and equatorial radii $a_i$, given a
+rotation parameter $q$. We use an iterative method similar to the one in
+sec.~\ref{sec:a_constant_density_spheroid}. Start with an initial guess for the
+values of all $J$-like coefficients in eqs.~\eqref{eq:J_menagerie}. (The simplest
+guess is to use values corresponding to a perfectly spherical planet:
+$J_{i,0}=-(\rho_i-\rho_{i-1})/\rho_{N-1}$, $J'_{i,0}=(3/2)J_{i,0}$,
+$J''_{i,0}=-(1/2)J_{i,0}$, and all other coefficients equal to zero.) We then
+reevaluate all the coefficients by numerically integrating
+eqs.~\eqref{eq:J_menagerie}. To evaluate the integrands we need the shape
+functions, $\xi_i(\mu')$. We obtain those using the \emph{current} values of the
+$J$-coefficients. The implicit equations defining the shape functions are obtained
+by equating the \emph{total} potential (including a centrifugal term) at
+$(\xi_i(\mu'),\mu')$ to the value computed at $(a_i/a_0,0)$. An implicit equation
+is solved, numerically, for every point where an integrand is evaluated in each of
+eqs.~\eqref{eq:J_menagerie} so this will be a computationally expensive operation.
+The result of an iteration is a new set of values for $J$ coefficients. The next
+iteration will use these new values when computing the shape functions, and will
+therefore return slightly different updated values for $J$s. Iterations continue
+until successive updates no longer modify any $J$ above the specified tolerance.
+
+The resulting converged model is a self-consistent mass distribution. In other
+words, the shape of the layered spheroid is such that gravitational accelerations
+balance centrifugal accelerations everywhere. However the mass distribution is
+probably not consistent with a realistic equation-of-state. Indeed up to now the
+composition of the planet was not mentioned anywhere. To obtain a useful interior
+model of a fluid planet we employ a second level of iterations. Computing the
+pressure inside layers of constant density (by integrating, numerically, from the
+surface down) we compare the value to the pressure predicted by a chosen barotrope
+meant to represent the planet's composition, and adjust the layer densities
+accordingly. We then run the first level iterations again to converge again to a
+self-consistent mass distribution, and repeat the process until successive
+iterations no longer modify the layer densities above a specified tolerance.
+
+In principle this completes the description of the concentric Maclaurin spheroid
+technique for modeling a rotating fluid. However there are many details that are
+useful to consider when implementing the method in practice; and some that are
+necessary. These are the subject of part~\ref{part:practice}.
+
 % subsection concentric_maclaurin_spheroids (end)
 
-\section{Practice (\textbf{to be continued})}
+\section{Practice (\textbf{to be continued})\label{part:practice}}
 
 % References
 \bibliographystyle{plainnat} % [plainnat|abbrvnat|agu08|agufull08|...]
