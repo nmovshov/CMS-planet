@@ -444,7 +444,7 @@ D'_k &= \int_{r'>r}\rho(\arp)(r')^{-k-1}P_k(\mu')\,d\tau'.
 
 \subsubsection{The measurable $J_n$ coefficients are the sum of $J_{i,n}$}
 By the principal of superposition the total gravitational potential at a point
-$(r,\mu)$ \red{external} to the planet is
+$(r,\mu)$ away from the planet (so $r'<r$) is
 \begin{equation}
 V\sub{ext} = \frac{G}{r}\left(\sum_{k=0}^{\inf}D_{0,2k}r^{-2k}P_{2k}(\mu) + 
 \sum_{k=0}^{\inf}D_{1,2k}r^{-2k}\ptk(\mu) + \cdots + 
@@ -470,8 +470,13 @@ so that the external potential can be written as
 V\sub{ext}(r,\mu) = \frac{GM}{r}\left(1 -
 \sumoni\sum_{k=1}^{\inf}J_{i,2k}(r/a_0)^{-2k}\ptk(\mu)\right).
 \end{equation}
-\red{Assuming for now that the infinite series on $k$ converges} we can change the
-order of summation and write
+Since the infinite series on $k$ converges\WarningsOff\footnote{Away from the
+planet the convergence of the Legendre expansion in $r'/r$ is not in question, so
+there is no problem with the claim that the measured $J_n$ are the sum of layer
+$J_{i,n}$. But for the actual calculation of $J_{i,n}$ by eq.~\eqref{eq:J_i_2k}
+we need the stronger claim that the Legendre expansion in $D$ is valid also on the
+surface of the spheroid.}\WarningsOn we can change the order of summation and
+write
 \begin{equation}
 V\sub{ext}(r,\mu) = \frac{GM}{r}\left(1 -
 \sum_{k=1}^{\inf}\left(\sumoni{}J_{i,2k}\right)(r/a_0)^{-2k}\ptk(\mu)\right),
