@@ -524,7 +524,7 @@ classdef ConcentricMaclaurinSpheroids < handle
     methods
         function set.opts(obj,val)
             % When we change opts, filter it through cmsset again.
-            obj.opts = cmsset(val);
+            obj.opts = cmsset(val); %TODO: don't allow changing some params
             obj.cooked = false; %#ok<MCSUP>
         end
         
