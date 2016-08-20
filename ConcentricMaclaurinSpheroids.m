@@ -52,6 +52,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.tilde = zeros(op.nlayers, (op.kmax+1));
             obj.Js.tilde_prime = zeros(op.nlayers, (op.kmax+1));
             obj.Js.pprime = zeros(op.nlayers, 1);
+            obj.Js.Jn = NaN(1, op.kmax+1);
             obj.opts = op;
             
             % Approximate degree 0 Js
@@ -59,6 +60,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.tilde(:,1) = -(obj.deltas.*obj.lambdas.^3)/den;
             obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
             obj.Js.pprime(:) = 0.5*obj.deltas/den;
+            obj.Js.Jn(1) = sum(obj.Js.tilde(:,1));
             
             %TODO: setup better deltas
             
@@ -165,8 +167,10 @@ classdef ConcentricMaclaurinSpheroids < handle
                 case 'adaptive'
                     dJ = obj.update_Js_adaptive();
                 otherwise
-                    error('Unknown integration method: %s.',obj.opts.J_integration_method)
+                    error('Unknown integration method: %s.',...
+                           obj.opts.J_integration_method)
             end
+            obj.Js.Jn = obj.Jn();
             
             % Optional communication
             if (verb > 1)
