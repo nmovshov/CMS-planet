@@ -14,7 +14,7 @@ classdef ConcentricMaclaurinSpheroids < handle
     properties (SetAccess = private)
         mus     % colatitude cosines
         zetas   % normalized and scaled level-surface radii
-        Js      % rescaled dimensionless gravity moments
+        Js      % rescaled, dimensionless, layer gravity moments
         bs      % normalized polar radii
         fs      % layer flattening (oblateness)
         ars     % layer aspect ratio
@@ -199,6 +199,12 @@ classdef ConcentricMaclaurinSpheroids < handle
                 end
             end
             
+            % Check for properly normalized Js
+            er = obj.Jn(0) + 1;
+            if abs(er) > 1e-15
+                warning('J0 + 1 = %g (should be near zero)',er)
+            end
+            
             % Check for weak concentricity
             ind = find(diff(obj.bs) > 0);
             if any(ind)
@@ -222,6 +228,19 @@ classdef ConcentricMaclaurinSpheroids < handle
             % If you can read this you passed.
             TF = true;
             warning('on','backtrace')
+        end
+        
+        function J = Jn(obj,n)
+            % Convenience method: return external, not re-scaled J multipoles
+            if exist('n','var')
+                validateattributes(n,{'numeric'},...
+                                     {'nonnegative','even','<=',obj.opts.kmax})
+            else
+                n = 0:2:obj.opts.kmax;
+            end
+            for k=1:length(n)
+                J(k) = dot(obj.Js.tilde(:,n(k)+1),obj.lambdas.^n(k));%#ok<AGROW>
+            end
         end
     end % public methods
     

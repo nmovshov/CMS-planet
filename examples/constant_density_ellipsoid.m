@@ -87,12 +87,12 @@ ah.XLabel.String = '$\mu = \cos(\theta)$';
 ah.YLabel.String = '$d\xi$';
 ah.Title.String = '$d\xi = \xi(\mu) - 1/\sqrt{1 + l^2\mu^2}$';
 xi_err = max(abs(dxi));
-b_err = b_cms - b_exact;
+b_err = b_cms - b_exact %#ok<NOPTS>
 
 % Compare the J values
 n = 0:2:opts.kmax;
 J_exact = (-1).^(1 + n/2).*(3./((n + 1).*(n + 3))).*(el^2/(1 + el^2)).^(n/2);
-J_cms = sum(cms.Js.tilde(:,n+1),1);
+J_cms = cms.Jn(n);
 dJ = J_cms - J_exact;
 subplot(2,1,1,ah);
 subplot(2,1,2);
@@ -108,4 +108,4 @@ ah.XLabel.String = '$n = 0,2,4,\ldots$';
 ah.YLabel.String = '$dJ_n$';
 sform = '$dJ_n = J_n - \frac{3(-1)^{1+n/2}}{(n+1)(n+3)}\left(\frac{l^2}{1+l^2}\right)^{n/2}$';
 ah.Title.String = sform;
-J_err = max(abs(dJ));
+J_err = max(abs(dJ)) %#ok<NOPTS>
