@@ -523,15 +523,19 @@ classdef ConcentricMaclaurinSpheroids < handle
     %% Access methods
     methods
         function set.opts(obj,val)
-            obj.opts = val;
+            % When we change opts, filter it through cmsset again.
+            obj.opts = cmsset(val);
+            obj.cooked = false; %#ok<MCSUP>
         end
         
         function set.lambdas(obj,val)
             obj.lambdas = val;
+            obj.cooked = false; %#ok<MCSUP>
         end
         
         function set.deltas(obj,val)
             obj.deltas = val;
+            obj.cooked = false; %#ok<MCSUP>
         end
         
         function val = get.bs(obj)
