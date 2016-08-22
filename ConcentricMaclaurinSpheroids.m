@@ -42,7 +42,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 op = cmsset(varargin{:});
             end
             
-            % Pre-allocation and simple assignments
+            % Pre-allocation and default assignments
             obj.lambdas = linspace(1, op.rcore, op.nlayers)';
             if (op.nlayers == 1), obj.lambdas = 1; end % N=1 special case
             obj.deltas = zeros(op.nlayers, 1);
@@ -523,8 +523,18 @@ classdef ConcentricMaclaurinSpheroids < handle
     %% Access methods
     methods
         function set.opts(obj,val)
-            % When we change opts, filter it through cmsset again.
-            obj.opts = cmsset(val); %TODO: don't allow changing some params
+            % Certain parameters are not alowed to change after construction:
+            forbiddenFields = {'kmax','nangles','nlayers'};
+            for k=1:length(forbiddenFields)
+                if val.(forbiddenFields{k}) ~= obj.opts.(forbiddenFields{k})
+                    msg = ['Changing %s in an existing obj makes no sense;',...
+                           ' create a new CMS object instead.'];
+                    error(msg,forbiddenFields{k})
+                end
+            end
+            
+            % For permitted opts, filter through cmsset again.
+            obj.opts = cmsset(val);
             obj.cooked = false; %#ok<MCSUP>
         end
         
