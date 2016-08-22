@@ -525,11 +525,13 @@ classdef ConcentricMaclaurinSpheroids < handle
         function set.opts(obj,val)
             % Certain parameters are not alowed to change after construction:
             forbiddenFields = {'kmax','nangles','nlayers'};
-            for k=1:length(forbiddenFields)
-                if val.(forbiddenFields{k}) ~= obj.opts.(forbiddenFields{k})
-                    msg = ['Changing %s in an existing obj makes no sense;',...
-                           ' create a new CMS object instead.'];
-                    error(msg,forbiddenFields{k})
+            if ~isempty(obj.opts) % for the call in the constructor
+                for k=1:length(forbiddenFields)
+                    if val.(forbiddenFields{k}) ~= obj.opts.(forbiddenFields{k})
+                        msg = ['Changing %s in an existing obj makes no ',...
+                               'sense; create a new CMS object instead.'];
+                        error(msg,forbiddenFields{k})
+                    end
                 end
             end
             
