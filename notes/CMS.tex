@@ -332,7 +332,20 @@ and moving to the variable $\mu=\cos\theta$ we have
 \begin{equation}
 D_n = \frac{2\pi\rho}{n + 3}\int_{-1}^{1}d\mu'\,P_n(\mu')r(\mu')^{n + 3}.
 \end{equation}
-\red{Note on convergence.}
+\emph{(Important note on convergence. Using the $D_n$ coefficients when the
+integration
+volume is the whole interior of the planet has been the subject of much debate.
+The problem is that we are using expressions that began with an expansion in
+powers of $r'/r$ applied to regions where the series diverges. The claim is that
+after integration the series converge unconditionally due to perfect cancellation
+of the diverging terms. But I was not able to follow this argument or even
+determine whether the proof is general or applies only to ellipsoids.
+\citet{Zharkov1978} claim that this expansion is entirely justified, and
+\citet{Hubbard2014} claims this is true but only if $q$ is sufficiently small.
+Hubbard also provides some numerical tests that supposedly show this expansion
+gives the same result as the more complicated expansion using both $D_n$ and
+$D'_n$ \citep[e.g.][]{Kong2013}. I will leave this wrinkle aside for now and
+hopefully come back to it some day.)}
 
 Moving now to the non-dimensional radius $\xi(\mu) = r(\mu)/a$ and remembering
 that only even degree coefficients contribute we can write
@@ -631,10 +644,10 @@ With eq.~\eqref{eq:VatB} at hand we can construct a self-consistent shape for an
 array of $N$ layers with densities $\rho_i$ and equatorial radii $a_i$, given a
 rotation parameter $q$. We use an iterative method similar to the one in
 sec.~\ref{sec:a_constant_density_spheroid}. Start with an initial guess for the
-values of all $J$-like coefficients in eqs.~\eqref{eq:J_menagerie}. (The simplest
+values of all $J$-like coefficients in eqs.~\eqref{eq:J_menagerie}. The simplest
 guess is to use values corresponding to a perfectly spherical planet:
 $J_{i,0}=-(\rho_i-\rho_{i-1})/\rho_{N-1}$, $J'_{i,0}=(3/2)J_{i,0}$,
-$J''_{i,0}=-(1/2)J_{i,0}$, and all other coefficients equal to zero.) We then
+$J''_{i,0}=-(1/2)J_{i,0}$, and all other coefficients equal to zero. We then
 reevaluate all the coefficients by numerically integrating
 eqs.~\eqref{eq:J_menagerie}. To evaluate the integrands we need the shape
 functions, $\xi_i(\mu')$. We obtain those using the \emph{current} values of the
@@ -652,7 +665,7 @@ The resulting converged model is a self-consistent mass distribution. In other
 words, the shape of the layered spheroid is such that gravitational accelerations
 balance centrifugal accelerations everywhere. However the mass distribution is
 probably not consistent with a realistic equation-of-state. Indeed up to now the
-composition of the planet was not mentioned anywhere. To obtain a useful interior
+composition of the planet was not even mentioned. To obtain a useful interior
 model of a fluid planet we employ a second level of iterations. Computing the
 pressure inside layers of constant density (by integrating, numerically, from the
 surface down) we compare the value to the pressure predicted by a chosen barotrope
@@ -663,7 +676,7 @@ iterations no longer modify the layer densities above a specified tolerance.
 
 In principle this completes the description of the concentric Maclaurin spheroid
 technique for modeling a rotating fluid. However there are many details that are
-useful to consider when implementing the method in practice; and some that are
+useful to consider when implementing the method in practice, and some that are
 necessary. These are the subject of part~\ref{part:practice}.
 
 % subsection concentric_maclaurin_spheroids (end)
