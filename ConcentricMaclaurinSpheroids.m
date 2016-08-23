@@ -250,46 +250,60 @@ classdef ConcentricMaclaurinSpheroids < handle
         function ah = plot(obj)
             % Visualize a CMS object, return axes handle.
             
+            % Require R2016a to use the amazing polarplot features
+            if verLessThan('matlab','9')
+                warning('CMS plotting requires R2016a or later')
+                if (nargout == 1), ah = []; end
+                return
+            end
+            
+            % Warn if uncooked
+            if (~obj.cooked)
+                warning(['Object may not be fully converged, try running',...
+                    ' %s.relax()'],inputname(1))
+            end
+            
+            % Prepare colatitudes for polar plot
             mu = [1, fliplr(obj.mus), 0];
             th = acos(mu);            % 0 to pi/2
             th = [th, fliplr(pi-th)]; % 0 to pi
             th = [th, (pi + th)];     % 0 to 2pi
+                        
+            % Prepare polar axes
+            figure;
+            pax = polaraxes;
+            pax.ThetaZeroLocation = 'top';
+            pax.ThetaDir = 'clockwise';
+            pax.ThetaAxisUnits = 'rad';
+            hold(pax, 'on')
             
-            if ~verLessThan('matlab','9')
-                % Prepare axes
-                fh = figure;
-                pax = polaraxes;
-                pax.ThetaZeroLocation = 'top';
-                pax.ThetaDir = 'clockwise';
-                pax.ThetaAxisUnits = 'rad';
-                hold(pax, 'on')
-                
-                % Plot level surfaces colored by layer density
-                cmap = parula;
-                rho = cumsum(obj.deltas);
-                romin = min(rho); romax = max(rho);
-                for k=1:obj.opts.nlayers
-                    xi = obj.zetas(k,:)*obj.lambdas(k);
-                    xi = [obj.bs(k), fliplr(xi), obj.lambdas(k)];
-                    xi = [xi, fliplr(xi)];
-                    xi = [xi, fliplr(xi)];
-                    lh(k) = polarplot(pax, th, xi);
+            % Plot level surfaces colored by layer density
+            cmap = parula;
+            rho = cumsum(obj.deltas);
+            romin = min(rho); romax = max(rho);
+            lh = gobjects(size(obj.lambdas));
+            for k=1:obj.opts.nlayers
+                xi = obj.zetas(k,:)*obj.lambdas(k);
+                xi = [obj.bs(k), fliplr(xi), obj.lambdas(k)];
+                xi = [xi, fliplr(xi)]; %#ok<AGROW>
+                xi = [xi, fliplr(xi)]; %#ok<AGROW>
+                lh(k) = polarplot(pax, th, xi);
+                if (rho(k) <= romin)
+                    ci = 1;
+                elseif (rho(k) >= romax)
+                    ci = length(cmap);
+                else
+                    ci = fix((rho(k) - romin)/(romax - romin)*length(cmap)) + 1;
                 end
-                
-                % Add distinct outer surface
-                xi0 = [obj.bs(1), fliplr(obj.zetas(1,:)), 1];
-                xi0 = [xi0, fliplr(xi0)];
-                xi0 = [xi0, fliplr(xi0)];
-                polarplot(pax, th, xi0, '-k', 'linewidth', 2)
-                
-                % Return handle if requested
-                if (nargout == 1), ah = pax; end
-                
-            else % Require R2016a for now
-                warning('Fallback for R2016a and earlier not yet implemented')
-                % Return handle if requested
-                if (nargout == 1), ah = []; end               
+                lh(k).Color = cmap(ci,:);
             end
+            
+            % Make outer surface more distinct
+            lh(1).LineWidth = 2;
+            lh(1).Color = 'k';
+            
+            % Return handle if requested
+            if (nargout == 1), ah = pax; end            
         end
         
     end % public methods
