@@ -246,6 +246,37 @@ classdef ConcentricMaclaurinSpheroids < handle
                 J(k) = dot(obj.Js.tilde(:,n(k)+1),obj.lambdas.^n(k));%#ok<AGROW>
             end
         end
+        
+        function ah = plot(obj)
+            % Visualize a CMS object, return axes handle.
+            
+            mu = [0, obj.mus, 1];
+            th = acos(mu);         % pi/2 to 0 (equator to pole)
+            
+            try % requires R2016a or above
+                % Prepare axes
+                fh = figure;
+                pax = polaraxes;
+                pax.ThetaZeroLocation = 'top';
+                pax.ThetaDir = 'clockwise';
+                pax.ThetaAxisUnits = 'rad';
+                cmap = parula(obj.opts.nlayers);
+                hold(pax, 'on')
+                
+                % Add distinct outer surface
+                xi0 = [1, obj.zetas(1,:), obj.bs(1)];
+                polarplot(pax, th, xi0)
+                
+                % Return handle if requested
+                if (nargout == 1), ah = pax; end
+                
+            catch
+                warning('Fallback for R2016a and earlier not yet implemented')
+                % Return handle if requested
+                if (nargout == 1), ah = pax; end
+            end
+            
+        end
     end % public methods
     
     %% Private methods
