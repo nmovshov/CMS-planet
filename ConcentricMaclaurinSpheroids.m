@@ -111,7 +111,14 @@ classdef ConcentricMaclaurinSpheroids < handle
                 end
                 iter = iter + 1;
             end
-            if (iter < obj.opts.MaxIter), obj.cooked = true; end % converged!
+            if (iter < obj.opts.MaxIter)
+                obj.cooked = true;
+            else
+                msg = ['Object may not have fully converged. ',...
+                       'Try running %s.relax() again and/or increasing ',...
+                       'the convergence tolerance: %s.opts.dJtol = newtol.'];
+                warning(msg, inputname(1), inputname(1))
+            end
             
             % Optional communication
             if (verb > 0)
