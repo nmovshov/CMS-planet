@@ -212,22 +212,18 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Check for weak concentricity
             ind = find(diff(obj.bs) > 0);
-            if any(ind)
-                warning('Concentricity may be broken')
-                TF = false;
-            end
             for k=1:length(ind)
-                warning('Polar radius b_%d > b_%d',ind(k) + 1, ind(k))
+                msg = 'Concentricity may be broken: polar radius b_%d > b_%d';
+                warning(msg,ind(k) + 1, ind(k))
+                TF = false;
             end
             
             % Check for strong concentricity
             ind = find((obj.bs(1:end-1) - obj.lambdas(2:end)) < 0);
-            if any(ind)
-                warning('Strong concentricity may be broken')
-                TF = false;
-            end
             for k=1:length(ind)
-                warning('b_%d < a_%d',ind(k), ind(k) + 1)
+                msg = 'Strong concentricity may be broken: b_%d < a_%d';
+                warning(msg,ind(k), ind(k) + 1)
+                TF = false;
             end
             
             % Return.
