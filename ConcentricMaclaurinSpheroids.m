@@ -255,15 +255,26 @@ classdef ConcentricMaclaurinSpheroids < handle
             th = [th, fliplr(pi-th)]; % 0 to pi
             th = [th, (pi + th)];     % 0 to 2pi
             
-            try % requires R2016a or above
+            if ~verLessThan('matlab','9')
                 % Prepare axes
                 fh = figure;
                 pax = polaraxes;
                 pax.ThetaZeroLocation = 'top';
                 pax.ThetaDir = 'clockwise';
                 pax.ThetaAxisUnits = 'rad';
-                cmap = parula(obj.opts.nlayers);
                 hold(pax, 'on')
+                
+                % Plot level surfaces colored by layer density
+                cmap = parula;
+                rho = cumsum(obj.deltas);
+                romin = min(rho); romax = max(rho);
+                for k=1:obj.opts.nlayers
+                    xi = obj.zetas(k,:)*obj.lambdas(k);
+                    xi = [obj.bs(k), fliplr(xi), obj.lambdas(k)];
+                    xi = [xi, fliplr(xi)];
+                    xi = [xi, fliplr(xi)];
+                    lh(k) = polarplot(pax, th, xi);
+                end
                 
                 % Add distinct outer surface
                 xi0 = [obj.bs(1), fliplr(obj.zetas(1,:)), 1];
@@ -274,13 +285,13 @@ classdef ConcentricMaclaurinSpheroids < handle
                 % Return handle if requested
                 if (nargout == 1), ah = pax; end
                 
-            catch
+            else % Require R2016a for now
                 warning('Fallback for R2016a and earlier not yet implemented')
                 % Return handle if requested
-                if (nargout == 1), ah = pax; end
+                if (nargout == 1), ah = []; end               
             end
-            
         end
+        
     end % public methods
     
     %% Private methods
