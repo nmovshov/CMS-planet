@@ -184,14 +184,14 @@ classdef ConcentricMaclaurinSpheroids < handle
         function TF = validate(obj)
             % Run a few simple sanity checks, warn if fail.
             
-            TF = false;
+            TF = true;
             warning('off','backtrace')
             
-            % Don't bother if obj is not even cooked
+            % Check for doneness
             if (~obj.cooked)
                 warning(['Object may not be fully converged, try running',...
                     ' %s.relax()'],inputname(1))
-                return
+                TF = false;
             end
             
             % Check for properly normalized zetas
@@ -199,7 +199,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 er = abs(1 - obj.zeta_j_of_mu(j,0));
                 if er > 1e-14
                     warning('Layer %d normalized radius deviates by %g',j,er)
-                    return
+                    TF = false;
                 end
             end
             
@@ -207,12 +207,14 @@ classdef ConcentricMaclaurinSpheroids < handle
             er = obj.Jn(0) + 1;
             if abs(er) > 1e-15
                 warning('J0 + 1 = %g (should be near zero)',er)
+                TF = false;
             end
             
             % Check for weak concentricity
             ind = find(diff(obj.bs) > 0);
             if any(ind)
                 warning('Concentricity may be broken')
+                TF = false;
             end
             for k=1:length(ind)
                 warning('Polar radius b_%d > b_%d',ind(k) + 1, ind(k))
@@ -222,15 +224,13 @@ classdef ConcentricMaclaurinSpheroids < handle
             ind = find((obj.bs(1:end-1) - obj.lambdas(2:end)) < 0);
             if any(ind)
                 warning('Strong concentricity may be broken')
+                TF = false;
             end
             for k=1:length(ind)
                 warning('b_%d < a_%d',ind(k), ind(k) + 1)
             end
             
-            % TODO: more checks
-            
-            % If you can read this you passed.
-            TF = true;
+            % Return.
             warning('on','backtrace')
         end
         
