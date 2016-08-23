@@ -250,8 +250,10 @@ classdef ConcentricMaclaurinSpheroids < handle
         function ah = plot(obj)
             % Visualize a CMS object, return axes handle.
             
-            mu = [0, obj.mus, 1];
-            th = acos(mu);         % pi/2 to 0 (equator to pole)
+            mu = [1, fliplr(obj.mus), 0];
+            th = acos(mu);            % 0 to pi/2
+            th = [th, fliplr(pi-th)]; % 0 to pi
+            th = [th, (pi + th)];     % 0 to 2pi
             
             try % requires R2016a or above
                 % Prepare axes
@@ -264,8 +266,10 @@ classdef ConcentricMaclaurinSpheroids < handle
                 hold(pax, 'on')
                 
                 % Add distinct outer surface
-                xi0 = [1, obj.zetas(1,:), obj.bs(1)];
-                polarplot(pax, th, xi0)
+                xi0 = [obj.bs(1), fliplr(obj.zetas(1,:)), 1];
+                xi0 = [xi0, fliplr(xi0)];
+                xi0 = [xi0, fliplr(xi0)];
+                polarplot(pax, th, xi0, '-k', 'linewidth', 2)
                 
                 % Return handle if requested
                 if (nargout == 1), ah = pax; end
