@@ -250,6 +250,19 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
         end
         
+        function xi = xi_i_of_theta(obj,ilayer,theta)
+            % Normalized (but not rescaled) layer shape function.
+            
+            validateattributes(ilayer,{'numeric'},...
+                {'positive','integer','scalar','<=',length(obj.lambdas)},...
+                '','ilayer',1)
+            validateattributes(theta,{'numeric'},...
+                {'real','scalar','>=',0,'<=',pi/2},...
+                '','theta',2)
+            
+            xi = obj.lambdas(ilayer)*obj.zeta_j_of_mu(ilayer, cos(theta));
+        end
+        
         function ah = plot(obj)
             % Visualize a CMS object, return axes handle.
             
