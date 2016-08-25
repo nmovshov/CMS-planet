@@ -15,9 +15,12 @@ classdef ConcentricMaclaurinSpheroids < handle
         mus     % colatitude cosines
         zetas   % normalized and scaled level-surface radii
         Js      % rescaled, dimensionless, layer gravity moments
+        as      % normalized equatorial radii (another name for lambdas)
         bs      % normalized polar radii
         fs      % layer flattening (oblateness)
         ars     % layer aspect ratio
+        ss      % layer mean radius normalized to a0
+        Vs      % layer volume normalized to 4pi/3 a0^3
     end
     properties (Access = private)
         Pnmu    % values of Legendre polynomials at fixed colatitudes
@@ -605,7 +608,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 for k=1:length(forbiddenFields)
                     if val.(forbiddenFields{k}) ~= obj.opts.(forbiddenFields{k})
                         msg = ['Changing %s in an existing obj makes no ',...
-                               'sense; create a new CMS object instead.'];
+                            'sense; create a new CMS object instead.'];
                         error(msg,forbiddenFields{k})
                     end
                 end
@@ -635,6 +638,10 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
         end
         
+        function val = get.as(obj)
+            val = obj.lambdas;
+        end
+        
         function val = get.fs(obj)
             val = NaN(size(obj.lambdas));
             if obj.cooked
@@ -656,6 +663,20 @@ classdef ConcentricMaclaurinSpheroids < handle
                 end
             end
         end
+        
+        function val = get.Vs(obj)
+            val = NaN(size(obj.lambdas));
+            if obj.cooked
+                for j=1:obj.opts.nlayers
+                    val(j) = obj.lambdas(j)^3*(obj.zetas(j,:).^3)*(obj.gws');
+                end
+            end
+        end
+        
+        function val = get.ss(obj)
+            val = obj.Vs.^(1/3);
+        end
+        
     end % access methods
 
     %% Static methods
