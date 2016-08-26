@@ -36,6 +36,10 @@
 \newcommand{\intonmu}{\int_{-1}^{1}}
 \newcommand{\mupint}{\int_{0}^{1}d\mu'\,}
 \newcommand{\tpi}{2\pi}
+\newcommand{\kmax}{k\sub{max}}
+\newcommand{\ML}[1]{{\textcolor{blue}{#1}}}
+\newcommand{\Jtil}{\widetilde{J}}
+\newcommand{\sumkmax}{\sum_{k=0}^{\kmax}}
 %\DeclareMathOperator{\XXX}{xxx} % \int like operators
 %\DeclareMathOperator*{\XXX}{xxx} % \lim like operators
 % HYPER REF OPTIONS ----------------------------------------------
@@ -637,6 +641,8 @@ J''_{i,0} &= \frac{1}{2}\;
 \frac{\dro_i}{\sum_{m=0}^{N-1}\dro_m\mupint\xi_m(\mu')^3}.
 \end{align}
 \end{subequations}
+(For the surface, $j=0$ layer the second double sum in~\eqref{eq:VatB} is
+dropped.)
 
 \subsubsection{A self-consistent interior model}
 
@@ -681,7 +687,100 @@ necessary. These are the subject of part~\ref{part:practice}.
 
 % subsection concentric_maclaurin_spheroids (end)
 
-\section{Practice (\textbf{to be continued})\label{part:practice}}
+\section{Practice\label{part:practice}}
+As always, when we begin to implement a theoretical model as an actual computer
+program we discover many small details that are not particularly important or
+interesting for a general understanding of the theory but are nonetheless
+necessary to consider for a practical implementation. I describe those here using
+the notation of \citet{Hubbard2013} which I am hoping will become standard
+notation for CMS models. I also mention some details that are particular to my
+MATLAB implementation, \ML{set apart like this.}
+
+\subsubsection{Truncating infinite series}
+
+\red{Look at eq.~\eqref{eq:VatB}. Obviously we must truncate the series at some
+$k=\kmax$. But how to choose $\kmax$ for the desired accuracy? It's easier to
+experiment than it is to analyze, and it turns out that truncating at
+$n=2\kmax=30$ leaves a remainder of $\about{10^{-12}}$.}
+
+\subsubsection{Rescaling}
+
+Suppose we want to construct a modest CMS model with $N=100$ layers and
+$\kmax=15$. Look at eq.~\eqref{eq:VatB}, for the $j=100$ layer. The $k=10$ term in
+the first double sum contains a product of $J_{100,20}$ and the huge number
+$\xi_{100}(\mu)^{-20}\sim(10^{-2})^{-20}$. But look now at
+eqs.~\eqref{eq:J_menagerie}. The integrand in the expression for $J_{100,20}$ is
+on the order $\about(10^{-2})^{23}$, more than enough to subdue the huge value of
+$\xi^{-2k}$ and make the contribution to the potential from the degree 20 moment
+of the smallest layer negligible, as expected. Similarly, when we come to
+calculate, say, $J'_{100,20}$ the integrand is huge, of order
+$\about{}(10^{-2})^{-18}$, and the corresponding term in eq.~\eqref{eq:VatB}
+is a product of this huge number with a factor of order $\about{}(10^{-2})^{21}$,
+so that the contribution to the potential is again small, as expected. This is
+fine in principle, but in practice in order to preserve numerical accuracy it is
+important to avoid multiplying and dividing by huge numbers. We can do this by
+rescaling the dimensionless multipole moments and associated equations.
+
+Define $\lambda_i\equiv(a_i/a_0)$ and $\zeta_i\equiv\xi_i/\lambda_i=r_i/a_i$. I
+call $\zeta_i(\mu)$ the \emph{renormalized shape functions}. Notice that $\zeta_i
+(\mu')\lesssim{1}$, always. In the definition of the $J'_{100,20}$, for example,
+the large numerical value can be pulled out of the integral:
+\begin{equation*}
+J'_{i,2k} = -\left(\frac{3}{2 - 2k}\right)
+\frac{\dro_i\lambda_i^{2 - 2k}\mupint\ptk(\mu')\zeta_i(\mu')^{2 - 2k}}
+{\sum_{m=0}^{N-1}\dro_m\lambda_m^3\mupint\zeta_m(\mu')^3}, \qquad k\ne{1},
+\end{equation*}
+the expected huge value now coming from $\lambda_i^{2-2k}$. We can prevent
+multiplication by this huge value by rescaling the mulipole moment itself.
+Defining $\Jtil'_{i,2k}=J'_{i,2k}\lambda_i^{2k+1}$, the potentially huge number is
+deferred, we shall see, to the expression for the potential where, we shall see,
+it is subdued by an even larger number, avoiding the expected loss of accuracy.
+Similarly, the $J_{i,2k}$ moments are rescaled to
+$\Jtil_{i,2k}=J_{i,2k}/\lambda^{2k}$ to match the change of variables from $\xi$
+to $\zeta$. And although the rescaling is not necessary for numerical reason in
+the case of $J''_{i,0}$ we do not want to maintain two sets of variables so we
+perform the same change of variables and rescaling moments by
+$\Jtil''_{i,0}=J''_{i,0}\lambda_i^3$. Eqs.~\eqref{eq:J_menagerie} are then
+replaced by eqs.~\eqref{eq:rescaledJs}, involving no numerically huge numbers:
+\begin{subequations}\label{eq:rescaledJs}
+\begin{align}
+\Jtil_{i,2k} &= -\left(\frac{3}{2k + 3}\right)
+\frac{\dro_i\lambda_i^3\mupint\ptk(\mu')\zeta_i(\mu')^{2k + 3}}
+{\sum_{m=0}^{N-1}\dro_m\lambda_m^3\mupint\zeta_m(\mu')^3},\\
+\Jtil'_{i,2k} &= -\left(\frac{3}{2 - 2k}\right)
+\frac{\dro_i\lambda_i^3\mupint\ptk(\mu')\zeta_i(\mu')^{2 - 2k}}
+{\sum_{m=0}^{N-1}\dro_m\lambda_m^3\mupint\zeta_m(\mu')^3}, & k\ne{1},\\
+\Jtil'_{i,2} &= -3\;
+\frac{\dro_i\lambda_i^3\mupint{}P_2(\mu')\ln{\zeta_i(\mu')}}
+{\sum_{m=0}^{N-1}\dro_m\lambda_m^3\mupint\zeta_m(\mu')^3}, & k=1,\\
+\Jtil''_{i,0} &= \frac{1}{2}\;
+\frac{\dro_i\lambda_i^3}{\sum_{m=0}^{N-1}\dro_m\lambda_m^3\mupint\zeta_m(\mu')^3}.
+\end{align}
+\end{subequations}
+(To understand the $k=1$ term recall that $\int_0^1P_2(\mu')\,d\mu'=0$.)
+
+Now, in terms of the renormalized shape functions and the rescaled multipole
+moments eq.~\eqref{eq:VatB} is replaced by:
+\begin{equation}\label{eq:VpuatB}
+\begin{split}
+V\sub{pu}(\zeta_j,\mu) = \frac{a_0}{GM} V(\zeta_j,\mu) &= \\ 
+-\frac{1}{\lambda_j\zeta_j(\mu)}\Biggl[
+&\sum_{i=j}^{N-1}\sumkmax{}\Bigl(\frac{\lambda_i}{\lambda_j}\Bigr)^{2k}
+\Jtil_{i,2k}\zeta_j(\mu)^{-2k}\ptk(\mu)\; + \\
+&\sum_{i=0}^{j-1}\sumkmax{}\Bigl(\frac{\lambda_j}{\lambda_i}\Bigr)^{2k+1}
+\Jtil'_{i,2k}\zeta_j(\mu)^{2k+1}\ptk(\mu) + 
+\sum_{i=0}^{j-1}\Bigl(\frac{\lambda_j}{\lambda_i}\Bigr)^3
+\Jtil''_{i,0}\zeta_j(\mu)^3
+\Biggr].
+\end{split}
+\end{equation}
+Notice how the ratios of $\lambda$s in the double sums are always less than or
+equal to one, and the $\zeta$ shape functions also have values close to but less
+than one, as long as the oblateness is not extreme. In this form it is easy to see
+that the expansions in multipole moments, with expressions \eqref{eq:rescaledJs}
+for the coefficients, are expected to converge rapidly, allowing us to choose a a
+sensible $\kmax$. We also introduced the non-dimensional potential $V\sub{pu}$.
+The subscript stands for planetary units.
 
 % References
 \bibliographystyle{plainnat} % [plainnat|abbrvnat|agu08|agufull08|...]
