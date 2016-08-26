@@ -240,8 +240,23 @@ classdef ConcentricMaclaurinSpheroids < handle
             warning('on','backtrace')
         end
         
+        function V = Vext(obj,xi,mu)
+            % Convenience method: return potential at external point (xi,mu).
+            
+            validateattributes(xi,{'numeric'},{'real','positive','scalar'},...
+                '','xi',1)
+            validateattributes(mu,{'numeric'},{'real','scalar',...
+                '>=',-1,'<=',1},'','mu',2)
+            assert(xi > obj.xi_i_of_mu(1,mu),...
+                'The point (xi,mu) = (%g,%g) is not external.',xi,mu);
+            
+            tk = 0:2:obj.opts.kmax;
+            p2k = arrayfun(@Pn,tk,mu*ones(size(tk)));
+            V = -(1/xi)*sum(obj.Jn.*xi.^-tk.*p2k);
+        end
+        
         function J = Jn(obj,n)
-            % Convenience method: return external, not re-scaled J multipoles
+            % Convenience method: return external, not re-scaled J multipoles.
             
             if exist('n','var')
                 validateattributes(n,{'numeric'},...
@@ -254,17 +269,17 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
         end
         
-        function xi = xi_i_of_theta(obj,ilayer,theta)
+        function xi = xi_i_of_mu(obj,ilayer,mu)
             % Normalized (but not rescaled) layer shape function.
             
             validateattributes(ilayer,{'numeric'},...
                 {'positive','integer','scalar','<=',length(obj.lambdas)},...
                 '','ilayer',1)
-            validateattributes(theta,{'numeric'},...
-                {'real','scalar','>=',0,'<=',pi/2},...
-                '','theta',2)
+            validateattributes(mu,{'numeric'},...
+                {'real','scalar','>=',0,'<=',1},...
+                '','mu',2)
             
-            xi = obj.lambdas(ilayer)*obj.zeta_j_of_mu(ilayer, cos(theta));
+            xi = obj.lambdas(ilayer)*obj.zeta_j_of_mu(ilayer, mu);
         end
         
         function ah = plot(obj)
