@@ -242,6 +242,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         
         function J = Jn(obj,n)
             % Convenience method: return external, not re-scaled J multipoles
+            
             if exist('n','var')
                 validateattributes(n,{'numeric'},...
                                      {'nonnegative','even','<=',obj.opts.kmax})
