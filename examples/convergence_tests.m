@@ -9,3 +9,7 @@ close all
 addpath(fullfile(pwd,'..'))
 
 %% Test convergence of Laplace expansion
+
+% Construct a CMS object and give it a linear density profile
+cms = ConcentricMaclaurinSpheroids;
+cms.opts.nlayers = 12;
