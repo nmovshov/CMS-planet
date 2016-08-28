@@ -617,17 +617,14 @@ classdef ConcentricMaclaurinSpheroids < handle
     %% Access methods
     methods
         function set.opts(obj,val)
-            % Certain parameters trigger re-construction:
-            triggerFields = {'kmax','nangles','nlayers'};
+            % Certain parameters are not alowed to change after construction:
+            forbiddenFields = {'kmax','nangles','nlayers'};
             if ~isempty(obj.opts) % for the call in the constructor
-                for k=1:length(triggerFields)
-                    if val.(triggerFields{k}) ~= obj.opts.(triggerFields{k})
-                        msg = ['Modifying %s in an existing obj triggered ',...
-                            'a call to the constructor; obj was reset to '...,
-                            'initial (non-relaxed) state.'];
-                        warning off backtrace
-                        warning(msg,triggerFields{k})
-                        warning on backtrace
+                for k=1:length(forbiddenFields)
+                    if val.(forbiddenFields{k}) ~= obj.opts.(forbiddenFields{k})
+                        msg = ['Changing %s in an existing obj makes no ',...
+                            'sense; create a new CMS object instead.'];
+                        error(msg,forbiddenFields{k})
                     end
                 end
             end
