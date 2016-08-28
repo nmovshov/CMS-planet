@@ -48,6 +48,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Pre-allocation and default assignments
             obj.lambdas = linspace(1, op.rcore, op.nlayers)';
             if (op.nlayers == 1), obj.lambdas = 1; end % N=1 special case
+            %TODO: setup better deltas
             obj.deltas = zeros(op.nlayers, 1);
             obj.deltas(1) = 1;
             obj.mus = linspace(0,1,op.nangles); % may be modified by gauss
@@ -64,8 +65,6 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
             obj.Js.pprime(:) = 0.5*obj.deltas/den;
             obj.Js.Jn(1) = sum(obj.Js.tilde(:,1));
-            
-            %TODO: setup better deltas
             
             % Get mus and weights for Gaussian quadrature
             if strcmpi(obj.opts.J_integration_method, 'gauss')
@@ -618,14 +617,17 @@ classdef ConcentricMaclaurinSpheroids < handle
     %% Access methods
     methods
         function set.opts(obj,val)
-            % Certain parameters are not alowed to change after construction:
-            forbiddenFields = {'kmax','nangles','nlayers'};
+            % Certain parameters trigger re-construction:
+            triggerFields = {'kmax','nangles','nlayers'};
             if ~isempty(obj.opts) % for the call in the constructor
-                for k=1:length(forbiddenFields)
-                    if val.(forbiddenFields{k}) ~= obj.opts.(forbiddenFields{k})
-                        msg = ['Changing %s in an existing obj makes no ',...
-                            'sense; create a new CMS object instead.'];
-                        error(msg,forbiddenFields{k})
+                for k=1:length(triggerFields)
+                    if val.(triggerFields{k}) ~= obj.opts.(triggerFields{k})
+                        msg = ['Modifying %s in an existing obj triggered ',...
+                            'a call to the constructor; obj was reset to '...,
+                            'initial (non-relaxed) state.'];
+                        warning off backtrace
+                        warning(msg,triggerFields{k})
+                        warning on backtrace
                     end
                 end
             end
