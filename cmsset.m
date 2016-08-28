@@ -77,6 +77,11 @@ validateattributes(x,{'char'},{'row'})
 if ~any(strcmpi(x,{'adaptive','gauss'}))
     error('Integration method %s not implemented.',x)
 end
+if strcmpi(x,'adaptive')
+    warning off backtrace
+    warning('Using adaptive integration is not recommended.')
+    warning on backtrace
+end
 end
 
 function isvalidzetasmethod(x)
