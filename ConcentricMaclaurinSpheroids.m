@@ -318,20 +318,24 @@ classdef ConcentricMaclaurinSpheroids < handle
         function InitCMS(obj,op)
             % (Re)Initialize a CMS object.
                         
-            % Pre-allocation and default assignments
-            obj.lambdas = linspace(1, op.rcore, op.nlayers)';
-            if (op.nlayers == 1), obj.lambdas = 1; end % N=1 special case
-            %TODO: setup better deltas
+            % Default layer setup is linear
+            obj.lambdas = linspace(1, 1/op.nlayers, op.nlayers)';
+            
+            % Default deltas setup is constant density (TODO: improve?)
             obj.deltas = zeros(op.nlayers, 1);
             obj.deltas(1) = 1;
+            
+            % Default mu setup is almost never used!
             obj.mus = linspace(0,1,op.nangles); % will be modified by gauss
+            
+            % Default zetas setup is spherical
             obj.zetas = ones(op.nlayers, op.nangles);
+            
+            % Default Js setup is spherical
             obj.Js.tilde = zeros(op.nlayers, (op.kmax+1));
             obj.Js.tilde_prime = zeros(op.nlayers, (op.kmax+1));
             obj.Js.pprime = zeros(op.nlayers, 1);
             obj.Js.Jn = NaN(1, op.kmax+1);
-            
-            % Approximate degree 0 Js
             den = sum(obj.deltas.*obj.lambdas.^3);
             obj.Js.tilde(:,1) = -(obj.deltas.*obj.lambdas.^3)/den;
             obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
