@@ -38,7 +38,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             % The constructor only dispatches to InitCMS().
             warning off CMS:obsolete
             op = cmsset(varargin{:});
-            warning on CMS:obsolete            
+            warning on CMS:obsolete
+            obj.opts = op; % (calls set.opts which calls cmsset(op) again)
             obj.InitCMS(op);
             
         end % Constructor
@@ -311,10 +312,7 @@ classdef ConcentricMaclaurinSpheroids < handle
     methods (Access = private) % to become private
         function InitCMS(obj,op)
             % (Re)Initialize a CMS object.
-            
-            % Save parameters in opts property (will be filtered by set.opts)
-            obj.opts = op;
-            
+                        
             % Pre-allocation and default assignments
             obj.lambdas = linspace(1, op.rcore, op.nlayers)';
             if (op.nlayers == 1), obj.lambdas = 1; end % N=1 special case
@@ -621,20 +619,31 @@ classdef ConcentricMaclaurinSpheroids < handle
     %% Access methods
     methods
         function set.opts(obj,val)
-            % Certain parameters are not alowed to change after construction:
-%             forbiddenFields = {'kmax','nangles','nlayers'};
-%             if ~isempty(obj.opts) % for the call in the constructor
-%                 for k=1:length(forbiddenFields)
-%                     if val.(forbiddenFields{k}) ~= obj.opts.(forbiddenFields{k})
-%                         msg = ['Changing %s in an existing obj makes no ',...
-%                             'sense; create a new CMS object instead.'];
-%                         error(msg,forbiddenFields{k})
-%                     end
-%                 end
-%             end
             
-            % For permitted opts, filter through cmsset again.
-            obj.opts = cmsset(val);
+            % First filter through cmsset again.
+            val = cmsset(val);
+            
+            % Then, certain parameters trigger a re-init (maybe with warning).
+            triggerFields = {'kmax','nangles','nlayers'};
+            trigger = false;
+            if ~isempty(obj.opts) % for the call in the constructor
+                for k=1:length(triggerFields)
+                    if val.(triggerFields{k}) ~= obj.opts.(triggerFields{k})
+                        msg = ['Changing %s of an existing obj triggers a ',...
+                            're-initilization; you should re-relax the obj.'];
+                        if (obj.cooked) %#ok<MCSUP>
+                            warning off backtrace
+                            warning(msg,triggerFields{k})
+                            warning on backtrace
+                        end
+                        trigger = true;
+                    end
+                end
+                if (trigger), obj.InitCMS(val); end
+            end
+
+            % Finally, assign the new opts, unflag cooked, and return.
+            obj.opts = val;
             obj.cooked = false; %#ok<MCSUP>
         end
         
