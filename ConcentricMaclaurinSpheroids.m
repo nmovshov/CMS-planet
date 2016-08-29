@@ -258,8 +258,6 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Require R2016a to use the amazing polarplot features
             if verLessThan('matlab','9')
                 error('CMS plotting requires R2016a or later')
-                if (nargout == 1), ah = []; end
-                return
             end
             
             % Warn if uncooked
