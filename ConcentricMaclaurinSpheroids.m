@@ -29,6 +29,11 @@ classdef ConcentricMaclaurinSpheroids < handle
         cooked = false  % flag indicating successful convergence
         inits = 0 % counter of calls to InitCMS, just for internal accounting
     end
+    properties (Dependent) % Convenience names
+        nlayers
+        kmax
+        qrot
+    end
     
     %% The constructor
     methods
@@ -252,7 +257,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Require R2016a to use the amazing polarplot features
             if verLessThan('matlab','9')
-                warning('CMS plotting requires R2016a or later')
+                error('CMS plotting requires R2016a or later')
                 if (nargout == 1), ah = []; end
                 return
             end
@@ -629,7 +634,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             if ~isempty(obj.opts) % for the call in the constructor
                 for k=1:length(triggerFields)
                     if val.(triggerFields{k}) ~= obj.opts.(triggerFields{k})
-                        msg = ['Changing %s of an existing obj triggers a ',...
+                        msg = ['Changing %s of an existing obj triggered a ',...
                             're-initilization; you should re-relax the obj.'];
                         if (obj.cooked) %#ok<MCSUP>
                             warning off backtrace
@@ -655,6 +660,30 @@ classdef ConcentricMaclaurinSpheroids < handle
         function set.deltas(obj,val)
             obj.deltas = val;
             obj.cooked = false; %#ok<MCSUP>
+        end
+        
+        function val = get.nlayers(obj)
+            val = obj.opts.nlayers;
+        end
+        
+        function set.nlayers(obj,val)
+            obj.opts.nlayers = val;
+        end
+        
+        function val = get.kmax(obj)
+            val = obj.opts.kmax;
+        end
+        
+        function set.kmax(obj,val)
+            obj.opts.kmax = val;
+        end
+        
+        function val = get.qrot(obj)
+            val = obj.opts.qrot;
+        end
+        
+        function set.qrot(obj,val)
+            obj.opts.qrot = val;
         end
         
         function val = get.bs(obj)
