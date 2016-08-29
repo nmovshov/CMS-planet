@@ -79,7 +79,7 @@ if ~any(strcmpi(x,{'adaptive','gauss'}))
 end
 if strcmpi(x,'adaptive')
     warning off backtrace
-    warning('Using adaptive integration is not recommended.')
+    warning('CMS:obsolete','Using adaptive integration is not recommended.')
     warning on backtrace
 end
 end

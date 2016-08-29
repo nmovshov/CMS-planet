@@ -27,6 +27,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         Pnzero  % values of Legendre polynomials at equator
         gws     % weight factors for Gauss integration (correspond to mus)
         cooked = false  % flag indicating successful convergence
+        inits = 0 % counter of calls to InitCMS, just for internal accounting
     end
     
     %% The constructor
@@ -34,48 +35,12 @@ classdef ConcentricMaclaurinSpheroids < handle
         function obj = ConcentricMaclaurinSpheroids(varargin)
             %CONCENTRICMACLAURINSPHEROIDS Class constructor.
             
-            if nargin == 0
-                % Use all default options
-                op = cmsset();
-            elseif (nargin == 1) && (isstruct(varargin{1}))
-                % Use options struct returned by cmsset()
-                op = varargin{1};
-            else
-                % Use Name/Value pairs
-                op = cmsset(varargin{:});
-            end
+            % The constructor only dispatches to InitCMS().
+            warning off CMS:obsolete
+            op = cmsset(varargin{:});
+            warning on CMS:obsolete            
+            obj.InitCMS(op);
             
-            % Pre-allocation and default assignments
-            obj.lambdas = linspace(1, op.rcore, op.nlayers)';
-            if (op.nlayers == 1), obj.lambdas = 1; end % N=1 special case
-            %TODO: setup better deltas
-            obj.deltas = zeros(op.nlayers, 1);
-            obj.deltas(1) = 1;
-            obj.mus = linspace(0,1,op.nangles); % may be modified by gauss
-            obj.zetas = ones(op.nlayers, op.nangles);
-            obj.Js.tilde = zeros(op.nlayers, (op.kmax+1));
-            obj.Js.tilde_prime = zeros(op.nlayers, (op.kmax+1));
-            obj.Js.pprime = zeros(op.nlayers, 1);
-            obj.Js.Jn = NaN(1, op.kmax+1);
-            obj.opts = op;
-            
-            % Approximate degree 0 Js
-            den = sum(obj.deltas.*obj.lambdas.^3);
-            obj.Js.tilde(:,1) = -(obj.deltas.*obj.lambdas.^3)/den;
-            obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
-            obj.Js.pprime(:) = 0.5*obj.deltas/den;
-            obj.Js.Jn(1) = sum(obj.Js.tilde(:,1));
-            
-            % Get mus and weights for Gaussian quadrature
-            if strcmpi(obj.opts.J_integration_method, 'gauss')
-                [obj.mus, obj.gws] = gauleg(0, 1, obj.opts.nangles);
-            end
-            
-            % Precompute Legendre polynomials for fixed colatitudes (gauss quad)
-            for k = 0:obj.opts.kmax
-                obj.Pnmu(k+1,:) = Pn(k, obj.mus);
-                obj.Pnzero(k+1,1) = Pn(k, 0);
-            end
         end % Constructor
     end % Constructor block
     
@@ -344,6 +309,45 @@ classdef ConcentricMaclaurinSpheroids < handle
     
     %% Private methods
     methods (Access = private) % to become private
+        function InitCMS(obj,op)
+            % (Re)Initialize a CMS object.
+            
+            % Save parameters in opts property (will be filtered by set.opts)
+            obj.opts = op;
+            
+            % Pre-allocation and default assignments
+            obj.lambdas = linspace(1, op.rcore, op.nlayers)';
+            if (op.nlayers == 1), obj.lambdas = 1; end % N=1 special case
+            %TODO: setup better deltas
+            obj.deltas = zeros(op.nlayers, 1);
+            obj.deltas(1) = 1;
+            obj.mus = linspace(0,1,op.nangles); % will be modified by gauss
+            obj.zetas = ones(op.nlayers, op.nangles);
+            obj.Js.tilde = zeros(op.nlayers, (op.kmax+1));
+            obj.Js.tilde_prime = zeros(op.nlayers, (op.kmax+1));
+            obj.Js.pprime = zeros(op.nlayers, 1);
+            obj.Js.Jn = NaN(1, op.kmax+1);
+            
+            % Approximate degree 0 Js
+            den = sum(obj.deltas.*obj.lambdas.^3);
+            obj.Js.tilde(:,1) = -(obj.deltas.*obj.lambdas.^3)/den;
+            obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
+            obj.Js.pprime(:) = 0.5*obj.deltas/den;
+            obj.Js.Jn(1) = sum(obj.Js.tilde(:,1));
+            
+            % Get mus and weights for Gaussian quadrature
+            if strcmpi(op.J_integration_method, 'gauss')
+                [obj.mus, obj.gws] = gauleg(0, 1, op.nangles);
+            end
+            
+            % Precompute Legendre polynomials for fixed colatitudes (gauss quad)
+            for k = 0:op.kmax
+                obj.Pnmu(k+1,:) = Pn(k, obj.mus);
+                obj.Pnzero(k+1,1) = Pn(k, 0);
+            end
+            
+        end
+        
         function dJ = update_Js_gauss(obj)
             % Single-pass update of gravitational moments by Gaussian quad.
                         
@@ -618,16 +622,16 @@ classdef ConcentricMaclaurinSpheroids < handle
     methods
         function set.opts(obj,val)
             % Certain parameters are not alowed to change after construction:
-            forbiddenFields = {'kmax','nangles','nlayers'};
-            if ~isempty(obj.opts) % for the call in the constructor
-                for k=1:length(forbiddenFields)
-                    if val.(forbiddenFields{k}) ~= obj.opts.(forbiddenFields{k})
-                        msg = ['Changing %s in an existing obj makes no ',...
-                            'sense; create a new CMS object instead.'];
-                        error(msg,forbiddenFields{k})
-                    end
-                end
-            end
+%             forbiddenFields = {'kmax','nangles','nlayers'};
+%             if ~isempty(obj.opts) % for the call in the constructor
+%                 for k=1:length(forbiddenFields)
+%                     if val.(forbiddenFields{k}) ~= obj.opts.(forbiddenFields{k})
+%                         msg = ['Changing %s in an existing obj makes no ',...
+%                             'sense; create a new CMS object instead.'];
+%                         error(msg,forbiddenFields{k})
+%                     end
+%                 end
+%             end
             
             % For permitted opts, filter through cmsset again.
             obj.opts = cmsset(val);
