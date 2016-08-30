@@ -12,7 +12,7 @@ addpath(fullfile(pwd,'..'))
 
 % Construct a CMS object and with a linear density profile
 cms = ConcentricMaclaurinSpheroids;
-cms.nlayers = 6;
+cms.nlayers = 12;
 cms.qrot = 0.1;
 cms.deltas = linspace(0,1,cms.nlayers);
 

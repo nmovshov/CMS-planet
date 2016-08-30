@@ -112,10 +112,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
             
             % Loop over layers (outer) and colatitudes (inner)
-            nlayers = size(obj.zetas, 1);
-            nangles = size(obj.zetas, 2);
-            for ii=1:nlayers
-                for alfa=1:nangles
+            for ii=1:obj.nlayers
+                for alfa=1:obj.opts.nangles
                     obj.zetas(ii,alfa) = obj.zeta_j_of_alfa(ii,alfa);
                     %obj.zetas(ii,alfa) = obj.zeta_j_of_mu(ii, obj.mus(alfa));
                 end
@@ -511,33 +509,33 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Equation 50 in Hubbard (2013) for fixed colatitudes.
             
             % Local variables
-            nlayers = obj.opts.nlayers;
-            kmax = obj.opts.kmax;
+            nbLayers = obj.opts.nlayers;
+            nbMoments = obj.opts.kmax;
             Jt = obj.Js.tilde;
             lambda = obj.lambdas;
-            qrot = obj.opts.qrot;
+            q = obj.opts.qrot;
             P0 = obj.Pnzero;
             Pmu = obj.Pnmu(:,alfa);
             
             % Double sum in eq. (47)
             x1 = 0;
-            for ii=1:nlayers
-                for kk=2:kmax % (note ind shift, start ind, odd J=0)
+            for ii=1:nbLayers
+                for kk=2:nbMoments % (note ind shift, start ind, odd J=0)
                     x1 = x1 + Jt(ii,kk+1)*lambda(ii)^kk*P0(kk+1);
                 end
             end
             
             % Double sum in eq. (50)
             x2 = 0;
-            for ii=1:nlayers
-                for kk=2:kmax % (note ind shift, start ind, odd J=0)
+            for ii=1:nbLayers
+                for kk=2:nbMoments % (note ind shift, start ind, odd J=0)
                     x2 = x2 + Jt(ii,kk+1)*lambda(ii)^kk*zeta0^(-kk)*Pmu(kk+1);
                 end
             end
             
             % And combine
-            U0 = 1 + 0.5*qrot - x1;
-            U = (1/zeta0)*(1 - x2) + 1/3*qrot*zeta0^2*(1 - Pmu(3));
+            U0 = 1 + 0.5*q - x1;
+            U = (1/zeta0)*(1 - x2) + 1/3*q*zeta0^2*(1 - Pmu(3));
             y = U - U0;
         end
 
@@ -545,20 +543,20 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Equation 51 in Hubbard (2013) for fixed colatitudes.
             
             % Local variables
-            nlayers = obj.opts.nlayers;
-            kmax = obj.opts.kmax;
+            nbLayers = obj.opts.nlayers;
+            nbMoments = obj.opts.kmax;
             Jt = obj.Js.tilde;
             Jtp = obj.Js.tilde_prime;
             Jpp = obj.Js.pprime;
             lambda = obj.lambdas;
-            qrot = obj.opts.qrot;
+            q = obj.opts.qrot;
             P0 = obj.Pnzero;
             Pmu = obj.Pnmu(:,alfa);
             
             % Double sum, row 1
             x1 = 0;
-            for ii=jj:nlayers
-                for kk=0:kmax % (note ind shift, start ind, odd J=0)
+            for ii=jj:nbLayers
+                for kk=0:nbMoments % (note ind shift, start ind, odd J=0)
                     x1 = x1 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*zeta_j^(-kk)*Pmu(kk+1);
                 end
             end
@@ -566,7 +564,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum, row 2
             x2 = 0;
             for ii=1:jj-1
-                for kk=0:kmax
+                for kk=0:nbMoments
                     x2 = x2 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*zeta_j^(kk+1)*Pmu(kk+1);
                 end
             end
@@ -579,8 +577,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Double sum, row 3
             x4 = 0;
-            for ii=jj:nlayers
-                for kk=0:kmax
+            for ii=jj:nbLayers
+                for kk=0:nbMoments
                     x4 = x4 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*P0(kk+1);
                 end
             end
@@ -588,7 +586,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum, row 4
             x5 = 0;
             for ii=1:jj-1
-                for kk=0:kmax
+                for kk=0:nbMoments
                     x5 = x5 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*P0(kk+1);
                 end
             end
@@ -601,8 +599,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % And combine
             y = -(1/zeta_j)*(x1 + x2 + x3) + ...
-                (1/3)*qrot*lambda(jj)^3*zeta_j^2*(1 - Pmu(3)) + ...
-                (x4 + x5 + x6) - 0.5*qrot*lambda(jj)^3;
+                (1/3)*q*lambda(jj)^3*zeta_j^2*(1 - Pmu(3)) + ...
+                (x4 + x5 + x6) - 0.5*q*lambda(jj)^3;
             
         end
         
