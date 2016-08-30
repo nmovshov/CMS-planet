@@ -10,6 +10,12 @@ addpath(fullfile(pwd,'..'))
 
 %% Test convergence of Laplace expansion
 
-% Construct a CMS object and give it a linear density profile
+% Construct a CMS object and with a linear density profile
 cms = ConcentricMaclaurinSpheroids;
-cms.opts.nlayers = 12;
+cms.nlayers = 6;
+cms.qrot = 0.1;
+cms.deltas = linspace(0,1,cms.nlayers);
+
+% Relax to hydrostatic equilibrium and validate
+cms.relax();
+cms.validate();
