@@ -17,8 +17,8 @@ classdef ConcentricMaclaurinSpheroids < handle
         Js      % rescaled, dimensionless, layer gravity moments
         as      % normalized equatorial radii (another name for lambdas)
         bs      % normalized polar radii
-        fs      % layer flattening (oblateness)
-        ars     % layer aspect ratio
+        fs      % layer flattening "oblateness" (a - b)/a
+        ars     % layer aspect ratio (b/a)
         ss      % layer mean radius normalized to a0
         Vs      % layer volume normalized to 4pi/3 a0^3
     end
@@ -217,7 +217,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 '','xi',1)
             validateattributes(mu,{'numeric'},{'real','scalar',...
                 '>=',-1,'<=',1},'','mu',2)
-            assert(xi > obj.xi_i_of_mu(1,mu),...
+            assert(xi >= obj.xi_i_of_mu(1,mu),...
                 'The point (xi,mu) = (%g,%g) is not external.',xi,mu);
             
             tk = 0:2:obj.opts.kmax;
@@ -637,7 +637,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 for k=1:length(triggerFields)
                     if val.(triggerFields{k}) ~= obj.opts.(triggerFields{k})
                         msg = ['Changing %s of an existing obj triggered a ',...
-                            're-initilization; you should re-relax the obj.'];
+                            're-initilization!'];
                         if (obj.cooked) %#ok<MCSUP>
                             warning off backtrace
                             warning(msg,triggerFields{k})
