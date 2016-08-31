@@ -14,7 +14,7 @@ addpath(fullfile(pwd,'..'))
 cms = ConcentricMaclaurinSpheroids;
 cms.nlayers = 12;
 cms.qrot = 0.1;
-cms.deltas = linspace(0,1,cms.nlayers);
+cms.deltas = linspace(0,1000,cms.nlayers); %TODO: that's not a linear profile
 
 % Relax to hydrostatic equilibrium and validate
 cms.relax();
