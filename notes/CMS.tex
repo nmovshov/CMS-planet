@@ -553,7 +553,7 @@ an $r_j^2$ term together with the contribution from $V_{i<j,\mathrm{ext}}$. Also
 we will use the oblate symmetry to take the integrals over $\mu$ from $0$ to $1$.
 Here we go.
 
-\begin{multline}
+\begin{multline}\label{eq:viltjint}
 V_{i<j,\mathrm{int}}(r_j,\mu) =
 \tpi{G}\dro_i\mupint[r_i(\mu')^2 - r_j(\mu)^2]\; +\\
 4\pi{G}\dro_i\,r_j(\mu)^2{}P_2(\mu)\mupint{}P_2(\mu')[\ln{r_i(\mu')} -
@@ -847,6 +847,23 @@ The outermost layer, $j=0$, is defined by the same equation with the second and
 third lines ($\Jtil'$ and $\Jtil''$ terms) removed. \ML{In MATLAB it is not
 necessary to write a separate equation for $j=0$ since a loop from $0$ to $-1$ is
 simply ignored.}
+
+\subsubsection{Central potential}
+
+The potential at the center of the planet is easily obtained. The only
+contribution is what we called the internal part, from all spheroids. Understand
+that $r_j$ in eq.~\eqref{eq:viltjint} does not have to represent the level
+surface; that was simply the point of interest. The equation works for any point
+$\arr=(r,\mu)$ and represents the contribution from the volume exterior to $r'=r$.
+Setting $r_j=0$, eq.~\eqref{eq:viltjint} is the contribution to the central
+potential from spheroid $i$. Only the constant term survives, the one
+corresponding to $D'_{i,0}$. Summing over all spheroids the central potential is
+simply
+\begin{equation}\label{eq:central_V}
+V\sub{center} = -\frac{GM}{a_0}\sum_{i=0}^{N-1}J'_{i,0} =
+-\frac{GM}{a_0}\sum_{i=0}^{N-1}\Jtil'_{i,0}\lambda_i^{-1}.
+\end{equation}
+(Note typo in \citep{Hubbard2013}.)
 
 % References
 \bibliographystyle{plainnat} % [plainnat|abbrvnat|agu08|agufull08|...]
