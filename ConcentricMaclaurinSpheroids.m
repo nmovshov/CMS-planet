@@ -43,6 +43,9 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % The constructor only dispatches to InitCMS().
             warning off CMS:obsolete
+            if isnumeric(varargin{1})
+                varargin = {'nlayers',varargin{1},varargin{2:end}};
+            end
             op = cmsset(varargin{:});
             warning on CMS:obsolete
             obj.opts = op; % (calls set.opts which calls cmsset(op) again)
@@ -174,7 +177,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
             
             % Check for properly normalized zetas
-            for j=1:obj.opts.nlayers
+            for j=1:obj.nlayers
                 er = abs(1 - obj.zeta_j_of_mu(j,0));
                 if er > 1e-14
                     warning('Layer %d normalized radius deviates by %g',j,er)
@@ -284,7 +287,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             rho = cumsum(obj.deltas);
             romin = min(rho); romax = max(rho);%TODO: colorbar
             lh = gobjects(size(obj.lambdas));
-            for k=1:obj.opts.nlayers
+            for k=1:obj.nlayers
                 xi = obj.zetas(k,:)*obj.lambdas(k);
                 xi = [obj.bs(k), fliplr(xi), obj.lambdas(k)];
                 xi = [xi, fliplr(xi)]; %#ok<AGROW>
@@ -360,7 +363,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                         
             % Do common denominator in eqs. (40-43)
             denom = 0;
-            for j=1:obj.opts.nlayers
+            for j=1:obj.nlayers
                 fun = obj.zetas(j,:).^3;
                 I = obj.gws*fun'; % gauss quad formula
                 denom = denom + obj.deltas(j)*obj.lambdas(j)^3*I;
@@ -368,7 +371,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Do J tilde, eq. (40)
             new_tilde = zeros(size(obj.Js.tilde));
-            for ii=1:obj.opts.nlayers
+            for ii=1:obj.nlayers
                 for kk=0:obj.opts.kmax
                     if rem(kk, 2), continue, end
                     fun = obj.Pnmu(kk+1,:).*obj.zetas(ii,:).^(kk+3);
@@ -379,7 +382,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Do J tilde prime, eqs. (41,42)
             new_tprime = zeros(size(obj.Js.tilde_prime));
-            for ii=1:obj.opts.nlayers
+            for ii=1:obj.nlayers
                 for kk=0:obj.opts.kmax
                     if rem(kk, 2), continue, end
                     if kk == 2
@@ -399,13 +402,13 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Do J double prime, eq. (27)
             new_pprime = zeros(size(obj.Js.pprime));
             denom = 0;
-            for j=1:obj.opts.nlayers
+            for j=1:obj.nlayers
                 fun = obj.zetas(j,:).^3;
                 I = obj.lambdas(j)*obj.gws*fun';
                 denom = denom + obj.deltas(j)*I;
             end
             denom = 2*denom;
-            for ii=1:obj.opts.nlayers
+            for ii=1:obj.nlayers
                 new_pprime(ii) = obj.deltas(ii)/denom;
             end
             
@@ -485,7 +488,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 
         function y = zeta_j_of_mu(obj,jlayer,mu)
             % Find lvl surface of jth layer at colat mu.
-            assert(jlayer > 0 && jlayer <= obj.opts.nlayers)
+            assert(jlayer > 0 && jlayer <= obj.nlayers)
             assert(mu >= 0 && mu <=1)
             if jlayer == 1
                 fun = @(x)eq50(x,mu,obj.Js.tilde,obj.lambdas,obj.opts.qrot);
@@ -498,7 +501,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         
         function y = zeta_j_of_alfa(obj,jlayer,alfa)
             % Find lvl surface of jth layer at colat mu(alfa).
-            assert(jlayer > 0 && jlayer <= obj.opts.nlayers)
+            assert(jlayer > 0 && jlayer <= obj.nlayers)
             assert(alfa > 0 && alfa <= obj.opts.nangles)
             if jlayer == 1
                 fun = @(x)obj.eq50_alfa(x,alfa);
@@ -513,7 +516,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Equation 50 in Hubbard (2013) for fixed colatitudes.
             
             % Local variables
-            nbLayers = obj.opts.nlayers;
+            nbLayers = obj.N;
             nbMoments = obj.opts.kmax;
             Jt = obj.Js.tilde;
             lambda = obj.lambdas;
@@ -547,7 +550,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Equation 51 in Hubbard (2013) for fixed colatitudes.
             
             % Local variables
-            nbLayers = obj.opts.nlayers;
+            nbLayers = obj.N;
             nbMoments = obj.opts.kmax;
             Jt = obj.Js.tilde;
             Jtp = obj.Js.tilde_prime;
@@ -610,7 +613,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         
         function y = zeta_j_of_mus(obj,jlayer,mus)
             % ML quad requires y=f(x) take and return vector...
-            assert(jlayer > 0 && jlayer <= obj.opts.nlayers)
+            assert(jlayer > 0 && jlayer <= obj.nlayers)
             assert(all(mus >= 0) && all(mus <=1))
             y = nan(size(mus));
             for alfa=1:numel(mus)
@@ -705,7 +708,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         function val = get.bs(obj)
             val = NaN(size(obj.lambdas));
             if obj.cooked
-                for j=1:obj.opts.nlayers
+                for j=1:obj.nlayers
                     val(j) = obj.zeta_j_of_mu(j,1)*obj.lambdas(j);
                 end
             end
@@ -718,7 +721,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         function val = get.fs(obj)
             val = NaN(size(obj.lambdas));
             if obj.cooked
-                for j=1:obj.opts.nlayers
+                for j=1:obj.nlayers
                     a = 1;
                     b = obj.zeta_j_of_mu(j,1);
                     val(j) = (a - b)/a;
@@ -729,7 +732,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         function val = get.ars(obj)
             val = NaN(size(obj.lambdas));
             if obj.cooked
-                for j=1:obj.opts.nlayers
+                for j=1:obj.nlayers
                     a = 1;
                     b = obj.zeta_j_of_mu(j,1);
                     val(j) = b/a;
@@ -740,7 +743,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         function val = get.Vs(obj)
             val = NaN(size(obj.lambdas));
             if obj.cooked
-                for j=1:obj.opts.nlayers
+                for j=1:obj.nlayers
                     val(j) = obj.lambdas(j)^3*(obj.zetas(j,:).^3)*(obj.gws');
                 end
             end
