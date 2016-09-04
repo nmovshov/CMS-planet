@@ -23,6 +23,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         Vs      % layer volume normalized to 4pi/3 a0^3
     end
     properties (Access = private)
+        N       % real nlayers
         Pnmu    % values of Legendre polynomials at fixed colatitudes
         Pnzero  % values of Legendre polynomials at equator
         gws     % weight factors for Gauss integration (correspond to mus)
@@ -313,7 +314,10 @@ classdef ConcentricMaclaurinSpheroids < handle
     methods (Access = private) % to become private
         function InitCMS(obj,op)
             % (Re)Initialize a CMS object.
-                        
+            
+            % The one required and immutable parameter
+            obj.N = op.nlayers;
+            
             % Default layer setup is linear
             obj.lambdas = linspace(1, 1/op.nlayers, op.nlayers)';
             
@@ -628,8 +632,18 @@ classdef ConcentricMaclaurinSpheroids < handle
             % First filter through cmsset again.
             val = cmsset(val);
             
+            % You can't change nlayers
+            if ~isempty(obj.opts)
+                if val.nlayers ~= obj.opts.nlayers
+                    msg = ['Changing number of layers in an existing ',...
+                        'CMS object makes no sense; create a new object ',...
+                        'instead.'];
+                    error(msg)
+                end
+            end
+            
             % Then, certain parameters trigger a re-init (maybe with warning).
-            triggerFields = {'kmax','nangles','nlayers'};
+            triggerFields = {'kmax','nangles'};
             trigger = false;
             if ~isempty(obj.opts) % for the call in the constructor
                 for k=1:length(triggerFields)
@@ -663,11 +677,13 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function val = get.nlayers(obj)
-            val = obj.opts.nlayers;
+            val = obj.N;
         end
         
-        function set.nlayers(obj,val)
-            obj.opts.nlayers = val;
+        function set.nlayers(~,~)
+            msg = ['Changing number of layers in an existing CMS object ',...
+                'makes no sense; create a new object instead.'];
+            error(msg)
         end
         
         function val = get.kmax(obj)
