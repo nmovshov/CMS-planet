@@ -670,7 +670,20 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function set.lambdas(obj,val)
-            obj.lambdas = val;
+            validateattributes(val,{'numeric'},{'vector','positive','finite',...
+                '<=',1},'','lambdas')
+            usval = sort(unique(double(val)),'descend');
+            if ~isequal(double(val),usval)
+                warning off backtrace
+                warning('lambdas array was sorted and/or pruned of duplicates.')
+                warning on backtrace
+            end
+            assert(numel(usval) == obj.N,...
+                'length(lambdas) = %g ~= nlayers = %g',...
+                numel(usval),obj.N)
+            assert(usval(1) == 1,['lambdas(1) = %g\n',...
+                'radii must be normalized to outer layer'],usval(1))
+            obj.lambdas = usval(:);
             obj.cooked = false; %#ok<MCSUP>
         end
         
