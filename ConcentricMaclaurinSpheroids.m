@@ -678,9 +678,9 @@ classdef ConcentricMaclaurinSpheroids < handle
                 warning('lambdas array was sorted and/or pruned of duplicates.')
                 warning on backtrace
             end
-            assert(numel(usval) == obj.N,...
+            assert(numel(usval) == obj.nlayers,...
                 'length(lambdas) = %g ~= nlayers = %g',...
-                numel(usval),obj.N)
+                numel(usval),obj.nlayers) %#ok<MCSUP>
             assert(usval(1) == 1,['lambdas(1) = %g\n',...
                 'radii must be normalized to outer layer'],usval(1))
             obj.lambdas = usval(:);
@@ -770,6 +770,21 @@ classdef ConcentricMaclaurinSpheroids < handle
 
     %% Static methods
     methods (Static)
+        function obj = loadobj(s)
+            obj = ConcentricMaclaurinSpheroids(s.opts);
+            obj.opts = s.opts;
+            obj.lambdas = s.lambdas;
+            obj.deltas = s.deltas;
+            obj.mus = s.mus;
+            obj.zetas = s.zetas;
+            obj.Js = s.Js;
+            obj.N = s.N;
+            obj.Pnmu = s.Pnmu;
+            obj.Pnzero = s.Pnzero;
+            obj.gws = s.gws;
+            obj.cooked = s.cooked;
+            obj.inits = s.inits;
+        end
         
     end % End of static methods
     
