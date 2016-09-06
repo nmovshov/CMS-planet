@@ -43,14 +43,18 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % The constructor only dispatches to InitCMS().
             warning off CMS:obsolete
-            if isnumeric(varargin{1})
-                varargin = {'nlayers',varargin{1},varargin{2:end}};
+            if nargin == 0
+                op = cmsset();
+            else
+                if isnumeric(varargin{1})
+                    varargin = {'nlayers',varargin{1},varargin{2:end}};
+                end
+                op = cmsset(varargin{:});
             end
-            op = cmsset(varargin{:});
             warning on CMS:obsolete
+            
             obj.opts = op; % (calls set.opts which calls cmsset(op) again)
             obj.InitCMS(op);
-            
         end % Constructor
     end % Constructor block
     
@@ -355,7 +359,6 @@ classdef ConcentricMaclaurinSpheroids < handle
                 obj.Pnmu(k+1,:) = Pn(k, obj.mus);
                 obj.Pnzero(k+1,1) = Pn(k, 0);
             end
-            
         end
         
         function dJ = update_Js_gauss(obj)
@@ -688,7 +691,12 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function set.deltas(obj,val)
-            obj.deltas = val;
+            validateattributes(val,{'numeric'},{'vector','real','finite'},...
+                '','deltas')
+            assert(numel(val) == obj.nlayers,...
+                'length(deltas) = %g ~= nlayers = %g',...
+                numel(val),obj.nlayers) %#ok<MCSUP>
+            obj.deltas = val(:);
             obj.cooked = false; %#ok<MCSUP>
         end
         
