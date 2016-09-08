@@ -60,11 +60,12 @@ classdef ConcentricMaclaurinSpheroids < handle
     
     %% Public methods
     methods (Access = public)
-        function relax(obj)
+        function ET = relax(obj)
             % Iterate calculation of gravitational moments until converged.
             
-            % Optional communication
             t_rlx = tic;
+            
+            % Optional communication
             verb = obj.opts.verbosity;
             if (verb > 0)
                 fprintf('Relaxing CMS to self-consistent level surfaces...\n\n')
@@ -101,11 +102,13 @@ classdef ConcentricMaclaurinSpheroids < handle
                 warning(msg, inputname(1), inputname(1))
             end
             
+            ET = toc(t_rlx);
+            
             % Optional communication
             if (verb > 0)
                 msg = 'Relaxing CMS to self-consistent level surfaces...done.';
                 fprintf([msg, '\n'])
-                fprintf('Total elapsed time %g sec.\n', toc(t_rlx))
+                fprintf('Total elapsed time %g sec.\n', ET)
             end
         end
         
