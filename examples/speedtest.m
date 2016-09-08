@@ -14,7 +14,6 @@ addpath(fullfile(getenv('userprofile'),'CMS-planet'))
 % computation time) and save the mean time per pass.
 
 nvec = [2, 4, 8, 16, 32, 64];
-nvec = [2, 4, 8];
 tvec = nan(size(nvec));
 
 for k=1:length(nvec)
@@ -34,3 +33,15 @@ N = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
 T = polyval(p,N.^2);
 
 %% Display timing results and extrapolated predictions
+ah = axes;
+hold(ah, 'on')
+plot(nvec, tvec, '-o', 'linewidth', 2, 'displayname', 'measured')
+plot(N, T, '--', 'displayname', 'extrapolated')
+ah.XScale = 'log';
+ah.YScale = 'log';
+xlabel('nlayers')
+ylabel('time per pass [s]')
+title(['CMS model timing with linear density profile and q = ',...
+    num2str(cms.qrot)])
+ah.Box = 'on';
+legend show
