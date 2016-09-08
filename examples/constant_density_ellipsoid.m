@@ -57,7 +57,7 @@ cms = ConcentricMaclaurinSpheroids(opts);
 cms.deltas = [1, 0*(2:opts.nlayers)];
 
 %% Converge cms
-cms.relax % (this may take a minute if using many layers)
+cms.relax; % (this may take a minute if using many layers)
 cms.validate;
 
 %% Get surface layer shape
