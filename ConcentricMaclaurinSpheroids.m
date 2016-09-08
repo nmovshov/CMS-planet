@@ -514,8 +514,12 @@ classdef ConcentricMaclaurinSpheroids < handle
             else
                 fun = @(x)obj.eq51_alfa(x,jlayer,alfa);
             end
-           %y = fzero(fun, [0.6, 1.02]);
-            y = fzero(fun, 1);
+            if strcmpi(obj.opts.rootfinder,'fzero')
+                %y = fzero(fun, [0.6, 1.02]);
+                y = fzero(fun, 1);
+            else
+                y = nzero(fun, 0.6, 1, obj.opts.TolX, eps);
+            end
         end
         
         function y = eq50_alfa(obj,zeta0,alfa)
@@ -1021,4 +1025,42 @@ end
 %% Verify and return
 assert(all(isfinite(x)))
 assert(all(isfinite(w)))
+end
+
+function x_root = nzero(fun, x1, x2, tolx, tolf)
+% Bare-bones, optimized lion hunter in the interval [x1,x2].
+
+f_l = fun(x1);
+f_u = fun(x2);
+if (abs(f_l) < tolf)
+    x_root = x1;
+    return
+end
+if (abs(f_u) < tolf)
+    x_root = x2;
+    return
+end
+if (f_l*f_u > 0), error('lion hunt error'), end
+if (f_l < 0)
+    x_l = x1;
+    x_u = x2;
+else
+    x_l = x2;
+    x_u = x1;
+    f_u = f_l;
+end
+x_n = x_u;
+f_n = f_u;
+dx = (x_u - x_l)/2;
+while (abs(dx) > tolx) && (abs(f_n) > tolf)
+    dx = (x_u - x_l)/2;
+    x_n = x_l + dx;
+    f_n = fun(x_n);
+    if (f_n < 0)
+        x_l = x_n;
+    else
+        x_u = x_n;
+    end
+end
+x_root = x_n;
 end

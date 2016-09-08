@@ -21,7 +21,8 @@ function options = cmsset(varargin)
 %zetas_in_J_integrals - How to obtain values of zeta inside J integrals [ {'rootfind'} | 'interp' ]
 %verbosity - Level of runtime messages [0 {1} 2]
 %IntTol - Relative tolerance for adaptive integrals [ positive real {1e-9} ]
-%
+%rootfinder - Algorithm choice for solving the zeta equations [ {'fzero'} | 'lionhunt' ]
+%TolX - Termination tolerance for root finding algorithms [ positive real {2.2204e-16} ]
 %   Note: defaults chosen to match Hubbard (2013) example.
 
 % If no arguments print usage and return.
@@ -45,6 +46,8 @@ p.addParameter('verbosity',1,@isnonnegintscalar)
 p.addParameter('J_integration_method','gauss',@isvalidintmethod)
 p.addParameter('zetas_in_J_integrals','rootfind',@isvalidzetasmethod)
 p.addParameter('IntTol',1e-9,@isposscalar)
+p.addParameter('rootfinder','fzero',@isvalidrootfinder)
+p.addParameter('TolX',eps,@isposscalar)
 
 % Parse name-value pairs and return.
 p.parse(varargin{:})
@@ -88,6 +91,13 @@ function isvalidzetasmethod(x)
 validateattributes(x,{'char'},{'row'})
 if ~any(strcmpi(x,{'rootfind','interp'}))
     error('Zetas in J integrals method %s not implemented.',x)
+end
+end
+
+function isvalidrootfinder(x)
+validateattributes(x,{'char'},{'row'})
+if ~any(strcmpi(x,{'fzero','lionhunt'}))
+    error('Unknown root finding algorithm %s.',x)
 end
 end
 
