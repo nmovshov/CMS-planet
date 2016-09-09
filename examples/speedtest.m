@@ -13,7 +13,7 @@ addpath(fullfile(getenv('userprofile'),'CMS-planet'))
 % functions and gravity moments (calculating shape functions dominates
 % computation time) and save the mean time per pass.
 
-nvec = [2, 4, 8, 16, 32, 64];
+nvec = [2, 4, 8, 16, 32];
 tvec = nan(size(nvec));
 
 for k=1:length(nvec)
@@ -45,3 +45,6 @@ title(['CMS model timing with linear density profile and q = ',...
     num2str(cms.qrot)])
 ah.Box = 'on';
 legend show
+eqstr = sprintf('Asymptotic behavior: $t = %g n^2$',p(1));
+th = annotation('textbox',[0.2,0.8,0.1,0.1],'string',eqstr,'fitbox','on');
+th.Interpreter = 'latex';
