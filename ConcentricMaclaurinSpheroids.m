@@ -824,7 +824,7 @@ end
 % Double sum in eq. (47)
 x1 = 0;
 for ii=1:nlayers
-    for kk=2:kmax % (note ind shift, start ind, odd J=0)
+    for kk=2:2:kmax % (note ind shift, start ind, odd J=0)
         x1 = x1 + Jt(ii,kk+1)*lambda(ii)^kk*P0(kk+1);
     end
 end
@@ -832,7 +832,7 @@ end
 % Double sum in eq. (50)
 x2 = 0;
 for ii=1:nlayers
-    for kk=2:kmax % (note ind shift, start ind, odd J=0)
+    for kk=2:2:kmax % (note ind shift, start ind, odd J=0)
         x2 = x2 + Jt(ii,kk+1)*lambda(ii)^kk*zeta0^(-kk)*Pmu(kk+1);
     end
 end
@@ -861,7 +861,7 @@ end
 % Double sum, row 1
 x1 = 0;
 for ii=jj:nlayers
-    for kk=0:kmax % (note ind shift, start ind, odd J=0)
+    for kk=0:2:kmax % (note ind shift, start ind, odd J=0)
         x1 = x1 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*zeta_j^(-kk)*Pmu(kk+1);
     end
 end
@@ -869,7 +869,7 @@ end
 % Double sum, row 2
 x2 = 0;
 for ii=1:jj-1
-    for kk=0:kmax
+    for kk=0:2:kmax
         x2 = x2 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*zeta_j^(kk+1)*Pmu(kk+1);
     end
 end
@@ -883,7 +883,7 @@ end
 % Double sum, row 3
 x4 = 0;
 for ii=jj:nlayers
-    for kk=0:kmax
+    for kk=0:2:kmax
         x4 = x4 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*P0(kk+1);
     end
 end
@@ -891,7 +891,7 @@ end
 % Double sum, row 4
 x5 = 0;
 for ii=1:jj-1
-    for kk=0:kmax
+    for kk=0:2:kmax
         x5 = x5 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*P0(kk+1);
     end
 end
