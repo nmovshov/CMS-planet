@@ -13,7 +13,7 @@ addpath(fullfile(getenv('userprofile'),'CMS-planet'))
 % functions and gravity moments (calculating shape functions dominates
 % computation time) and save the mean time per pass.
 
-nvec = [2, 4, 8, 16, 32];
+nvec = [2, 4, 8, 16, 32, 64];
 tvec = nan(size(nvec));
 
 for k=1:length(nvec)
