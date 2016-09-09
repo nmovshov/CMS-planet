@@ -516,7 +516,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
             if strcmpi(obj.opts.rootfinder,'fzero')
                 %y = fzero(fun, [0.6, 1.02]);
-                y = fzero(fun, 1);
+                %y = fzero(fun, 1);
+                y = fzero(fun, obj.zetas(jlayer, alfa));
             else
                 y = nzero(fun, 0.6, 1, obj.opts.TolX, eps);
             end
@@ -537,7 +538,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum in eq. (47)
             x1 = 0;
             for ii=1:nbLayers
-                for kk=2:nbMoments % (note ind shift, start ind, odd J=0)
+                for kk=2:2:nbMoments % (note ind shift, start ind, odd J=0)
                     x1 = x1 + Jt(ii,kk+1)*lambda(ii)^kk*P0(kk+1);
                 end
             end
@@ -545,7 +546,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum in eq. (50)
             x2 = 0;
             for ii=1:nbLayers
-                for kk=2:nbMoments % (note ind shift, start ind, odd J=0)
+                for kk=2:2:nbMoments % (note ind shift, start ind, odd J=0)
                     x2 = x2 + Jt(ii,kk+1)*lambda(ii)^kk*zeta0^(-kk)*Pmu(kk+1);
                 end
             end
@@ -573,7 +574,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum, row 1
             x1 = 0;
             for ii=jj:nbLayers
-                for kk=0:nbMoments % (note ind shift, start ind, odd J=0)
+                for kk=0:2:nbMoments % (note ind shift, start ind, odd J=0)
                     x1 = x1 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*zeta_j^(-kk)*Pmu(kk+1);
                 end
             end
@@ -581,7 +582,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum, row 2
             x2 = 0;
             for ii=1:jj-1
-                for kk=0:nbMoments
+                for kk=0:2:nbMoments
                     x2 = x2 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*zeta_j^(kk+1)*Pmu(kk+1);
                 end
             end
@@ -595,7 +596,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum, row 3
             x4 = 0;
             for ii=jj:nbLayers
-                for kk=0:nbMoments
+                for kk=0:2:nbMoments
                     x4 = x4 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*P0(kk+1);
                 end
             end
@@ -603,7 +604,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum, row 4
             x5 = 0;
             for ii=1:jj-1
-                for kk=0:nbMoments
+                for kk=0:2:nbMoments
                     x5 = x5 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*P0(kk+1);
                 end
             end
