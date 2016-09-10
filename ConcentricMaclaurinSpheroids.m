@@ -665,7 +665,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 for k=1:length(triggerFields)
                     if val.(triggerFields{k}) ~= obj.opts.(triggerFields{k})
                         msg = ['Changing %s of an existing obj triggered a ',...
-                            're-initilization!'];
+                            're-initialization!'];
                         if (obj.cooked) %#ok<MCSUP>
                             warning off backtrace
                             warning(msg,triggerFields{k})
@@ -996,7 +996,7 @@ w = NaN(1,n);
 
 %% Main loop
 for j=1:m
-    % Get j-th root of Legenre polynomial Pn, along with Pn' value there.
+    % Get j-th root of Legendre polynomial Pn, along with Pn' value there.
     z = cos(pi*((j - 1) + 0.75)/(n + 0.5)); % initial guess for j-th root
     while true
         % Calculate Pn(z) and Pn-1(z) and Pn'(z)
