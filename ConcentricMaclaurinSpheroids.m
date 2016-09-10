@@ -27,6 +27,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         Pnmu    % values of Legendre polynomials at fixed colatitudes
         Pnzero  % values of Legendre polynomials at equator
         gws     % weight factors for Gauss integration (correspond to mus)
+        os      % optimset struct for use by fzero
         cooked = false  % flag indicating successful convergence
         inits = 0 % counter of calls to InitCMS, just for internal accounting
     end
@@ -123,10 +124,10 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
             
             % Loop over layers (outer) and colatitudes (inner)
-            s = optimset('TolX',obj.opts.TolX);
+            obj.os = optimset('TolX',obj.opts.TolX);
             for ii=1:obj.nlayers
                 for alfa=1:obj.opts.nangles
-                    obj.zetas(ii,alfa) = obj.zeta_j_of_alfa(ii,alfa,s);
+                    obj.zetas(ii,alfa) = obj.zeta_j_of_alfa(ii,alfa);
                     %obj.zetas(ii,alfa) = obj.zeta_j_of_mu(ii, obj.mus(alfa));
                 end
             end
@@ -506,7 +507,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             y = fzero(fun, 1);
         end
         
-        function y = zeta_j_of_alfa(obj,jlayer,alfa,os)
+        function y = zeta_j_of_alfa(obj,jlayer,alfa)
             % Find lvl surface of jth layer at colat mu(alfa).
             assert(jlayer > 0 && jlayer <= obj.nlayers)
             assert(alfa > 0 && alfa <= obj.opts.nangles)
@@ -518,7 +519,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             if strcmpi(obj.opts.rootfinder,'fzero')
                 %y = fzero(fun, [0.6, 1.02]);
                 %y = fzero(fun, 1);
-                y = fzero(fun, obj.zetas(jlayer, alfa), os);
+                y = fzero(fun, obj.zetas(jlayer, alfa), obj.os);
             else
                 y = nzero(fun, 0.6, 1, obj.opts.TolX, eps);
             end
