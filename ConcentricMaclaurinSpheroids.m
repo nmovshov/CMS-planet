@@ -22,6 +22,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         Pnzero  % values of Legendre polynomials at equator
         Pnone   % values of Legendre polynomials at pole
         gws     % weight factors for Gauss integration (correspond to mus)
+        zeta1s  % normalized rescaled level-surface polar radii
         os      % optimset struct for use by fzero
         cooked = false  % flag indicating successful convergence
         inits = 0 % counter of calls to InitCMS, just for internal accounting
@@ -36,7 +37,6 @@ classdef ConcentricMaclaurinSpheroids < handle
         ars     % layer aspect ratio (b/a)
         ss      % layer mean radius normalized to a0
         Vs      % layer volume normalized to 4pi/3 a0^3
-
     end
     
     %% The constructor
@@ -103,6 +103,11 @@ classdef ConcentricMaclaurinSpheroids < handle
                        'Try running %s.relax() again and/or increasing ',...
                        'the convergence tolerance: %s.opts.dJtol = newtol.'];
                 warning(msg, inputname(1), inputname(1))
+            end
+            
+            % Calculate polar radii
+            for ii=1:obj.nlayers
+                obj.zeta1s(ii) = obj.zeta_j_of_mu(ii, 1);
             end
             
             ET = toc(t_rlx);
@@ -344,6 +349,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Default zetas setup is spherical
             obj.zetas = ones(op.nlayers, op.nangles);
+            obj.zeta1s = ones(op.nlayers, 1);
             
             % Default Js setup is spherical
             obj.Js.tilde = zeros(op.nlayers, (op.kmax+1));
@@ -747,7 +753,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             val = NaN(size(obj.lambdas));
             if obj.cooked
                 for j=1:obj.nlayers
-                    val(j) = obj.zeta_j_of_mu(j,1)*obj.lambdas(j);
+                    val(j) = obj.zeta1s(j)*obj.lambdas(j);
                 end
             end
         end
@@ -759,22 +765,14 @@ classdef ConcentricMaclaurinSpheroids < handle
         function val = get.fs(obj)
             val = NaN(size(obj.lambdas));
             if obj.cooked
-                for j=1:obj.nlayers
-                    a = 1;
-                    b = obj.zeta_j_of_mu(j,1);
-                    val(j) = (a - b)/a;
-                end
+                val = (obj.as - obj.bs)./obj.as;
             end
         end
         
         function val = get.ars(obj)
             val = NaN(size(obj.lambdas));
             if obj.cooked
-                for j=1:obj.nlayers
-                    a = 1;
-                    b = obj.zeta_j_of_mu(j,1);
-                    val(j) = b/a;
-                end
+                val = obj.bs./obj.as;
             end
         end
         
