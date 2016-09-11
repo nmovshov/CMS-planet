@@ -21,6 +21,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         ars     % layer aspect ratio (b/a)
         ss      % layer mean radius normalized to a0
         Vs      % layer volume normalized to 4pi/3 a0^3
+        %TODO: rethink geometry props - dependent or saved?
     end
     properties (Access = private)
         N       % real nlayers
@@ -503,8 +504,12 @@ classdef ConcentricMaclaurinSpheroids < handle
             else
                 fun = @(x)eq51(x,jlayer,mu,obj.Js.tilde,obj.Js.tilde_prime,obj.Js.pprime,obj.lambdas,obj.opts.qrot);
             end
-           %y = fzero(fun, [0.6, 1.02]);
-            y = fzero(fun, 1);
+            if strcmpi(obj.opts.rootfinder,'fzero')
+                %y = fzero(fun, [0.6, 1.02]);
+                y = fzero(fun, 1, obj.os);
+            else
+                y = nzero(fun, 0.6, 1, obj.opts.TolX, eps);
+            end
         end
         
         function y = zeta_j_of_alfa(obj,jlayer,alfa)
