@@ -373,6 +373,9 @@ classdef ConcentricMaclaurinSpheroids < handle
                 obj.Pnzero(k+1,1) = Pn(k, 0);
                 obj.Pnone(k+1,1) = Pn(k, 1);
             end
+            
+            % Remember that we Init-ed and return.
+            obj.inits = obj.inits + 1;
         end
         
         function dJ = update_Js_gauss(obj)
@@ -750,12 +753,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function val = get.bs(obj)
-            val = NaN(size(obj.lambdas));
-            if obj.cooked
-                for j=1:obj.nlayers
-                    val(j) = obj.zeta1s(j)*obj.lambdas(j);
-                end
-            end
+            val = obj.zeta1s.*obj.lambdas;
         end
         
         function val = get.as(obj)
@@ -763,25 +761,17 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function val = get.fs(obj)
-            val = NaN(size(obj.lambdas));
-            if obj.cooked
-                val = (obj.as - obj.bs)./obj.as;
-            end
+            val = (obj.as - obj.bs)./obj.as;
         end
         
         function val = get.ars(obj)
-            val = NaN(size(obj.lambdas));
-            if obj.cooked
-                val = obj.bs./obj.as;
-            end
+            val = obj.bs./obj.as;
         end
         
         function val = get.Vs(obj)
             val = NaN(size(obj.lambdas));
-            if obj.cooked
-                for j=1:obj.nlayers
-                    val(j) = obj.lambdas(j)^3*(obj.zetas(j,:).^3)*(obj.gws');
-                end
+            for j=1:obj.nlayers
+                val(j) = obj.lambdas(j)^3*(obj.zetas(j,:).^3)*(obj.gws');
             end
         end
         
@@ -800,6 +790,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.deltas = s.deltas;
             obj.mus = s.mus;
             obj.zetas = s.zetas;
+            obj.zeta1s = s.zeta1s;
             obj.Js = s.Js;
             obj.N = s.N;
             obj.Pnmu = s.Pnmu;
