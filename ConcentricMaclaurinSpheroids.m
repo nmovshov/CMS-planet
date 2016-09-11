@@ -15,18 +15,15 @@ classdef ConcentricMaclaurinSpheroids < handle
         mus     % colatitude cosines
         zetas   % normalized and scaled level-surface radii
         Js      % rescaled, dimensionless, layer gravity moments
-        as      % normalized equatorial radii (another name for lambdas)
-        bs      % normalized polar radii
-        fs      % layer flattening "oblateness" (a - b)/a
-        ars     % layer aspect ratio (b/a)
-        ss      % layer mean radius normalized to a0
-        Vs      % layer volume normalized to 4pi/3 a0^3
     end
     properties (Access = private)
         N       % real nlayers
         Pnmu    % values of Legendre polynomials at fixed colatitudes
         Pnzero  % values of Legendre polynomials at equator
+        Pnone   % values of Legendre polynomials at pole
         gws     % weight factors for Gauss integration (correspond to mus)
+        zeta1s  % normalized rescaled level-surface polar radii
+        os      % optimset struct for use by fzero
         cooked = false  % flag indicating successful convergence
         inits = 0 % counter of calls to InitCMS, just for internal accounting
     end
@@ -34,6 +31,12 @@ classdef ConcentricMaclaurinSpheroids < handle
         nlayers
         kmax
         qrot
+        as      % normalized equatorial radii (another name for lambdas)
+        bs      % normalized polar radii
+        fs      % layer flattening "oblateness" (a - b)/a
+        ars     % layer aspect ratio (b/a)
+        ss      % layer mean radius normalized to a0
+        Vs      % layer volume normalized to 4pi/3 a0^3
     end
     
     %% The constructor
@@ -60,11 +63,12 @@ classdef ConcentricMaclaurinSpheroids < handle
     
     %% Public methods
     methods (Access = public)
-        function relax(obj)
+        function ET = relax(obj)
             % Iterate calculation of gravitational moments until converged.
             
-            % Optional communication
             t_rlx = tic;
+            
+            % Optional communication
             verb = obj.opts.verbosity;
             if (verb > 0)
                 fprintf('Relaxing CMS to self-consistent level surfaces...\n\n')
@@ -101,11 +105,18 @@ classdef ConcentricMaclaurinSpheroids < handle
                 warning(msg, inputname(1), inputname(1))
             end
             
+            % Calculate polar radii
+            for ii=1:obj.nlayers
+                obj.zeta1s(ii) = obj.zeta_j_of_mu(ii, 1);
+            end
+            
+            ET = toc(t_rlx);
+            
             % Optional communication
             if (verb > 0)
                 msg = 'Relaxing CMS to self-consistent level surfaces...done.';
                 fprintf([msg, '\n'])
-                fprintf('Total elapsed time %g sec.\n', toc(t_rlx))
+                fprintf('Total elapsed time %g sec.\n', ET)
             end
         end
         
@@ -120,6 +131,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
             
             % Loop over layers (outer) and colatitudes (inner)
+            obj.os = optimset('TolX',obj.opts.TolX);
             for ii=1:obj.nlayers
                 for alfa=1:obj.opts.nangles
                     obj.zetas(ii,alfa) = obj.zeta_j_of_alfa(ii,alfa);
@@ -337,6 +349,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Default zetas setup is spherical
             obj.zetas = ones(op.nlayers, op.nangles);
+            obj.zeta1s = ones(op.nlayers, 1);
             
             % Default Js setup is spherical
             obj.Js.tilde = zeros(op.nlayers, (op.kmax+1));
@@ -358,7 +371,11 @@ classdef ConcentricMaclaurinSpheroids < handle
             for k = 0:op.kmax
                 obj.Pnmu(k+1,:) = Pn(k, obj.mus);
                 obj.Pnzero(k+1,1) = Pn(k, 0);
+                obj.Pnone(k+1,1) = Pn(k, 1);
             end
+            
+            % Remember that we Init-ed and return.
+            obj.inits = obj.inits + 1;
         end
         
         function dJ = update_Js_gauss(obj)
@@ -498,8 +515,12 @@ classdef ConcentricMaclaurinSpheroids < handle
             else
                 fun = @(x)eq51(x,jlayer,mu,obj.Js.tilde,obj.Js.tilde_prime,obj.Js.pprime,obj.lambdas,obj.opts.qrot);
             end
-           %y = fzero(fun, [0.6, 1.02]);
-            y = fzero(fun, 1);
+            if strcmpi(obj.opts.rootfinder,'fzero')
+                %y = fzero(fun, [0.6, 1.02]);
+                y = fzero(fun, 1, obj.os);
+            else
+                y = nzero(fun, 0.6, 1, obj.opts.TolX, eps);
+            end
         end
         
         function y = zeta_j_of_alfa(obj,jlayer,alfa)
@@ -511,8 +532,13 @@ classdef ConcentricMaclaurinSpheroids < handle
             else
                 fun = @(x)obj.eq51_alfa(x,jlayer,alfa);
             end
-           %y = fzero(fun, [0.6, 1.02]);
-            y = fzero(fun, 1);
+            if strcmpi(obj.opts.rootfinder,'fzero')
+                %y = fzero(fun, [0.6, 1.02]);
+                %y = fzero(fun, 1);
+                y = fzero(fun, obj.zetas(jlayer, alfa), obj.os);
+            else
+                y = nzero(fun, 0.6, 1, obj.opts.TolX, eps);
+            end
         end
         
         function y = eq50_alfa(obj,zeta0,alfa)
@@ -530,7 +556,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum in eq. (47)
             x1 = 0;
             for ii=1:nbLayers
-                for kk=2:nbMoments % (note ind shift, start ind, odd J=0)
+                for kk=2:2:nbMoments % (note ind shift, start ind, odd J=0)
                     x1 = x1 + Jt(ii,kk+1)*lambda(ii)^kk*P0(kk+1);
                 end
             end
@@ -538,7 +564,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum in eq. (50)
             x2 = 0;
             for ii=1:nbLayers
-                for kk=2:nbMoments % (note ind shift, start ind, odd J=0)
+                for kk=2:2:nbMoments % (note ind shift, start ind, odd J=0)
                     x2 = x2 + Jt(ii,kk+1)*lambda(ii)^kk*zeta0^(-kk)*Pmu(kk+1);
                 end
             end
@@ -566,7 +592,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum, row 1
             x1 = 0;
             for ii=jj:nbLayers
-                for kk=0:nbMoments % (note ind shift, start ind, odd J=0)
+                for kk=0:2:nbMoments % (note ind shift, start ind, odd J=0)
                     x1 = x1 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*zeta_j^(-kk)*Pmu(kk+1);
                 end
             end
@@ -574,7 +600,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum, row 2
             x2 = 0;
             for ii=1:jj-1
-                for kk=0:nbMoments
+                for kk=0:2:nbMoments
                     x2 = x2 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*zeta_j^(kk+1)*Pmu(kk+1);
                 end
             end
@@ -588,7 +614,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum, row 3
             x4 = 0;
             for ii=jj:nbLayers
-                for kk=0:nbMoments
+                for kk=0:2:nbMoments
                     x4 = x4 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*P0(kk+1);
                 end
             end
@@ -596,7 +622,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Double sum, row 4
             x5 = 0;
             for ii=1:jj-1
-                for kk=0:nbMoments
+                for kk=0:2:nbMoments
                     x5 = x5 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*P0(kk+1);
                 end
             end
@@ -655,7 +681,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 for k=1:length(triggerFields)
                     if val.(triggerFields{k}) ~= obj.opts.(triggerFields{k})
                         msg = ['Changing %s of an existing obj triggered a ',...
-                            're-initilization!'];
+                            're-initialization!'];
                         if (obj.cooked) %#ok<MCSUP>
                             warning off backtrace
                             warning(msg,triggerFields{k})
@@ -727,12 +753,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function val = get.bs(obj)
-            val = NaN(size(obj.lambdas));
-            if obj.cooked
-                for j=1:obj.nlayers
-                    val(j) = obj.zeta_j_of_mu(j,1)*obj.lambdas(j);
-                end
-            end
+            val = obj.zeta1s.*obj.lambdas;
         end
         
         function val = get.as(obj)
@@ -740,33 +761,17 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function val = get.fs(obj)
-            val = NaN(size(obj.lambdas));
-            if obj.cooked
-                for j=1:obj.nlayers
-                    a = 1;
-                    b = obj.zeta_j_of_mu(j,1);
-                    val(j) = (a - b)/a;
-                end
-            end
+            val = (obj.as - obj.bs)./obj.as;
         end
         
         function val = get.ars(obj)
-            val = NaN(size(obj.lambdas));
-            if obj.cooked
-                for j=1:obj.nlayers
-                    a = 1;
-                    b = obj.zeta_j_of_mu(j,1);
-                    val(j) = b/a;
-                end
-            end
+            val = obj.bs./obj.as;
         end
         
         function val = get.Vs(obj)
             val = NaN(size(obj.lambdas));
-            if obj.cooked
-                for j=1:obj.nlayers
-                    val(j) = obj.lambdas(j)^3*(obj.zetas(j,:).^3)*(obj.gws');
-                end
+            for j=1:obj.nlayers
+                val(j) = obj.lambdas(j)^3*(obj.zetas(j,:).^3)*(obj.gws');
             end
         end
         
@@ -785,10 +790,12 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.deltas = s.deltas;
             obj.mus = s.mus;
             obj.zetas = s.zetas;
+            obj.zeta1s = s.zeta1s;
             obj.Js = s.Js;
             obj.N = s.N;
             obj.Pnmu = s.Pnmu;
             obj.Pnzero = s.Pnzero;
+            obj.Pnone = s.Pnone;
             obj.gws = s.gws;
             obj.cooked = s.cooked;
             obj.inits = s.inits;
@@ -817,7 +824,7 @@ end
 % Double sum in eq. (47)
 x1 = 0;
 for ii=1:nlayers
-    for kk=2:kmax % (note ind shift, start ind, odd J=0)
+    for kk=2:2:kmax % (note ind shift, start ind, odd J=0)
         x1 = x1 + Jt(ii,kk+1)*lambda(ii)^kk*P0(kk+1);
     end
 end
@@ -825,7 +832,7 @@ end
 % Double sum in eq. (50)
 x2 = 0;
 for ii=1:nlayers
-    for kk=2:kmax % (note ind shift, start ind, odd J=0)
+    for kk=2:2:kmax % (note ind shift, start ind, odd J=0)
         x2 = x2 + Jt(ii,kk+1)*lambda(ii)^kk*zeta0^(-kk)*Pmu(kk+1);
     end
 end
@@ -854,7 +861,7 @@ end
 % Double sum, row 1
 x1 = 0;
 for ii=jj:nlayers
-    for kk=0:kmax % (note ind shift, start ind, odd J=0)
+    for kk=0:2:kmax % (note ind shift, start ind, odd J=0)
         x1 = x1 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*zeta_j^(-kk)*Pmu(kk+1);
     end
 end
@@ -862,7 +869,7 @@ end
 % Double sum, row 2
 x2 = 0;
 for ii=1:jj-1
-    for kk=0:kmax
+    for kk=0:2:kmax
         x2 = x2 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*zeta_j^(kk+1)*Pmu(kk+1);
     end
 end
@@ -876,7 +883,7 @@ end
 % Double sum, row 3
 x4 = 0;
 for ii=jj:nlayers
-    for kk=0:kmax
+    for kk=0:2:kmax
         x4 = x4 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*P0(kk+1);
     end
 end
@@ -884,7 +891,7 @@ end
 % Double sum, row 4
 x5 = 0;
 for ii=1:jj-1
-    for kk=0:kmax
+    for kk=0:2:kmax
         x5 = x5 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*P0(kk+1);
     end
 end
@@ -986,7 +993,7 @@ w = NaN(1,n);
 
 %% Main loop
 for j=1:m
-    % Get j-th root of Legenre polynomial Pn, along with Pn' value there.
+    % Get j-th root of Legendre polynomial Pn, along with Pn' value there.
     z = cos(pi*((j - 1) + 0.75)/(n + 0.5)); % initial guess for j-th root
     while true
         % Calculate Pn(z) and Pn-1(z) and Pn'(z)
@@ -1018,4 +1025,42 @@ end
 %% Verify and return
 assert(all(isfinite(x)))
 assert(all(isfinite(w)))
+end
+
+function x_root = nzero(fun, x1, x2, tolx, tolf)
+% Bare-bones, optimized lion hunter in the interval [x1,x2].
+
+f_l = fun(x1);
+f_u = fun(x2);
+if (abs(f_l) < tolf)
+    x_root = x1;
+    return
+end
+if (abs(f_u) < tolf)
+    x_root = x2;
+    return
+end
+if (f_l*f_u > 0), error('lion hunt error'), end
+if (f_l < 0)
+    x_l = x1;
+    x_u = x2;
+else
+    x_l = x2;
+    x_u = x1;
+    f_u = f_l;
+end
+x_n = x_u;
+f_n = f_u;
+dx = (x_u - x_l)/2;
+while (abs(dx) > tolx) && (abs(f_n) > tolf)
+    dx = (x_u - x_l)/2;
+    x_n = x_l + dx;
+    f_n = fun(x_n);
+    if (f_n < 0)
+        x_l = x_n;
+    else
+        x_u = x_n;
+    end
+end
+x_root = x_n;
 end
