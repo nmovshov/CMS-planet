@@ -16,7 +16,7 @@
 % $$l^2 = \frac{a^2}{b^2} - 1.$$
 %
 % The ellipticity parameter $l$ is related to a dimensionless rotation
-% parameter $m=\omega^2s^3/GM$ by the trancendental equation
+% parameter $m=\omega^2s^3/GM$ by the transcendental equation
 %
 % $$ m = \frac{3}{2l^3}[(3 + l^2)\arctan{l} - 3l]. $$
 % 
@@ -57,7 +57,7 @@ cms = ConcentricMaclaurinSpheroids(opts);
 cms.deltas = [1, 0*(2:opts.nlayers)];
 
 %% Converge cms
-cms.relax % (this may take a minute if using many layers)
+cms.relax; % (this may take a minute if using many layers)
 cms.validate;
 
 %% Get surface layer shape
