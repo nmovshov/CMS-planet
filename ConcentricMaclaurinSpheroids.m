@@ -15,18 +15,12 @@ classdef ConcentricMaclaurinSpheroids < handle
         mus     % colatitude cosines
         zetas   % normalized and scaled level-surface radii
         Js      % rescaled, dimensionless, layer gravity moments
-        as      % normalized equatorial radii (another name for lambdas)
-        bs      % normalized polar radii
-        fs      % layer flattening "oblateness" (a - b)/a
-        ars     % layer aspect ratio (b/a)
-        ss      % layer mean radius normalized to a0
-        Vs      % layer volume normalized to 4pi/3 a0^3
-        %TODO: rethink geometry props - dependent or saved?
     end
     properties (Access = private)
         N       % real nlayers
         Pnmu    % values of Legendre polynomials at fixed colatitudes
         Pnzero  % values of Legendre polynomials at equator
+        Pnone   % values of Legendre polynomials at pole
         gws     % weight factors for Gauss integration (correspond to mus)
         os      % optimset struct for use by fzero
         cooked = false  % flag indicating successful convergence
@@ -36,6 +30,13 @@ classdef ConcentricMaclaurinSpheroids < handle
         nlayers
         kmax
         qrot
+        as      % normalized equatorial radii (another name for lambdas)
+        bs      % normalized polar radii
+        fs      % layer flattening "oblateness" (a - b)/a
+        ars     % layer aspect ratio (b/a)
+        ss      % layer mean radius normalized to a0
+        Vs      % layer volume normalized to 4pi/3 a0^3
+
     end
     
     %% The constructor
@@ -364,6 +365,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             for k = 0:op.kmax
                 obj.Pnmu(k+1,:) = Pn(k, obj.mus);
                 obj.Pnzero(k+1,1) = Pn(k, 0);
+                obj.Pnone(k+1,1) = Pn(k, 1);
             end
         end
         
@@ -804,6 +806,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.N = s.N;
             obj.Pnmu = s.Pnmu;
             obj.Pnzero = s.Pnzero;
+            obj.Pnone = s.Pnone;
             obj.gws = s.gws;
             obj.cooked = s.cooked;
             obj.inits = s.inits;
