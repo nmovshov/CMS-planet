@@ -1,4 +1,4 @@
-classdef CMSPlanet < handle
+classdef CMSPlanet < ConcentricMaclaurinSpheroids
     %CMSPLANET Interior model of rotating fluid planet.
     %   This class implements a model of a rotating fluid planet using the
     %   Concentric Maclaurin Spheroids technique. A CMSPlanet object is defined
@@ -15,6 +15,9 @@ classdef CMSPlanet < handle
         function obj = CMSPlanet(varargin)
             %CMSPLANET Class constructor.
             
+            % Call the base class constructor
+            obj@ConcentricMaclaurinSpheroids(varargin{:});
+
         end
     end % constructor block
     

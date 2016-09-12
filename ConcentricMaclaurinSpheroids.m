@@ -58,8 +58,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             obj.opts = op; % (calls set.opts which calls cmsset(op) again)
             obj.InitCMS(op);
-        end % Constructor
-    end % Constructor block
+        end
+    end % End of constructor block
     
     %% Public methods
     methods (Access = public)
@@ -327,7 +327,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             if (nargout == 1), ah = pax; end            
         end
         
-    end % public methods
+    end % End of public methods block
     
     %% Private methods
     methods (Access = private) % to become private
@@ -655,7 +655,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 y(alfa) = fzero(fun, 1);
             end
         end
-    end % private methods
+    end % End of private methods block
     
     %% Access methods
     methods
@@ -779,7 +779,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             val = obj.Vs.^(1/3);
         end
         
-    end % access methods
+    end % End of access methods block
 
     %% Static methods
     methods (Static)
@@ -801,7 +801,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.inits = s.inits;
         end
         
-    end % End of static methods
+    end % End of static methods block
     
 end % End of classdef
 
