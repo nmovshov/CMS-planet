@@ -29,7 +29,6 @@ classdef ConcentricMaclaurinSpheroids < handle
     end
     properties (Dependent) % Convenience names
         nlayers
-        kmax
         qrot
         as      % normalized equatorial radii (another name for lambdas)
         bs      % normalized polar radii
@@ -734,14 +733,6 @@ classdef ConcentricMaclaurinSpheroids < handle
             msg = ['Changing number of layers in an existing CMS object ',...
                 'makes no sense; create a new object instead.'];
             error(msg)
-        end
-        
-        function val = get.kmax(obj)
-            val = obj.opts.kmax;
-        end
-        
-        function set.kmax(obj,val)
-            obj.opts.kmax = val;
         end
         
         function val = get.qrot(obj)
