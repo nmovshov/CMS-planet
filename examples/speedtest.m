@@ -18,7 +18,7 @@ tvec = nan(size(nvec));
 
 for k=1:length(nvec)
     cms = ConcentricMaclaurinSpheroids(nvec(k));
-    cms.deltas = linspace(0,1,nvec(k));
+    cms.deltas = [0, ones(1,nvec(k)-1)];
     cms.lambdas = linspace(1,1/nvec(k),nvec(k)); % this is actually the default
     cms.qrot = 0.1;
     cms.opts.verbosity = 2;
