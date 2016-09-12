@@ -8,17 +8,34 @@ classdef CMSPlanet < handle
     properties (Access = public)
         name
         desc
-        cms
-        baro
-        opts
     end
     
     %% The constructor
     methods
         function obj = CMSPlanet(varargin)
             %CMSPLANET Class constructor.
+            
         end
-    end
+    end % constructor block
     
-end
+    %% Public methods
+    methods (Access = public)
+        
+    end % public methods
+    
+    %% Private methods
+    methods (Access = private)
+        
+    end % private methods
+    
+    %% Access methods
+    methods
+        
+    end % access methods
+    
+    %% Static methods
+    methods (Static)
+        
+    end % static methods
+end % End of classdef
 
