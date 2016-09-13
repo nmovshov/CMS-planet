@@ -6,15 +6,15 @@ classdef CMSPlanet < handle
     
     %% Properties
     properties (Access = public)
-        name
-        desc
-        opts
-        cms
-        baro
-    end
-    properties (Dependent)
+        name    % model name
+        desc    % model description (one line)
         a0      % equatorial radius
         M       % total mass
+        opts    % struct with opts, both CMS and CMSPlanet
+        cms     % a CMS object
+        baro    % a barotrope object
+    end
+    properties (Dependent)
         qrot    % rotation parameter 
         nlayers % layers of constant density 
     end
@@ -50,13 +50,34 @@ classdef CMSPlanet < handle
     %% Private methods
     methods (Access = private)
         function InitPlanet(obj,op)
-           % (Re)Initialize a CMSPlanet object. 
+           % (Re)Initialize a CMSPlanet object.
+           
+           obj.cms = ConcentricMaclaurinSpheroids(op);
         end
     end % End of private methods block
     
     %% Access methods
     methods
+        function set.opts(obj,val)
+            obj.opts = val;
+            obj.cms.opts = val; %#ok<MCSUP>
+        end
         
+        function val = get.nlayers(obj)
+            val = obj.cms.nlayers;
+        end
+        
+        function set.nlayers(obj,val)
+            obj.cms.nlayers = val;
+        end
+        
+        function val = get.qrot(obj)
+            val = obj.cms.qrot;
+        end
+        
+        function set.qrot(obj,val)
+            obj.cms.qrot = val;
+        end
     end % End of access methods block
     
     %% Static methods
