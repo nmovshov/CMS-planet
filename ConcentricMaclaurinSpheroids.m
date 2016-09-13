@@ -17,14 +17,15 @@ classdef ConcentricMaclaurinSpheroids < handle
         Js      % rescaled, dimensionless, layer gravity moments
     end
     properties (Access = private)
-        N       % real nlayers
-        Pnmu    % values of Legendre polynomials at fixed colatitudes
-        Pnzero  % values of Legendre polynomials at equator
-        Pnone   % values of Legendre polynomials at pole
-        gws     % weight factors for Gauss integration (correspond to mus)
-        zeta1s  % normalized rescaled level-surface polar radii
-        os      % optimset struct for use by fzero
-        cooked = false  % flag indicating successful convergence
+        N           % real nlayers
+        Pnmu        % values of Legendre polynomials at fixed colatitudes
+        Pnzero      % values of Legendre polynomials at equator
+        Pnone       % values of Legendre polynomials at pole
+        gws         % weight factors for Gauss integration (correspond to mus)
+        zeta1s      % normalized rescaled level-surface polar radii
+        os          % optimset struct for use by fzero
+        cooked      % flag indicating obj.relax() was run
+        fullyCooked % flag indicating successful convergence
     end
     properties (Dependent) % Convenience names
         nlayers
@@ -94,13 +95,19 @@ classdef ConcentricMaclaurinSpheroids < handle
                 end
                 iter = iter + 1;
             end
+            
+            % Flags and maybe warnings
+            obj.cooked = true;
             if (iter < obj.opts.MaxIter)
-                obj.cooked = true;
+                obj.fullyCooked = true;
             else
                 msg = ['Object may not have fully converged. ',...
-                       'Try running %s.relax() again and/or increasing ',...
-                       'the convergence tolerance: %s.opts.dJtol = newtol.'];
-                warning(msg, inputname(1), inputname(1))
+                       'Try running %s.relax() and increasing ',...
+                       'the convergence tolerance (%s.opts.dJtol) ',...
+                       'and/or iteration limit (%s.opts.MaxIter).'];
+                warning off backtrace
+                warning(msg, inputname(1), inputname(1), inputname(1))
+                warning on backtrace
             end
             
             % Calculate polar radii
@@ -183,11 +190,15 @@ classdef ConcentricMaclaurinSpheroids < handle
             TF = true;
             warning('off','backtrace')
             
-            % Check for doneness
+            % Warn but don't fail uncooked objects
             if (~obj.cooked)
-                warning(['Object may not be fully converged, try running',...
-                    ' %s.relax()'],inputname(1))
-                TF = false;
+                warning('Uncooked object, try running %s.relax()',inputname(1))
+            elseif (~obj.fullyCooked)
+                msg = ['Object may not be fully converged. ',...
+                       'Try running %s.relax() and increasing ',...
+                       'the convergence tolerance (%s.opts.dJtol) ',...
+                       'and/or iteration limit (%s.opts.MaxIter).'];
+                warning(msg, inputname(1), inputname(1), inputname(1))
             end
             
             % Check for properly normalized zetas
@@ -281,13 +292,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             if verLessThan('matlab','9')
                 error('CMS plotting requires R2016a or later')
             end
-            
-            % Warn if uncooked
-            if (~obj.cooked)
-                warning(['Object may not be fully converged, try running',...
-                    ' %s.relax()'],inputname(1))
-            end
-            
+                        
             % Prepare colatitudes for polar plot
             mu = [1, fliplr(obj.mus), 0];
             th = acos(mu);            % 0 to pi/2
@@ -377,6 +382,10 @@ classdef ConcentricMaclaurinSpheroids < handle
                 obj.Pnzero(k+1,1) = Pn(k, 0);
                 obj.Pnone(k+1,1) = Pn(k, 1);
             end
+            
+            % Set flags and counters
+            obj.cooked = false;
+            obj.fullyCooked = false;
         end
         
         function dJ = update_Js_gauss(obj)
@@ -696,7 +705,7 @@ classdef ConcentricMaclaurinSpheroids < handle
 
             % Finally, assign the new opts, unflag cooked, and return.
             obj.opts = val;
-            obj.cooked = false; %#ok<MCSUP>
+            obj.fullyCooked = false; %#ok<MCSUP>
         end
         
         function set.lambdas(obj,val)
@@ -715,6 +724,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 'radii must be normalized to outer layer'],usval(1))
             obj.lambdas = usval(:);
             obj.cooked = false; %#ok<MCSUP>
+            obj.fullyCooked = false; %#ok<MCSUP>
         end
         
         function set.deltas(obj,val)
@@ -725,6 +735,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 numel(val),obj.nlayers) %#ok<MCSUP>
             obj.deltas = val(:);
             obj.cooked = false; %#ok<MCSUP>
+            obj.fullyCooked = false; %#ok<MCSUP>
         end
         
         function val = get.nlayers(obj)
@@ -791,6 +802,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Pnone = s.Pnone;
             obj.gws = s.gws;
             obj.cooked = s.cooked;
+            obj.fullyCooked = s.fullyCooked;
         end
         
     end % End of static methods block
