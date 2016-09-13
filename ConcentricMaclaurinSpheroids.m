@@ -25,7 +25,6 @@ classdef ConcentricMaclaurinSpheroids < handle
         zeta1s  % normalized rescaled level-surface polar radii
         os      % optimset struct for use by fzero
         cooked = false  % flag indicating successful convergence
-        inits = 0 % counter of calls to InitCMS, just for internal accounting
     end
     properties (Dependent) % Convenience names
         nlayers
@@ -227,7 +226,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             warning('on','backtrace')
         end
         
-        function V = Vext(obj,xi,mu)
+        function V = Vext(obj,xi,mu,nmax)
             % Convenience method: return potential at external point (xi,mu).
             
             validateattributes(xi,{'numeric'},{'real','positive','scalar'},...
@@ -236,10 +235,16 @@ classdef ConcentricMaclaurinSpheroids < handle
                 '>=',-1,'<=',1},'','mu',2)
             assert(xi >= obj.xi_i_of_mu(1,mu),...
                 'The point (xi,mu) = (%g,%g) is not external.',xi,mu);
-            
-            tk = 0:2:obj.opts.kmax;
+            if nargin < 4
+                nmax = obj.opts.kmax;
+            else
+                validateattributes(nmax,{'numeric'},...
+                    {'positive','integer','scalar','<=',obj.opts.kmax},...
+                    '','nmax',3)
+            end
+            tk = 0:2:nmax;
             p2k = arrayfun(@Pn,tk,mu*ones(size(tk)));
-            V = -(1/xi)*sum(obj.Jn.*xi.^-tk.*p2k);
+            V = -(1/xi)*sum(obj.Jn(tk).*xi.^-tk.*p2k);
         end
         
         function J = Jn(obj,n)
@@ -372,9 +377,6 @@ classdef ConcentricMaclaurinSpheroids < handle
                 obj.Pnzero(k+1,1) = Pn(k, 0);
                 obj.Pnone(k+1,1) = Pn(k, 1);
             end
-            
-            % Remember that we Init-ed and return.
-            obj.inits = obj.inits + 1;
         end
         
         function dJ = update_Js_gauss(obj)
@@ -789,7 +791,6 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Pnone = s.Pnone;
             obj.gws = s.gws;
             obj.cooked = s.cooked;
-            obj.inits = s.inits;
         end
         
     end % End of static methods block
