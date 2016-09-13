@@ -359,7 +359,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.tilde = zeros(op.nlayers, (op.kmax+1));
             obj.Js.tilde_prime = zeros(op.nlayers, (op.kmax+1));
             obj.Js.pprime = zeros(op.nlayers, 1);
-            obj.Js.Jn = NaN(1, op.kmax+1);
+            obj.Js.Jn = zeros(1, op.kmax+1);
             den = sum(obj.deltas.*obj.lambdas.^3);
             obj.Js.tilde(:,1) = -(obj.deltas.*obj.lambdas.^3)/den;
             obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
