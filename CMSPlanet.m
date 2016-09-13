@@ -17,6 +17,7 @@ classdef CMSPlanet < handle
     properties (Dependent)
         qrot    % rotation parameter 
         nlayers % layers of constant density 
+        Jn      % external gravity moments
     end
     
     %% The constructor
@@ -77,6 +78,10 @@ classdef CMSPlanet < handle
         
         function set.qrot(obj,val)
             obj.cms.qrot = val;
+        end
+        
+        function val = get.Jn(obj)
+            val = obj.cms.Jn;
         end
     end % End of access methods block
     
