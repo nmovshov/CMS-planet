@@ -373,7 +373,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Precompute Legendre polynomials for fixed colatitudes (gauss quad)
             for k = 0:op.kmax
-                obj.Pnmu(k+1,:) = Pn(k, obj.mus);
+                obj.Pnmu(k+1,1:op.nangles) = Pn(k, obj.mus);
                 obj.Pnzero(k+1,1) = Pn(k, 0);
                 obj.Pnone(k+1,1) = Pn(k, 1);
             end
