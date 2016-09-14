@@ -137,12 +137,14 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Loop over layers (outer) and colatitudes (inner)
             obj.os = optimset('TolX',obj.opts.TolX);
-            for ii=1:obj.nlayers
-                for alfa=1:obj.opts.nangles
-                    obj.zetas(ii,alfa) = obj.zeta_j_of_alfa(ii,alfa);
-                    %obj.zetas(ii,alfa) = obj.zeta_j_of_mu(ii, obj.mus(alfa));
+            nbLats = obj.opts.nangles;
+            newzetas = NaN(size(obj.zetas));
+            parfor ii=1:obj.nlayers
+                for alfa=1:nbLats
+                    newzetas(ii,alfa) = obj.zeta_j_of_alfa(ii,alfa); %#ok<PFBNS>
                 end
             end
+            obj.zetas = newzetas;
             
             % Optional communication
             if (verb > 1)
