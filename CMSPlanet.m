@@ -112,6 +112,13 @@ classdef CMSPlanet < handle
             end
         end
         
+        function set.eos(obj,val)
+            if ~isa(val,'barotropes.Barotrope')
+                error('eos must be a valid instance of class Barotrope')
+            end
+            obj.eos = val;
+        end
+        
         function val = get.s0(obj)
             val = obj.a0*obj.cms.ss(1);
         end

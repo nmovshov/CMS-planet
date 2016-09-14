@@ -12,8 +12,8 @@ classdef Polytrope < barotropes.Barotrope
     methods
         function obj = Polytrope(K, n)
             if nargin > 0
-                assert(isnumeric(K) && isscalar(K) && K > 0)
-                assert(isnumeric(n) && isscalar(n) && n > 0)
+                assert(isnumeric(K) && isscalar(K) && double(K) > 0)
+                assert(isnumeric(n) && isscalar(n) && double(n) > 0)
                 obj.K = K;
                 obj.n = n;
                 obj.alpha = 1 + 1/n;
