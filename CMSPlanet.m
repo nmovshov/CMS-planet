@@ -51,7 +51,16 @@ classdef CMSPlanet < handle
     
     %% Public methods
     methods (Access = public)
-        
+        function ah = show(obj)
+            % Visualize a CMSPlanet object, return axes handle.
+            
+            % Require R2016a to use the amazing polarplot features
+            if verLessThan('matlab','9')
+                error('CMS plotting requires R2016a or later')
+            end
+            
+            ah = obj.cms.plot();
+        end
     end % End of public methods block
     
     %% Private methods
