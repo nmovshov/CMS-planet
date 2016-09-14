@@ -18,6 +18,9 @@ classdef CMSPlanet < handle
         qrot    % rotation parameter 
         nlayers % layers of constant density 
         Jn      % external gravity moments
+        s0      % mean radius
+        b0      % polar radius
+        f0      % flattening, a.k.a, oblateness: (a - b)/a
     end
     properties (Access = private)
         si
@@ -107,6 +110,18 @@ classdef CMSPlanet < handle
             catch
                 error('Radius must be a positive scalar.')
             end
+        end
+        
+        function val = get.s0(obj)
+            val = obj.a0*obj.cms.ss(1);
+        end
+        
+        function val = get.b0(obj)
+            val = obj.a0*obj.cms.bs(1);
+        end
+        
+        function val = get.f0(obj)
+            val = (obj.a0 - obj.b0)/obj.a0;
         end
     end % End of access methods block
     

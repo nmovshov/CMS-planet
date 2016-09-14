@@ -32,7 +32,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         qrot
         as      % normalized equatorial radii (another name for lambdas)
         bs      % normalized polar radii
-        fs      % layer flattening "oblateness" (a - b)/a
+        fs      % layer flattening, a.k.a, oblateness: (a - b)/a
         ars     % layer aspect ratio (b/a)
         ss      % layer mean radius normalized to a0
         Vs      % layer volume normalized to 4pi/3 a0^3
