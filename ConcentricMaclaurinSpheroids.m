@@ -690,23 +690,16 @@ classdef ConcentricMaclaurinSpheroids < handle
                 end
             end
             
-            % Then, certain parameters trigger a re-init (maybe with warning).
+            % Also, don't change these horses mid-stream, it's just too messy.
             triggerFields = {'kmax','nangles'};
-            trigger = false;
             if ~isempty(obj.opts) % for the call in the constructor
                 for k=1:length(triggerFields)
                     if val.(triggerFields{k}) ~= obj.opts.(triggerFields{k})
-                        msg = ['Changing %s of an existing obj triggered a ',...
-                            're-initialization!'];
-                        if (obj.cooked) %#ok<MCSUP>
-                            warning off backtrace
-                            warning(msg,triggerFields{k})
-                            warning on backtrace
-                        end
-                        trigger = true;
+                        msg = ['Changing %s of an existing object is just ',...
+                            'too messy; create a new object instead.'];
+                            error(msg,triggerFields{k})
                     end
                 end
-                if (trigger), obj.InitCMS(val); end
             end
 
             % Finally, assign the new opts, unflag cooked, and return.
