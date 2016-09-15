@@ -363,15 +363,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.zeta1s = ones(op.nlayers, 1);
             
             % Default Js setup is spherical
-            obj.Js.tilde = zeros(op.nlayers, (op.kmax+1));
-            obj.Js.tilde_prime = zeros(op.nlayers, (op.kmax+1));
-            obj.Js.pprime = zeros(op.nlayers, 1);
-            obj.Js.Jn = zeros(1, op.kmax+1);
-            den = sum(obj.deltas.*obj.lambdas.^3);
-            obj.Js.tilde(:,1) = -(obj.deltas.*obj.lambdas.^3)/den;
-            obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
-            obj.Js.pprime(:) = 0.5*obj.deltas/den;
-            obj.Js.Jn(1) = sum(obj.Js.tilde(:,1));
+            obj.allocate_spherical_Js(op.nlayers, op.kmax);
             
             % Get mus and weights for Gaussian quadrature
             if strcmpi(op.J_integration_method, 'gauss')
@@ -667,6 +659,18 @@ classdef ConcentricMaclaurinSpheroids < handle
                 y(alfa) = fzero(fun, 1);
             end
         end
+        
+        function allocate_spherical_Js(obj,nlay,nmom)
+            obj.Js.tilde = zeros(nlay, (nmom+1));
+            obj.Js.tilde_prime = zeros(nlay, (nmom+1));
+            obj.Js.pprime = zeros(nlay, 1);
+            obj.Js.Jn = zeros(1, nmom+1);
+            den = sum(obj.deltas.*obj.lambdas.^3);
+            obj.Js.tilde(:,1) = -(obj.deltas.*obj.lambdas.^3)/den;
+            obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
+            obj.Js.pprime(:) = 0.5*obj.deltas/sum(obj.deltas);
+            obj.Js.Jn(1) = sum(obj.Js.tilde(:,1));
+        end
     end % End of private methods block
     
     %% Access methods
@@ -727,6 +731,11 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.lambdas = usval(:);
             obj.cooked = false; %#ok<MCSUP>
             obj.fullyCooked = false; %#ok<MCSUP>
+            
+            % just for fun, really hitting it heavy on the MCSUP warning...
+            if ~isempty(obj.deltas) %#ok<MCSUP>
+                obj.allocate_spherical_Js(obj.opts.nlayers,obj.opts.kmax); %#ok<MCSUP>
+            end
         end
         
         function set.deltas(obj,val)
@@ -738,6 +747,11 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.deltas = val(:);
             obj.cooked = false; %#ok<MCSUP>
             obj.fullyCooked = false; %#ok<MCSUP>
+            
+            % just for fun, really hitting it heavy on the MCSUP warning...
+            if ~isempty(obj.lambdas) %#ok<MCSUP>
+                obj.allocate_spherical_Js(obj.opts.nlayers,obj.opts.kmax); %#ok<MCSUP>
+            end
         end
         
         function val = get.nlayers(obj)
