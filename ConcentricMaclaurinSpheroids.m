@@ -121,7 +121,11 @@ classdef ConcentricMaclaurinSpheroids < handle
             if (verb > 0)
                 msg = 'Relaxing CMS to self-consistent level surfaces...done.';
                 fprintf([msg, '\n'])
-                fprintf('Total elapsed time %g sec.\n', ET)
+                try
+                    fprintf('Total elapsed time %s',lower(seconds2human(ET)))
+                catch
+                    fprintf('Total elapsed time %g sec.\n', ET)
+                end
             end
         end
         
