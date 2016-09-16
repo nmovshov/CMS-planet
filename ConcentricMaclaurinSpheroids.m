@@ -72,6 +72,13 @@ classdef ConcentricMaclaurinSpheroids < handle
             if (verb > 0)
                 fprintf('Relaxing CMS to self-consistent level surfaces...\n\n')
             end
+            if (verb > 2)
+                try
+                    sbj = ['CMS.relax() started on ', getenv('computername')];
+                    sendmail(obj.opts.email,sbj)
+                catch
+                end
+            end
             
             % Main loop
             dJ = Inf;
@@ -122,9 +129,16 @@ classdef ConcentricMaclaurinSpheroids < handle
                 msg = 'Relaxing CMS to self-consistent level surfaces...done.';
                 fprintf([msg, '\n'])
                 try
-                    fprintf('Total elapsed time %s',lower(seconds2human(ET)))
+                    fprintf('Total elapsed time %s\n',lower(seconds2human(ET)))
                 catch
                     fprintf('Total elapsed time %g sec.\n', ET)
+                end
+            end
+            if (verb > 2)
+                try
+                    sbj = ['CMS.relax() finished on ', getenv('computername')];
+                    sendmail(obj.opts.email,sbj)
+                catch
                 end
             end
         end
