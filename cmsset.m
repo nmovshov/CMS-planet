@@ -19,7 +19,7 @@ function options = cmsset(varargin)
 %qrot - Dimensionless rotation parameter [ {0} ]
 %J_integration_method - Choice of integration algorithm to compute J moments [ 'adaptive' | {'gauss'} ]
 %zetas_in_J_integrals - How to obtain values of zeta inside J integrals [ {'rootfind'} | 'interp' ]
-%verbosity - Level of runtime messages [0 {1} 2]
+%verbosity - Level of runtime messages [0 {1} 2 3 4]
 %IntTol - Relative tolerance for adaptive integrals [ positive real {1e-9} ]
 %rootfinder - Algorithm choice for solving the zeta equations [ {'fzero'} | 'lionhunt' ]
 %TolX - Termination tolerance for root finding algorithms [ positive real {1e-13} ]
@@ -48,6 +48,7 @@ p.addParameter('zetas_in_J_integrals','rootfind',@isvalidzetasmethod)
 p.addParameter('IntTol',1e-9,@isposscalar)
 p.addParameter('rootfinder','fzero',@isvalidrootfinder)
 p.addParameter('TolX',1e-13,@isposscalar)
+p.addParameter('email','',@isvalidemail)
 
 % Parse name-value pairs and return.
 p.parse(varargin{:})
@@ -98,6 +99,16 @@ function isvalidrootfinder(x)
 validateattributes(x,{'char'},{'row'})
 if ~any(strcmpi(x,{'fzero','lionhunt'}))
     error('Unknown root finding algorithm %s.',x)
+end
+end
+
+function TF = isvalidemail(x)
+if isempty(x), TF = true; return, end
+validateattributes(x,{'char'},{'row'})
+validemail='[a-z_.1-9]+@[a-z_.1-9]+\.(com|net|edu)';
+imatch=regexp(x,validemail);
+if isempty(imatch) || ~isscalar(imatch) || imatch > 1
+    error('Not a valid email address')
 end
 end
 
