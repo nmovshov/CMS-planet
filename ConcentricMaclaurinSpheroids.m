@@ -17,23 +17,22 @@ classdef ConcentricMaclaurinSpheroids < handle
         Js      % rescaled, dimensionless, layer gravity moments
     end
     properties (Access = private)
-        N       % real nlayers
-        Pnmu    % values of Legendre polynomials at fixed colatitudes
-        Pnzero  % values of Legendre polynomials at equator
-        Pnone   % values of Legendre polynomials at pole
-        gws     % weight factors for Gauss integration (correspond to mus)
-        zeta1s  % normalized rescaled level-surface polar radii
-        os      % optimset struct for use by fzero
-        cooked = false  % flag indicating successful convergence
-        inits = 0 % counter of calls to InitCMS, just for internal accounting
+        N           % real nlayers
+        Pnmu        % values of Legendre polynomials at fixed colatitudes
+        Pnzero      % values of Legendre polynomials at equator
+        Pnone       % values of Legendre polynomials at pole
+        gws         % weight factors for Gauss integration (correspond to mus)
+        zeta1s      % normalized rescaled level-surface polar radii
+        os          % optimset struct for use by fzero
+        cooked      % flag indicating obj.relax() was run
+        fullyCooked % flag indicating successful convergence
     end
     properties (Dependent) % Convenience names
         nlayers
-        kmax
         qrot
         as      % normalized equatorial radii (another name for lambdas)
         bs      % normalized polar radii
-        fs      % layer flattening "oblateness" (a - b)/a
+        fs      % layer flattening, a.k.a, oblateness: (a - b)/a
         ars     % layer aspect ratio (b/a)
         ss      % layer mean radius normalized to a0
         Vs      % layer volume normalized to 4pi/3 a0^3
@@ -58,8 +57,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             obj.opts = op; % (calls set.opts which calls cmsset(op) again)
             obj.InitCMS(op);
-        end % Constructor
-    end % Constructor block
+        end
+    end % End of constructor block
     
     %% Public methods
     methods (Access = public)
@@ -96,13 +95,19 @@ classdef ConcentricMaclaurinSpheroids < handle
                 end
                 iter = iter + 1;
             end
+            
+            % Flags and maybe warnings
+            obj.cooked = true;
             if (iter < obj.opts.MaxIter)
-                obj.cooked = true;
+                obj.fullyCooked = true;
             else
                 msg = ['Object may not have fully converged. ',...
-                       'Try running %s.relax() again and/or increasing ',...
-                       'the convergence tolerance: %s.opts.dJtol = newtol.'];
-                warning(msg, inputname(1), inputname(1))
+                       'Try running %s.relax() and increasing ',...
+                       'the convergence tolerance (%s.opts.dJtol) ',...
+                       'and/or iteration limit (%s.opts.MaxIter).'];
+                warning off backtrace
+                warning(msg, inputname(1), inputname(1), inputname(1))
+                warning on backtrace
             end
             
             % Calculate polar radii
@@ -116,7 +121,11 @@ classdef ConcentricMaclaurinSpheroids < handle
             if (verb > 0)
                 msg = 'Relaxing CMS to self-consistent level surfaces...done.';
                 fprintf([msg, '\n'])
-                fprintf('Total elapsed time %g sec.\n', ET)
+                try
+                    fprintf('Total elapsed time %s',lower(seconds2human(ET)))
+                catch
+                    fprintf('Total elapsed time %g sec.\n', ET)
+                end
             end
         end
         
@@ -132,12 +141,14 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Loop over layers (outer) and colatitudes (inner)
             obj.os = optimset('TolX',obj.opts.TolX);
-            for ii=1:obj.nlayers
-                for alfa=1:obj.opts.nangles
-                    obj.zetas(ii,alfa) = obj.zeta_j_of_alfa(ii,alfa);
-                    %obj.zetas(ii,alfa) = obj.zeta_j_of_mu(ii, obj.mus(alfa));
+            nbLats = obj.opts.nangles;
+            newzetas = NaN(size(obj.zetas));
+            parfor ii=1:obj.nlayers
+                for alfa=1:nbLats
+                    newzetas(ii,alfa) = obj.zeta_j_of_alfa(ii,alfa); %#ok<PFBNS>
                 end
             end
+            obj.zetas = newzetas;
             
             % Optional communication
             if (verb > 1)
@@ -185,11 +196,15 @@ classdef ConcentricMaclaurinSpheroids < handle
             TF = true;
             warning('off','backtrace')
             
-            % Check for doneness
+            % Warn but don't fail uncooked objects
             if (~obj.cooked)
-                warning(['Object may not be fully converged, try running',...
-                    ' %s.relax()'],inputname(1))
-                TF = false;
+                warning('Uncooked object, try running %s.relax()',inputname(1))
+            elseif (~obj.fullyCooked)
+                msg = ['Object may not be fully converged. ',...
+                       'Try running %s.relax() and increasing ',...
+                       'the convergence tolerance (%s.opts.dJtol) ',...
+                       'and/or iteration limit (%s.opts.MaxIter).'];
+                warning(msg, inputname(1), inputname(1), inputname(1))
             end
             
             % Check for properly normalized zetas
@@ -228,7 +243,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             warning('on','backtrace')
         end
         
-        function V = Vext(obj,xi,mu)
+        function V = Vext(obj,xi,mu,nmax)
             % Convenience method: return potential at external point (xi,mu).
             
             validateattributes(xi,{'numeric'},{'real','positive','scalar'},...
@@ -237,10 +252,16 @@ classdef ConcentricMaclaurinSpheroids < handle
                 '>=',-1,'<=',1},'','mu',2)
             assert(xi >= obj.xi_i_of_mu(1,mu),...
                 'The point (xi,mu) = (%g,%g) is not external.',xi,mu);
-            
-            tk = 0:2:obj.opts.kmax;
+            if nargin < 4
+                nmax = obj.opts.kmax;
+            else
+                validateattributes(nmax,{'numeric'},...
+                    {'positive','integer','scalar','<=',obj.opts.kmax},...
+                    '','nmax',3)
+            end
+            tk = 0:2:nmax;
             p2k = arrayfun(@Pn,tk,mu*ones(size(tk)));
-            V = -(1/xi)*sum(obj.Jn.*xi.^-tk.*p2k);
+            V = -(1/xi)*sum(obj.Jn(tk).*xi.^-tk.*p2k);
         end
         
         function J = Jn(obj,n)
@@ -277,13 +298,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             if verLessThan('matlab','9')
                 error('CMS plotting requires R2016a or later')
             end
-            
-            % Warn if uncooked
-            if (~obj.cooked)
-                warning(['Object may not be fully converged, try running',...
-                    ' %s.relax()'],inputname(1))
-            end
-            
+                        
             % Prepare colatitudes for polar plot
             mu = [1, fliplr(obj.mus), 0];
             th = acos(mu);            % 0 to pi/2
@@ -327,7 +342,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             if (nargout == 1), ah = pax; end            
         end
         
-    end % public methods
+    end % End of public methods block
     
     %% Private methods
     methods (Access = private) % to become private
@@ -352,15 +367,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.zeta1s = ones(op.nlayers, 1);
             
             % Default Js setup is spherical
-            obj.Js.tilde = zeros(op.nlayers, (op.kmax+1));
-            obj.Js.tilde_prime = zeros(op.nlayers, (op.kmax+1));
-            obj.Js.pprime = zeros(op.nlayers, 1);
-            obj.Js.Jn = NaN(1, op.kmax+1);
-            den = sum(obj.deltas.*obj.lambdas.^3);
-            obj.Js.tilde(:,1) = -(obj.deltas.*obj.lambdas.^3)/den;
-            obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
-            obj.Js.pprime(:) = 0.5*obj.deltas/den;
-            obj.Js.Jn(1) = sum(obj.Js.tilde(:,1));
+            obj.allocate_spherical_Js(op.nlayers, op.kmax);
             
             % Get mus and weights for Gaussian quadrature
             if strcmpi(op.J_integration_method, 'gauss')
@@ -369,13 +376,14 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Precompute Legendre polynomials for fixed colatitudes (gauss quad)
             for k = 0:op.kmax
-                obj.Pnmu(k+1,:) = Pn(k, obj.mus);
+                obj.Pnmu(k+1,1:op.nangles) = Pn(k, obj.mus);
                 obj.Pnzero(k+1,1) = Pn(k, 0);
                 obj.Pnone(k+1,1) = Pn(k, 1);
             end
             
-            % Remember that we Init-ed and return.
-            obj.inits = obj.inits + 1;
+            % Set flags and counters
+            obj.cooked = false;
+            obj.fullyCooked = false;
         end
         
         function dJ = update_Js_gauss(obj)
@@ -655,7 +663,19 @@ classdef ConcentricMaclaurinSpheroids < handle
                 y(alfa) = fzero(fun, 1);
             end
         end
-    end % private methods
+        
+        function allocate_spherical_Js(obj,nlay,nmom)
+            obj.Js.tilde = zeros(nlay, (nmom+1));
+            obj.Js.tilde_prime = zeros(nlay, (nmom+1));
+            obj.Js.pprime = zeros(nlay, 1);
+            obj.Js.Jn = zeros(1, nmom+1);
+            den = sum(obj.deltas.*obj.lambdas.^3);
+            obj.Js.tilde(:,1) = -(obj.deltas.*obj.lambdas.^3)/den;
+            obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
+            obj.Js.pprime(:) = 0.5*obj.deltas/sum(obj.deltas);
+            obj.Js.Jn(1) = sum(obj.Js.tilde(:,1));
+        end
+    end % End of private methods block
     
     %% Access methods
     methods
@@ -674,28 +694,21 @@ classdef ConcentricMaclaurinSpheroids < handle
                 end
             end
             
-            % Then, certain parameters trigger a re-init (maybe with warning).
+            % Also, don't change these horses mid-stream, it's just too messy.
             triggerFields = {'kmax','nangles'};
-            trigger = false;
             if ~isempty(obj.opts) % for the call in the constructor
                 for k=1:length(triggerFields)
                     if val.(triggerFields{k}) ~= obj.opts.(triggerFields{k})
-                        msg = ['Changing %s of an existing obj triggered a ',...
-                            're-initialization!'];
-                        if (obj.cooked) %#ok<MCSUP>
-                            warning off backtrace
-                            warning(msg,triggerFields{k})
-                            warning on backtrace
-                        end
-                        trigger = true;
+                        msg = ['Changing %s of an existing object is just ',...
+                            'too messy; create a new object instead.'];
+                            error(msg,triggerFields{k})
                     end
                 end
-                if (trigger), obj.InitCMS(val); end
             end
 
             % Finally, assign the new opts, unflag cooked, and return.
             obj.opts = val;
-            obj.cooked = false; %#ok<MCSUP>
+            obj.fullyCooked = false; %#ok<MCSUP>
         end
         
         function set.lambdas(obj,val)
@@ -714,6 +727,12 @@ classdef ConcentricMaclaurinSpheroids < handle
                 'radii must be normalized to outer layer'],usval(1))
             obj.lambdas = usval(:);
             obj.cooked = false; %#ok<MCSUP>
+            obj.fullyCooked = false; %#ok<MCSUP>
+            
+            % just for fun, really hitting it heavy on the MCSUP warning...
+            if ~isempty(obj.deltas) %#ok<MCSUP>
+                obj.allocate_spherical_Js(obj.opts.nlayers,obj.opts.kmax); %#ok<MCSUP>
+            end
         end
         
         function set.deltas(obj,val)
@@ -724,6 +743,12 @@ classdef ConcentricMaclaurinSpheroids < handle
                 numel(val),obj.nlayers) %#ok<MCSUP>
             obj.deltas = val(:);
             obj.cooked = false; %#ok<MCSUP>
+            obj.fullyCooked = false; %#ok<MCSUP>
+            
+            % just for fun, really hitting it heavy on the MCSUP warning...
+            if ~isempty(obj.lambdas) %#ok<MCSUP>
+                obj.allocate_spherical_Js(obj.opts.nlayers,obj.opts.kmax); %#ok<MCSUP>
+            end
         end
         
         function val = get.nlayers(obj)
@@ -734,14 +759,6 @@ classdef ConcentricMaclaurinSpheroids < handle
             msg = ['Changing number of layers in an existing CMS object ',...
                 'makes no sense; create a new object instead.'];
             error(msg)
-        end
-        
-        function val = get.kmax(obj)
-            val = obj.opts.kmax;
-        end
-        
-        function set.kmax(obj,val)
-            obj.opts.kmax = val;
         end
         
         function val = get.qrot(obj)
@@ -779,7 +796,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             val = obj.Vs.^(1/3);
         end
         
-    end % access methods
+    end % End of access methods block
 
     %% Static methods
     methods (Static)
@@ -798,10 +815,10 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Pnone = s.Pnone;
             obj.gws = s.gws;
             obj.cooked = s.cooked;
-            obj.inits = s.inits;
+            obj.fullyCooked = s.fullyCooked;
         end
         
-    end % End of static methods
+    end % End of static methods block
     
 end % End of classdef
 
