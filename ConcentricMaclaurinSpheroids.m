@@ -100,6 +100,19 @@ classdef ConcentricMaclaurinSpheroids < handle
                         fprintf('\n')
                     end
                 end
+                if (verb > 3)
+                    try
+                        sbj = ['CMS.relax() on ', getenv('computername')];
+                        msg{1} = sprintf(...
+                            'Pass %d (of %d max)...done. (%g sec.)',...
+                            iter, obj.opts.MaxIter, toc(t_pass));
+                        msg{2} = sprintf(...
+                            'dJ = %g; required tolerance = %g.',...
+                            dJ, obj.opts.dJtol);
+                        sendmail(obj.opts.email,sbj,msg)
+                    catch
+                    end
+                end
                 iter = iter + 1;
             end
             
