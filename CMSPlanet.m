@@ -10,6 +10,12 @@ classdef CMSPlanet < handle
         desc    % model description (one line)
         a0      % equatorial radius
         M       % total mass
+    end
+    properties (Dependent)
+        ai      % layer equatorial radii
+        rhoi    % layer densities
+    end
+    properties
         cms     % a CMS object
         eos     % a barotrope object
         opts    % struct with opts, both CMS and CMSPlanet
@@ -21,6 +27,7 @@ classdef CMSPlanet < handle
         s0      % mean radius
         b0      % polar radius
         f0      % flattening, a.k.a, oblateness: (a - b)/a
+        M_calc  % total mass calculated from converged cms
     end
     properties (Access = private)
         si
