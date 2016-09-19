@@ -768,7 +768,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             assert(numel(val) == obj.nlayers,...
                 'length(deltas) = %g ~= nlayers = %g',...
                 numel(val),obj.nlayers) %#ok<MCSUP>
-            obj.deltas = val(:);
+            obj.deltas = double(val(:));
             obj.cooked = false; %#ok<MCSUP>
             obj.fullyCooked = false; %#ok<MCSUP>
             

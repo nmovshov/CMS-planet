@@ -27,7 +27,7 @@ classdef CMSPlanet < handle
         s0      % mean radius
         b0      % polar radius
         f0      % flattening, a.k.a, oblateness: (a - b)/a
-        M_calc  % total mass calculated from converged cms
+        rho0    % mean density
     end
     properties (Access = private)
         si
@@ -136,8 +136,29 @@ classdef CMSPlanet < handle
         end
         
         function set.ai(obj,val)
+            validateattributes(val,{'numeric'},{'real','finite','vector'},...
+                '','ai')
+            assert(numel(val) == obj.nlayers,...
+                'length(ai) = %g ~= nlayers = %g',...
+                numel(val),obj.nlayers)
+            assert(all(double(val) > 0), 'layer radii must be positive')
             obj.a0 = val(1);
             obj.cms.lambdas = val/obj.a0;
+        end
+        
+        function val = get.rhoi(obj)
+            val = cumsum(obj.cms.deltas);
+            val = val*obj.rho0/double(obj.rho0); % in case units
+        end
+        
+        function set.rhoi(obj,val)
+            validateattributes(val,{'numeric'},{'real','finite','vector'},...
+                '','rhoi')
+            assert(numel(val) == obj.nlayers,...
+                'length(rhoi) = %g ~= nlayers = %g',...
+                numel(val),obj.nlayers)
+            assert(all(double(val) >= 0), 'layer densities must be nonnegative')
+            obj.cms.deltas = [val(1); diff(val(:))];
         end
         
         function set.eos(obj,val)
@@ -157,6 +178,10 @@ classdef CMSPlanet < handle
         
         function val = get.f0(obj)
             val = (obj.a0 - obj.b0)/obj.a0;
+        end
+        
+        function val = get.rho0(obj)
+            val = obj.M/(4*pi/3*obj.s0^3);
         end
     end % End of access methods block
     
