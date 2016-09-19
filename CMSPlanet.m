@@ -128,6 +128,18 @@ classdef CMSPlanet < handle
             end
         end
         
+        function val = get.ai(obj)
+            val = [];
+            if ~isempty(obj.a0)
+                val = obj.a0*obj.cms.lambdas;
+            end
+        end
+        
+        function set.ai(obj,val)
+            obj.a0 = val(1);
+            obj.cms.lambdas = val/obj.a0;
+        end
+        
         function set.eos(obj,val)
             if ~isa(val,'barotropes.Barotrope')
                 error('eos must be a valid instance of class Barotrope')
