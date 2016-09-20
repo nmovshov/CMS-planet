@@ -23,4 +23,5 @@ end
 cmp = CMSPlanet(4); % nlayers shouldn't matter
 cmp.a0 = 7e4*si.km;
 cmp.M = 317*si.earth_mass;
-cmp
+cmp.rhoi = ones(cmp.nlayers,1)*cmp.rho0; % for illustration
+
