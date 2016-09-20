@@ -41,12 +41,12 @@ catch
 end
 
 %% Set up a CMS Planet with constant density and relax to HE
-cmp = CMSPlanet(4); % nlayers shouldn't matter
+cmp = CMSPlanet(2); % nlayers shouldn't matter
 cmp.a0 = 7e4*si.km;
 cmp.M = 317*si.earth_mass;
 cmp.rhoi = ones(cmp.nlayers,1)*cmp.rho0; % for illustration
 cmp.qrot = m/s3; % CMS method uses q=w^2a^3/GM as rotation parameter
-cmp.cms.relax();
+cmp.relax_to_HE;
 
 %% Compare numerical and analytic solutions (still relies on underlying cms)
 

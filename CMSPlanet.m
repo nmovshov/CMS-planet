@@ -59,6 +59,17 @@ classdef CMSPlanet < handle
     
     %% Public methods
     methods (Access = public)
+        function ET = relax_to_HE(obj)
+            ET = obj.cms.relax();
+        end
+        
+        function fac = match_total_mass(obj)
+            % Rescale layer densities to match planet mass; return scale factor.
+            if isempty(obj.rhoi), fac = []; return, end
+            fac = obj.M/obj.M_calc;
+            obj.rhoi = obj.rhoi*fac;
+        end
+        
         function ah = show(obj)
             % Visualize a CMSPlanet object, return axes handle.
             
@@ -195,6 +206,7 @@ classdef CMSPlanet < handle
         end
         
         function val = get.M_calc(obj)
+            if isempty(obj.rhoi), val = []; return, end
             drho = [obj.rhoi(1); diff(obj.rhoi)];
             val = (4*pi/3)*(obj.a0^3)*sum(drho.*obj.cms.Vs);
         end
