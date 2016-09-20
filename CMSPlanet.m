@@ -115,6 +115,9 @@ classdef CMSPlanet < handle
             catch
                 error('Mass must be a positive scalar.')
             end
+            if ~isempty(obj.a0) && ~isempty(obj.cms) %#ok<MCSUP> scale deltas
+                obj.rhoi = obj.rhoi*obj.rho0; %#ok<MCSUP>
+            end
         end
         
         function set.a0(obj,val)
@@ -125,6 +128,9 @@ classdef CMSPlanet < handle
                 obj.a0 = val;
             catch
                 error('Radius must be a positive scalar.')
+            end
+            if ~isempty(obj.M) && ~isempty(obj.cms) %#ok<MCSUP> scale deltas
+                obj.rhoi = obj.rhoi*obj.rho0; %#ok<MCSUP>
             end
         end
         
@@ -147,8 +153,11 @@ classdef CMSPlanet < handle
         end
         
         function val = get.rhoi(obj)
-            val = cumsum(obj.cms.deltas);
-            val = val*obj.rho0/double(obj.rho0); % in case units
+            val = [];
+            if ~isempty(obj.rho0)
+                val = cumsum(obj.cms.deltas);
+                val = val*obj.rho0/double(obj.rho0); % in case of units
+            end
         end
         
         function set.rhoi(obj,val)
@@ -181,7 +190,7 @@ classdef CMSPlanet < handle
         end
         
         function val = get.rho0(obj)
-            val = obj.M/(4*pi/3*obj.s0^3);
+            val = obj.M./(4*pi/3*obj.s0^3);
         end
     end % End of access methods block
     
