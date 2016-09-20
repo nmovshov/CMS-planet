@@ -12,7 +12,7 @@ function options = cmsset(varargin)
 %
 %nlayers - Number of constant density layers [ positive integer {512} ]
 %nangles - Number of colatitude points used to define level surfaces [ positive integer {48} ]
-%kmax - Degree to carry out mulitpole expansion of gravity moments [ positive even {12} ]
+%kmax - Degree to carry out mulitpole expansion of gravity moments [ positive even {30} ]
 %dJtol - Convergence tolerance for gravity moments [ positive real {1e-10} ]
 %MaxIter - Maximum number of iterations allowed [ positive integer {60} ]
 %rcore - Core radius, normalized [ {0.15} ]
@@ -37,7 +37,7 @@ p.FunctionName = mfilename;
 
 p.addParameter('nlayers',512,@isposintscalar)
 p.addParameter('nangles',48,@isposintscalar)
-p.addParameter('kmax',12,@isposintscalar)
+p.addParameter('kmax',30,@isposintscalar)
 p.addParameter('dJtol',1e-10,@isposscalar)
 p.addParameter('MaxIter',60,@isposintscalar)
 p.addParameter('rcore',0.15,@isposnormalscalar)
