@@ -23,7 +23,7 @@ classdef CMSPlanet < handle
     properties (Dependent)
         qrot    % rotation parameter 
         nlayers % layers of constant density 
-        Jn      % external gravity moments
+        Js      % external gravity moments (even, 0:2:kmax degree)
         s0      % mean radius
         b0      % polar radius
         f0      % flattening, a.k.a, oblateness: (a - b)/a
@@ -114,7 +114,7 @@ classdef CMSPlanet < handle
             obj.cms.qrot = val;
         end
         
-        function val = get.Jn(obj)
+        function val = get.Js(obj)
             val = obj.cms.Jn;
         end
         
