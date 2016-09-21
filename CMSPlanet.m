@@ -202,7 +202,11 @@ classdef CMSPlanet < handle
         end
         
         function val = get.rho0(obj)
-            val = obj.M./(4*pi/3*obj.s0^3);
+            if isempty(obj.M) || isempty(obj.s0)
+                val = [];
+            else
+                val = obj.M./(4*pi/3*obj.s0^3);
+            end
         end
         
         function val = get.M_calc(obj)
