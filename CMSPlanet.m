@@ -27,7 +27,8 @@ classdef CMSPlanet < handle
         s0      % mean radius
         b0      % polar radius
         f0      % flattening, a.k.a, oblateness: (a - b)/a
-        rho0    % mean density
+        rho0    % reference density (uses equatorial radius)
+        rho_s   % mean density (uses mean radius)
         M_calc  % mass from current state of cms
     end
     properties (Access = private)
@@ -198,13 +199,21 @@ classdef CMSPlanet < handle
         end
         
         function val = get.rho0(obj)
+            if isempty(obj.M) || isempty(obj.a0)
+                val = [];
+            else
+                val = obj.M./(4*pi/3*obj.a0^3);
+            end
+        end
+
+        function val = get.rho_s(obj)
             if isempty(obj.M) || isempty(obj.s0)
                 val = [];
             else
                 val = obj.M./(4*pi/3*obj.s0^3);
             end
         end
-        
+
         function val = get.M_calc(obj)
             if isempty(obj.rhoi), val = []; return, end
             drho = [obj.rhoi(1); diff(obj.rhoi)];
