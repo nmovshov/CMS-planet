@@ -127,9 +127,6 @@ classdef CMSPlanet < handle
             catch
                 error('Mass must be a positive scalar.')
             end
-            if ~isempty(obj.a0) && ~isempty(obj.cms) %#ok<MCSUP> scale deltas
-                obj.rhoi = obj.rhoi*obj.rho0; %#ok<MCSUP>
-            end
         end
         
         function set.a0(obj,val)
@@ -140,9 +137,6 @@ classdef CMSPlanet < handle
                 obj.a0 = val;
             catch
                 error('Radius must be a positive scalar.')
-            end
-            if ~isempty(obj.M) && ~isempty(obj.cms) %#ok<MCSUP> scale deltas
-                obj.rhoi = obj.rhoi*obj.rho0; %#ok<MCSUP>
             end
         end
         
@@ -168,7 +162,7 @@ classdef CMSPlanet < handle
             val = [];
             if ~isempty(obj.rho0)
                 val = cumsum(obj.cms.deltas);
-                val = val*obj.rho0/double(obj.rho0); % in case of units
+                val = val*obj.rho0;
             end
         end
         
@@ -179,7 +173,9 @@ classdef CMSPlanet < handle
                 'length(rhoi) = %g ~= nlayers = %g',...
                 numel(val),obj.nlayers)
             assert(all(double(val) >= 0), 'layer densities must be nonnegative')
-            obj.cms.deltas = [val(1); diff(val(:))];
+            assert(~isempty(obj.a0) && ~isempty(obj.M),...
+                'cannot set layer densities before setting mass and radius')
+            obj.cms.deltas = [val(1); diff(val(:))]/obj.rho0;
         end
         
         function set.eos(obj,val)
@@ -222,3 +218,5 @@ classdef CMSPlanet < handle
     end % End of static methods block
 end % End of classdef
 
+%TODO: make opts a ref to cms.opts, requires to look at constructor too
+%TODO: look through warning msgs in cms and remove inputname where useless
