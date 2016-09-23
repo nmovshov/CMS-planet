@@ -13,6 +13,8 @@ classdef CMSPlanet < handle
     end
     properties (Dependent)
         ai      % layer equatorial radii
+        bi      % layer polar radii
+        si      % layer mean radii
         rhoi    % layer densities
     end
     properties
@@ -32,7 +34,7 @@ classdef CMSPlanet < handle
         M_calc  % mass from current state of cms
     end
     properties (Access = private)
-        si
+        
     end
     
     %% The constructor
@@ -222,6 +224,20 @@ classdef CMSPlanet < handle
             if isempty(obj.rhoi), val = []; return, end
             drho = [obj.rhoi(1); diff(obj.rhoi)];
             val = (4*pi/3)*(obj.a0^3)*sum(drho.*obj.cms.Vs);
+        end
+        
+        function val = get.bi(obj)
+            val = [];
+            if ~isempty(obj.a0)
+                val = obj.a0*obj.cms.bs;
+            end
+        end
+        
+        function val = get.si(obj)
+            val = [];
+            if ~isempty(obj.a0)
+                val = obj.a0*obj.cms.ss;
+            end
         end
     end % End of access methods block
     

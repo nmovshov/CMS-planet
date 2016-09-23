@@ -69,7 +69,7 @@ b_err = b_cms - b_exact %#ok<NOPTS>
 % Compare the J values
 n = 0:2:cmp.opts.kmax;
 J_exact = (-1).^(1 + n/2).*(3./((n + 1).*(n + 3))).*(el^2/(1 + el^2)).^(n/2);
-J_cms = cmp.Jn;
+J_cms = cmp.Js;
 dJ = J_cms - J_exact;
 subplot(2,1,1,ah);
 subplot(2,1,2);
