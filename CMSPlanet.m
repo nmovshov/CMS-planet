@@ -18,9 +18,9 @@ classdef CMSPlanet < handle
     properties
         cms     % a CMS object
         eos     % a barotrope object
-        opts    % struct with opts, both CMS and CMSPlanet
     end
     properties (Dependent)
+        opts    % struct with opts, both CMS and CMSPlanet
         qrot    % rotation parameter 
         nlayers % layers of constant density 
         Js      % external gravity moments (even, 0:2:kmax degree)
@@ -52,8 +52,7 @@ classdef CMSPlanet < handle
             end
             warning on CMS:obsolete
             
-            % Save opts struct and call InitPlanet to finish the construction
-            obj.opts = op; % (calls set.opts and may have side effects!)
+            % Call InitPlanet to finish the construction
             obj.InitPlanet(op);
         end
     end % End of constructor block
@@ -94,17 +93,22 @@ classdef CMSPlanet < handle
     
     %% Access methods
     methods
+        function val = get.opts(obj)
+            val = obj.cms.opts;
+        end
+        
         function set.opts(obj,val)
-            obj.opts = val;
-            obj.cms.opts = val; %#ok<MCSUP>
+            obj.cms.opts = val;
         end
         
         function val = get.nlayers(obj)
             val = obj.cms.nlayers;
         end
         
-        function set.nlayers(obj,val)
-            obj.cms.nlayers = val;
+        function set.nlayers(~,~)
+            msg = ['Changing number of layers in an existing CMSPlanet ',...
+                'makes no sense; create a new object instead.'];
+            error(msg)
         end
         
         function val = get.qrot(obj)
@@ -226,6 +230,3 @@ classdef CMSPlanet < handle
         
     end % End of static methods block
 end % End of classdef
-
-%TODO: make opts a ref to cms.opts, requires to look at constructor too
-%TODO: look through warning msgs in cms and remove inputname where useless
