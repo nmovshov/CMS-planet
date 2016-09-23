@@ -756,10 +756,6 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.cooked = false; %#ok<MCSUP>
             obj.fullyCooked = false; %#ok<MCSUP>
             
-            % just for fun, really hitting it heavy on the MCSUP warning...
-            if ~isempty(obj.deltas) %#ok<MCSUP>
-                obj.allocate_spherical_Js(obj.opts.nlayers,obj.opts.kmax); %#ok<MCSUP>
-            end
         end
         
         function set.deltas(obj,val)
