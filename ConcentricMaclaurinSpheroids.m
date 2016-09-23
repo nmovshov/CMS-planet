@@ -459,7 +459,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             denom = 0;
             for j=1:obj.nlayers
                 fun = obj.zetas(j,:).^3;
-                I = obj.lambdas(j)*obj.gws*fun';
+                I = obj.lambdas(j)*obj.gws*fun';%FIXME
                 denom = denom + obj.deltas(j)*I;
             end
             denom = 2*denom;
