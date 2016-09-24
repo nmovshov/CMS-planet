@@ -50,7 +50,7 @@ end
 %% Now set up a CMS object to mimic constant density case
 q = m/s3; % CMS method uses q=w^2a^3/GM as rotation parameter
 opts = cmsset('qrot', q,...
-              'nlayers', 10,... % can be any number though!
+              'nlayers', 4,... % can be any number though!
               'kmax', 32,...
               'verbosity', 2);
 cms = ConcentricMaclaurinSpheroids(opts);
