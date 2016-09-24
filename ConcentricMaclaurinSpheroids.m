@@ -118,7 +118,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Flags and maybe warnings
             obj.cooked = true;
-            if (iter < obj.opts.MaxIter)
+            if (dJ < obj.opts.dJtol)
                 obj.fullyCooked = true;
             else
                 msg = ['Object may not have fully converged. ',...
