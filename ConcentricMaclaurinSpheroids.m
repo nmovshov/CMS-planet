@@ -741,10 +741,10 @@ classdef ConcentricMaclaurinSpheroids < handle
         function set.lambdas(obj,val)
             validateattributes(val,{'numeric'},{'vector','positive','finite',...
                 '<=',1},'','lambdas')
-            usval = sort(unique(double(val)),'descend');
+            usval = sort((double(val)),'descend');
             if ~isequal(double(val),usval)
                 warning off backtrace
-                warning('lambdas array was sorted and/or pruned of duplicates.')
+                warning('lambdas array was sorted.')
                 warning on backtrace
             end
             assert(numel(usval) == obj.nlayers,...
