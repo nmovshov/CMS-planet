@@ -24,9 +24,13 @@ R = 71492*si.km;
 T = 9.9250*si.hr;
 w = 2*pi/T;
 G = si.gravity;
-q = w^2*R^3/G*M;
+q = w^2*R^3/G/M;
 
 cmp = CMSPlanet(4);
 cmp.M = M;
 cmp.a0 = R;
 cmp.qrot = q;
+
+%% Construct a polytrope of index 1 to represent the planet's eos
+eos = barotropes.Polytrope(1e5, 1);
+cmp.eos = eos;
