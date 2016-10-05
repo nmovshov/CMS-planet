@@ -32,5 +32,7 @@ cmp.a0 = R;
 cmp.qrot = q;
 
 %% Construct a polytrope of index 1 to represent the planet's eos
-eos = barotropes.Polytrope(1e5, 1);
+K = 2e5*si.kg^-1*si.m^5*si.s^-2;
+n = 1;
+eos = barotropes.Polytrope(K, n);
 cmp.eos = eos;
