@@ -16,6 +16,11 @@ classdef ConcentricMaclaurinSpheroids < handle
         zetas   % normalized and scaled level-surface radii
         Js      % rescaled, dimensionless, layer gravity moments
     end
+    properties (Dependent)
+        Vpu     % gravitational potential on fixed angles in planetary units
+        Qpu     % rotation potential on fixed angles in planetary units
+        Upu     % total potential on fixed angles in planetary units
+    end
     properties (Access = private)
         N           % real nlayers
         Pnmu        % values of Legendre polynomials at fixed colatitudes
@@ -28,8 +33,8 @@ classdef ConcentricMaclaurinSpheroids < handle
         fullyCooked % flag indicating successful convergence
     end
     properties (Dependent) % Convenience names
-        nlayers
-        qrot
+        nlayers % number of layers
+        qrot    % dimensionless rotation parameter
         as      % normalized equatorial radii (another name for lambdas)
         bs      % normalized polar radii
         fs      % layer flattening, a.k.a, oblateness: (a - b)/a
@@ -818,6 +823,22 @@ classdef ConcentricMaclaurinSpheroids < handle
         function val = get.ss(obj)
             val = obj.Vs.^(1/3);
         end
+        
+        function val = get.Vpu(obj)
+            val = NaN(size(obj.zetas)); %TODO: implement eq. 49 in notes
+        end
+        
+        function val = get.Qpu(obj)
+            val = NaN(size(obj.zetas));
+            for j=1:obj.nlayers
+                val(j,:) = (1/3)*obj.qrot*obj.lambdas(j)^2*obj.zetas(j,:).^2.*(1 - obj.Pnmu(2,:));
+            end
+        end
+        
+        function val = get.Upu(obj)
+            val = obj.Vpu + obj.Qpu;
+        end
+            
         
     end % End of access methods block
 
