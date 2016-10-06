@@ -211,6 +211,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                     error('Unknown integration method: %s.',...
                            obj.opts.J_integration_method)
             end
+            obj.Js.tpprime = obj.Js.pprime.*obj.lambdas.^3;
             obj.Js.Jn = obj.Jn();
             
             % Optional communication
@@ -387,7 +388,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Default layer setup is linear
             obj.lambdas = linspace(1, 1/op.nlayers, op.nlayers)';
             
-            % Default deltas setup is constant density (TODO: improve?)
+            % Default deltas setup is constant density
             obj.deltas = zeros(op.nlayers, 1);
             obj.deltas(1) = 1;
             
@@ -700,11 +701,13 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.tilde = zeros(nlay, (nmom+1));
             obj.Js.tilde_prime = zeros(nlay, (nmom+1));
             obj.Js.pprime = zeros(nlay, 1);
+            obj.Js.tpprime = zeros(nlay, 1);
             obj.Js.Jn = zeros(1, nmom+1);
             den = sum(obj.deltas.*obj.lambdas.^3);
             obj.Js.tilde(:,1) = -(obj.deltas.*obj.lambdas.^3)/den;
             obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
             obj.Js.pprime(:) = 0.5*obj.deltas/sum(obj.deltas);
+            obj.Js.tpprime = obj.Js.pprime.*(obj.lambdas.^3);
             obj.Js.Jn(1) = sum(obj.Js.tilde(:,1));
         end
     end % End of private methods block
@@ -825,13 +828,38 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function val = get.Vpu(obj)
-            val = NaN(size(obj.zetas)); %TODO: implement eq. 49 in notes
+            val = NaN(size(obj.zetas));
+            lam = obj.lambdas;
+            zet = obj.zetas;
+            til = obj.Js.tilde;
+            tilp = obj.Js.tilde_prime;
+            tilpp = obj.Js.tpprime;
+            P2k = obj.Pnmu;
+            n = (0:obj.opts.kmax)';
+            for j=1:obj.nlayers
+                for alfa=1:length(obj.mus)
+                   val(j,alfa) = 0;
+                   for i=j:obj.nlayers
+                       val(j,alfa) = val(j,alfa) + ...
+                           sum((lam(i)/lam(j)).^n.*til(i,:)'.*zet(j,alfa).^-n.*P2k(:,alfa));
+                   end
+                   for i=1:j-1
+                       val(j,alfa) = val(j,alfa) + ...
+                           sum((lam(j)/lam(i)).^(n+1).*tilp(i,:)'.*zet(j,alfa).^(n+1).*P2k(:,alfa));
+                   end
+                   for i=1:j-1
+                       val(j,alfa) = val(j,alfa) + ...
+                           (lam(j)/lam(i))^3*tilpp(i)*zet(j,alfa)^3;
+                   end
+                   val(j,alfa) = val(j,alfa)*(-1/(lam(j)*zet(j,alfa)));
+                end
+            end
         end
         
         function val = get.Qpu(obj)
             val = NaN(size(obj.zetas));
             for j=1:obj.nlayers
-                val(j,:) = (1/3)*obj.qrot*obj.lambdas(j)^2*obj.zetas(j,:).^2.*(1 - obj.Pnmu(2,:));
+                val(j,:) = (1/3)*obj.qrot*obj.lambdas(j)^2*obj.zetas(j,:).^2.*(1 - obj.Pnmu(3,:));
             end
         end
         
