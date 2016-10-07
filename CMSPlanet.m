@@ -118,7 +118,16 @@ classdef CMSPlanet < handle
         end
         
         function set.qrot(obj,val)
-            obj.cms.qrot = val;
+            try
+                (val == 1); %#ok<EQEFF>
+                obj.cms.qrot = double(val);
+            catch ME
+                if (strfind(ME.message,'Attempt to compare')) == 1
+                    error('Check dimensions of qrot')
+                else
+                    rethrow(ME)
+                end
+            end
         end
         
         function val = get.Js(obj)
