@@ -73,7 +73,10 @@ classdef CMSPlanet < handle
             if (verb > 0)
                 fprintf('Updating layer densities...')
             end
-            obj.rhoi = obj.eos.density(obj.Pi);
+            P = obj.Pi;
+            obj.rhoi(1:end-1) = ...
+                obj.eos.density((P(1:end-1) + P(2:end))/2);
+            obj.rhoi(end) = obj.eos.density((P(end) + obj.P_c)/2);
             if (verb > 0)
                 fprintf('done. (%g sec.)\n', toc(t_rho))
             end
