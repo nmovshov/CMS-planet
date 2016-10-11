@@ -27,6 +27,8 @@ G = si.gravity;
 q = w^2*R^3/G/M;
 
 cmp = CMSPlanet(4);
+cmp.name = 'polyjup';
+cmp.desc = 'A polytropic Jupiter';
 cmp.M = M;
 cmp.a0 = R;
 cmp.qrot = q;

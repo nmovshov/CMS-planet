@@ -67,6 +67,18 @@ classdef CMSPlanet < handle
             ET = obj.cms.relax();
         end
         
+        function update_densities(obj)
+            t_rho = tic;
+            verb = obj.opts.verbosity;
+            if (verb > 0)
+                fprintf('Updating layer densities...')
+            end
+            obj.rhoi = obj.eos.density(obj.Pi);
+            if (verb > 0)
+                fprintf('done. (%g sec.)\n', toc(t_rho))
+            end
+        end
+        
         function fac = match_total_mass(obj)
             % Rescale layer densities to match planet mass; return scale factor.
             if isempty(obj.rhoi), fac = []; return, end
