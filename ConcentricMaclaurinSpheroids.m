@@ -20,7 +20,6 @@ classdef ConcentricMaclaurinSpheroids < handle
         Vpu     % gravitational potential on fixed angles in planetary units
         Qpu     % rotation potential on fixed angles in planetary units
         Upu     % total potential on fixed angles in planetary units
-        Ppu     % pressure on layer surfaces in planetary units
     end
     properties (Access = private)
         N           % real nlayers
@@ -868,9 +867,6 @@ classdef ConcentricMaclaurinSpheroids < handle
             val = obj.Vpu + obj.Qpu;
         end
         
-        function val = get.Ppu(obj)
-            val = 0;
-        end
     end % End of access methods block
 
     %% Static methods
