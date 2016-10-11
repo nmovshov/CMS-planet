@@ -33,6 +33,7 @@ classdef CMSPlanet < handle
         rho0    % reference density (uses equatorial radius)
         rho_s   % mean density (uses mean radius)
         M_calc  % mass from current state of cms
+        P_c     % central pressure
     end
     properties (Access = private)
         
@@ -263,6 +264,24 @@ classdef CMSPlanet < handle
             for j=2:obj.nlayers
                 val(j) = val(j-1) + obj.rhoi(j-1)*(U(j) - U(j-1));
             end
+        end
+        
+        function val = get.P_c(obj)
+            if isempty(obj.rho0), val = []; return, end
+            try
+                si = setUnits; % if you have physunits
+            catch
+                si = setFUnits; % if you don't have physunits
+            end
+            G = si.gravity;
+            U = mean(obj.cms.Upu, 2)*G*obj.M_calc/obj.a0;
+            U_center = -G*obj.M_calc/obj.a0*...
+                sum(obj.cms.Js.tilde_prime(:,1).*obj.cms.lambdas.^-1);
+            val = obj.Pi(end) + obj.rhoi(end)*(U_center - U(end));
+        end
+        
+        function set.P_c(~,~)
+            error('Pi is a calculated property and cannot be assigned')
         end
         
         function set.Pi(~,~)
