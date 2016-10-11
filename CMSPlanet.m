@@ -16,6 +16,7 @@ classdef CMSPlanet < handle
         bi      % layer polar radii
         si      % layer mean radii
         rhoi    % layer densities
+        Pi      % layer surface pressure (top of layer)
     end
     properties
         cms     % a CMS object
@@ -247,6 +248,25 @@ classdef CMSPlanet < handle
             if ~isempty(obj.a0)
                 val = obj.a0*obj.cms.ss;
             end
+        end
+        
+        function val = get.Pi(obj)
+            if isempty(obj.rho0), val = []; return, end
+            try
+                si = setUnits; % if you have physunits
+            catch
+                si = setFUnits; % if you don't have physunits
+            end
+            G = si.gravity;
+            U = mean(obj.cms.Upu, 2)*G*obj.M_calc/obj.a0;
+            val = zeros(obj.nlayers, 1)*si.Pa;
+            for j=2:obj.nlayers
+                val(j) = val(j-1) + obj.rhoi(j-1)*(U(j) - U(j-1));
+            end
+        end
+        
+        function set.Pi(~,~)
+            error('Pi is a calculated property and cannot be assigned')
         end
     end % End of access methods block
     
