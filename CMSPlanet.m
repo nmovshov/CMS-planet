@@ -67,16 +67,95 @@ classdef CMSPlanet < handle
             ET = obj.cms.relax();
         end
         
-        function update_densities(obj)
+        function ET = relax_to_barotrope(obj)
+            % Iterate relaxation to HE and density updates until converged.
+            
+            t_rlx = tic;
+            
+            % Optional communication
+            verb = obj.opts.verbosity;
+            fprintf('Relaxing CMP to desired barotrope...\n\n')
+            if (verb > 2)
+                try
+                    sbj = ['CMP.relax_to_barotrope() started on ',...
+                        getenv('computername')];
+                    sendmail(obj.opts.email,sbj)
+                catch
+                end
+            end
+            
+            % Main loop
+            dM = Inf;
+            iter = 1;
+            while (dM > obj.opts.dMtol) && (iter <= obj.opts.MaxIterBar)
+                t_pass = tic;
+                fprintf('Baropass %d (of max %d)...\n',...
+                    iter, obj.opts.MaxIterBar)
+                
+                obj.relax_to_HE;
+                obj.update_densities;
+                obj.match_total_mass;
+                
+                fprintf('Baropass %d (of max %d)...done. (%g sec.)\n',...
+                    iter, obj.opts.MaxIterBar, toc(t_pass))
+                if (verb > 0)
+                    fprintf('\n')
+                else
+                    fprintf('\n')
+                end
+                if (verb > 3)
+%                     try
+%                         sbj = ['CMP.relax_to_barotrope() on ',...
+%                             getenv('computername')];
+%                         msg{1} = sprintf(...
+%                             'Baropass %d (of max %d)...done. (%g sec.)',...
+%                             iter, obj.opts., toc(t_pass));
+%                         msg{2} = sprintf(...
+%                             'dM = %g; required tolerance = %g.',...
+%                             dM, obj.opts.);
+%                         sendmail(obj.opts.email,sbj,msg)
+%                     catch
+%                     end
+                end
+                iter = iter + 1;
+            end
+            
+            % Flags and maybe warnings
+            
+            ET = toc(t_rlx);
+            
+            % Optional communication
+            if (verb > 0)
+                msg = 'Relaxing CMP to desired barotrope...done.';
+                fprintf([msg, '\n'])
+                try
+                    fprintf('Total elapsed time %s\n',lower(seconds2human(ET)))
+                catch
+                    fprintf('Total elapsed time %g sec.\n', ET)
+                end
+            end
+            if (verb > 2)
+                try
+                    sbj = ['CMP.relax_to_barotrope() finished on ',...
+                        getenv('computername')];
+                    sendmail(obj.opts.email,sbj)
+                catch
+                end
+            end
+        end
+        
+        function dro = update_densities(obj)
             t_rho = tic;
             verb = obj.opts.verbosity;
             if (verb > 0)
                 fprintf('Updating layer densities...')
             end
+            oldrho = obj.rhoi;
             P = obj.Pi;
             obj.rhoi(1:end-1) = ...
                 obj.eos.density((P(1:end-1) + P(2:end))/2);
             obj.rhoi(end) = obj.eos.density((P(end) + obj.P_c)/2);
+            dro = ((obj.rhoi - oldrho)./oldrho);
             if (verb > 0)
                 fprintf('done. (%g sec.)\n', toc(t_rho))
             end
