@@ -150,15 +150,14 @@ classdef CMSPlanet < handle
             if (verb > 0)
                 fprintf('Updating layer densities...')
             end
-            oldrho = obj.rhoi;
             P = obj.Pi;
-            obj.rhoi(1:end-1) = ...
-                obj.eos.density((P(1:end-1) + P(2:end))/2);
-            obj.rhoi(end) = obj.eos.density((P(end) + obj.P_c)/2);
-            dro = ((obj.rhoi - oldrho)./oldrho);
+            newro = obj.eos.density((P(1:end-1) + P(2:end))/2);
+            newro(end+1) = obj.eos.density((P(end) + obj.P_c)/2);
+            dro = ((newro - obj.rhoi)./obj.rhoi);
             if (verb > 0)
                 fprintf('done. (%g sec.)\n', toc(t_rho))
             end
+            obj.rhoi = newro;
         end
         
         function fac = match_total_mass(obj)
