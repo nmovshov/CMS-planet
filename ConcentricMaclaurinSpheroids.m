@@ -75,6 +75,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Optional communication
             verb = obj.opts.verbosity;
             if (verb > 0)
+                fprintf('  ')
                 fprintf('Relaxing CMS to self-consistent level surfaces...\n\n')
             end
             if (verb > 2)
@@ -91,14 +92,17 @@ classdef ConcentricMaclaurinSpheroids < handle
             while (dJ > obj.opts.dJtol) && (iter <= obj.opts.MaxIter)
                 t_pass = tic;
                 if (verb > 0)
-                    fprintf('Pass %d (of %d max)...\n', iter, obj.opts.MaxIter)
+                    fprintf('    ')
+                    fprintf('Pass %d (of max %d)...\n', iter, obj.opts.MaxIter)
                 end
                 obj.update_zetas;
                 dJ = obj.update_Js();
                 if (verb > 0)
-                    fprintf('Pass %d (of %d max)...done. (%g sec.)\n',...
+                    fprintf('    ')
+                    fprintf('Pass %d (of max %d)...done. (%g sec.)\n',...
                         iter, obj.opts.MaxIter, toc(t_pass))
                     if (verb > 1)
+                        fprintf('    ')
                         fprintf('dJ = %g; required tolerance = %g.\n\n',...
                             dJ, obj.opts.dJtol)
                     else
@@ -109,7 +113,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                     try
                         sbj = ['CMS.relax() on ', getenv('computername')];
                         msg{1} = sprintf(...
-                            'Pass %d (of %d max)...done. (%g sec.)',...
+                            'Pass %d (of max %d)...done. (%g sec.)',...
                             iter, obj.opts.MaxIter, toc(t_pass));
                         msg{2} = sprintf(...
                             'dJ = %g; required tolerance = %g.',...
@@ -145,10 +149,13 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Optional communication
             if (verb > 0)
                 msg = 'Relaxing CMS to self-consistent level surfaces...done.';
+                fprintf('  ')
                 fprintf([msg, '\n'])
                 try
+                    fprintf('  ')
                     fprintf('Total elapsed time %s\n',lower(seconds2human(ET)))
                 catch
+                    fprintf('  ')
                     fprintf('Total elapsed time %g sec.\n', ET)
                 end
             end
@@ -168,7 +175,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             verb = obj.opts.verbosity;
             if (verb > 0)
                 t_z_pass = tic;
-                fprintf('Updating zetas....')
+                fprintf('    Updating zetas....')
             end
             
             % Loop over layers (outer) and colatitudes (inner)
@@ -198,7 +205,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             verb = obj.opts.verbosity;
             if (verb > 0)
                 t_J_pass = tic;
-                fprintf('Updating Js....')
+                fprintf('    Updating Js....')
             end
             
             % Dispatch based on chosen integration method.
