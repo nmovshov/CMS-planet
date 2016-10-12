@@ -91,11 +91,15 @@ classdef CMSPlanet < handle
                 t_pass = tic;
                 fprintf('Baropass %d (of max %d)...\n',...
                     iter, obj.opts.MaxIterBar)
+                if (verb > 0), fprintf('\n'), end
                 
                 obj.relax_to_HE;
+                
+                fprintf('\n  ')
                 obj.update_densities;
                 obj.match_total_mass;
                 
+                if (verb > 0), fprintf('\n'), end
                 fprintf('Baropass %d (of max %d)...done. (%g sec.)\n',...
                     iter, obj.opts.MaxIterBar, toc(t_pass))
                 if (verb > 0)
@@ -125,14 +129,11 @@ classdef CMSPlanet < handle
             ET = toc(t_rlx);
             
             % Optional communication
-            if (verb > 0)
-                msg = 'Relaxing CMP to desired barotrope...done.';
-                fprintf([msg, '\n'])
-                try
-                    fprintf('Total elapsed time %s\n',lower(seconds2human(ET)))
-                catch
-                    fprintf('Total elapsed time %g sec.\n', ET)
-                end
+            fprintf('Relaxing CMP to desired barotrope...done.\n')
+            try
+                fprintf('Total elapsed time %s\n',lower(seconds2human(ET)))
+            catch
+                fprintf('Total elapsed time %g sec.\n', ET)
             end
             if (verb > 2)
                 try
@@ -352,7 +353,7 @@ classdef CMSPlanet < handle
                 si = setFUnits; % if you don't have physunits
             end
             G = si.gravity;
-            U = mean(obj.cms.Upu, 2)*G*obj.M_calc/obj.a0;
+            U = mean(obj.cms.Upu, 2)*G*obj.M/obj.a0;
             val = zeros(obj.nlayers, 1)*si.Pa;
             for j=2:obj.nlayers
                 val(j) = val(j-1) + obj.rhoi(j-1)*(U(j) - U(j-1));
@@ -367,8 +368,8 @@ classdef CMSPlanet < handle
                 si = setFUnits; % if you don't have physunits
             end
             G = si.gravity;
-            U = mean(obj.cms.Upu, 2)*G*obj.M_calc/obj.a0;
-            U_center = -G*obj.M_calc/obj.a0*...
+            U = mean(obj.cms.Upu, 2)*G*obj.M/obj.a0;
+            U_center = -G*obj.M/obj.a0*...
                 sum(obj.cms.Js.tilde_prime(:,1).*obj.cms.lambdas.^-1);
             val = obj.Pi(end) + obj.rhoi(end)*(U_center - U(end));
         end
