@@ -15,7 +15,7 @@ function options = cmsset(varargin)
 %kmax - Degree to carry out mulitpole expansion of gravity moments [ positive even {30} ]
 %dJtol - Convergence tolerance for gravity moments [ positive real {1e-10} ]
 %dMtol - Convergence tolerance for barotrope adjustment [ positive real {1e-4} ]
-%MaxIter - Maximum number of iterations allowed [ positive integer {60} ]
+%MaxIterHE - Maximum number of iterations allowed for relaxation to hydrostatic equilibrium [ positive integer {60} ]
 %MaxIterBar - Maximum number of iterations allowed for relaxation to barotrope [ positive integer {10} ]
 %rcore - Core radius, normalized [ {0.15} ]
 %qrot - Dimensionless rotation parameter [ {0} ]
