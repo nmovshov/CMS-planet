@@ -371,7 +371,8 @@ classdef CMSPlanet < handle
             U = mean(obj.cms.Upu, 2)*G*obj.M/obj.a0;
             U_center = -G*obj.M/obj.a0*...
                 sum(obj.cms.Js.tilde_prime(:,1).*obj.cms.lambdas.^-1);
-            val = obj.Pi(end) + obj.rhoi(end)*(U_center - U(end));
+            xx = obj.Pi; % strangely this removes an extra call to get.Pi()
+            val = xx(end) + obj.rhoi(end)*(U_center - U(end));
         end
         
         function set.P_c(~,~)
