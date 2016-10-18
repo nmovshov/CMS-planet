@@ -95,7 +95,7 @@ classdef CMSPlanet < handle
                 
                 obj.relax_to_HE;
                 
-                fprintf('\n  ')
+                if (verb > 0), fprintf('\n'), end
                 obj.update_densities;
                 obj.match_total_mass;
                 
@@ -103,23 +103,24 @@ classdef CMSPlanet < handle
                 fprintf('Baropass %d (of max %d)...done. (%g sec.)\n',...
                     iter, obj.opts.MaxIterBar, toc(t_pass))
                 if (verb > 0)
-                    fprintf('\n')
+                    fprintf('dM = %g; required tolerance = %g.\n\n',...
+                        dM, obj.opts.dMtol)
                 else
                     fprintf('\n')
                 end
-                if (verb > 3)
-%                     try
-%                         sbj = ['CMP.relax_to_barotrope() on ',...
-%                             getenv('computername')];
-%                         msg{1} = sprintf(...
-%                             'Baropass %d (of max %d)...done. (%g sec.)',...
-%                             iter, obj.opts., toc(t_pass));
-%                         msg{2} = sprintf(...
-%                             'dM = %g; required tolerance = %g.',...
-%                             dM, obj.opts.);
-%                         sendmail(obj.opts.email,sbj,msg)
-%                     catch
-%                     end
+                if (verb > 2)
+                    try
+                        sbj = ['CMP.relax_to_barotrope() on ',...
+                            getenv('computername')];
+                        msg{1} = sprintf(...
+                            'Baropass %d (of max %d)...done. (%g sec.)',...
+                            iter, obj.opts.MaxIterBar, toc(t_pass));
+                        msg{2} = sprintf(...
+                            'dM = %g; required tolerance = %g.',...
+                            dM, obj.opts.dMtol);
+                        sendmail(obj.opts.email,sbj,msg)
+                    catch
+                    end
                 end
                 iter = iter + 1;
             end
@@ -149,7 +150,7 @@ classdef CMSPlanet < handle
             t_rho = tic;
             verb = obj.opts.verbosity;
             if (verb > 0)
-                fprintf('Updating layer densities...')
+                fprintf('  Updating layer densities...')
             end
             P = obj.Pi;
             newro = obj.eos.density((P(1:end-1) + P(2:end))/2);
