@@ -89,18 +89,19 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Main loop
             dJ = Inf;
             iter = 1;
-            while (dJ > obj.opts.dJtol) && (iter <= obj.opts.MaxIter)
+            while (dJ > obj.opts.dJtol) && (iter <= obj.opts.MaxIterHE)
                 t_pass = tic;
                 if (verb > 0)
                     fprintf('    ')
-                    fprintf('Pass %d (of max %d)...\n', iter, obj.opts.MaxIter)
+                    fprintf('Pass %d (of max %d)...\n', iter,...
+                        obj.opts.MaxIterHE)
                 end
                 obj.update_zetas;
                 dJ = obj.update_Js();
                 if (verb > 0)
                     fprintf('    ')
                     fprintf('Pass %d (of max %d)...done. (%g sec.)\n',...
-                        iter, obj.opts.MaxIter, toc(t_pass))
+                        iter, obj.opts.MaxIterHE, toc(t_pass))
                     if (verb > 1)
                         fprintf('    ')
                         fprintf('dJ = %g; required tolerance = %g.\n\n',...
@@ -114,7 +115,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                         sbj = ['CMS.relax() on ', getenv('computername')];
                         msg{1} = sprintf(...
                             'Pass %d (of max %d)...done. (%g sec.)',...
-                            iter, obj.opts.MaxIter, toc(t_pass));
+                            iter, obj.opts.MaxIterHE, toc(t_pass));
                         msg{2} = sprintf(...
                             'dJ = %g; required tolerance = %g.',...
                             dJ, obj.opts.dJtol);
@@ -133,7 +134,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 msg = ['Object may not have fully converged. ',...
                        'Try running %s.relax() and increasing ',...
                        'the convergence tolerance (%s.opts.dJtol) ',...
-                       'and/or iteration limit (%s.opts.MaxIter).'];
+                       'and/or iteration limit (%s.opts.MaxIterHE).'];
                 warning off backtrace
                 warning(msg, inputname(1), inputname(1), inputname(1))
                 warning on backtrace
@@ -243,7 +244,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 msg = ['Object may not be fully converged. ',...
                        'Try running %s.relax() and increasing ',...
                        'the convergence tolerance (%s.opts.dJtol) ',...
-                       'and/or iteration limit (%s.opts.MaxIter).'];
+                       'and/or iteration limit (%s.opts.MaxIterHE).'];
                 warning(msg, inputname(1), inputname(1), inputname(1))
             end
             
