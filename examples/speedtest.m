@@ -22,7 +22,7 @@ for k=1:length(nvec)
     cms.lambdas = linspace(1,1/nvec(k),nvec(k)); % this is actually the default
     cms.qrot = 0.1;
     cms.opts.verbosity = 2;
-    cms.opts.MaxIter = 10; % usually NOT enough to achieve convergence
+    cms.opts.MaxIterHE = 10; % usually NOT enough to achieve convergence
     
     tvec(k) = cms.relax()/cms.opts.MaxIter;
 end
