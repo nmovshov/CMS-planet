@@ -34,6 +34,7 @@ classdef CMSPlanet < handle
         rho_s   % mean density (uses mean radius)
         M_calc  % mass from current state of cms
         P_c     % central pressure
+        P_mid   % layer internal pressure (avg. of surface pressures)
     end
     properties (Access = private)
         
@@ -374,6 +375,12 @@ classdef CMSPlanet < handle
                 sum(obj.cms.Js.tilde_prime(:,1).*obj.cms.lambdas.^-1);
             P = obj.Pi; % matlab answers 307052
             val = P(end) + obj.rhoi(end)*(U_center - U(end));
+        end
+        
+        function val = get.P_mid(obj)
+            P = obj.Pi;
+            val = (P(1:end-1) + P(2:end))/2;
+            val(end+1) = (P(end) + obj.P_c)/2;
         end
         
         function set.P_c(~,~)
