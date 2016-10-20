@@ -22,7 +22,7 @@ G = si.gravity;
 M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
-cmp = CMSPlanet(32);
+cmp = CMSPlanet(16);
 cmp.name = 'nrpoly';
 cmp.desc = 'A nonrotating polytropic planet';
 cmp.M = M;
@@ -41,6 +41,6 @@ cmp.eos = eos;
 
 %% Relax to desired barotrope
 cmp.opts.verbosity = 2;
-cmp.opts.dMtol = 0.1;
+cmp.opts.dBtol = 0.01;
 cmp.opts.MaxIterBar = 10;
 cmp.relax_to_barotrope;
