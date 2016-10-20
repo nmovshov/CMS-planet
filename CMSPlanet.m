@@ -93,7 +93,7 @@ classdef CMSPlanet < handle
             % Main loop
             dBar = Inf;
             iter = 1;
-            while (dBar > obj.opts.dBtol) && (iter <= obj.opts.MaxIterBar)
+            while (abs(dBar) > obj.opts.dBtol) && (iter <= obj.opts.MaxIterBar)
                 t_pass = tic;
                 fprintf('Baropass %d (of max %d)...\n',...
                     iter, obj.opts.MaxIterBar)
@@ -365,6 +365,7 @@ classdef CMSPlanet < handle
         end
         
         function val = get.Pi(obj)
+            %#ok<*PROP> 
             if isempty(obj.rho0), val = []; return, end
             try
                 si = setUnits; % if you have physunits
