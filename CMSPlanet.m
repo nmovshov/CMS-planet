@@ -71,6 +71,11 @@ classdef CMSPlanet < handle
         function ET = relax_to_barotrope(obj)
             % Iterate relaxation to HE and density updates until converged.
             
+            if isempty(obj.eos)
+                warning('Set valid barotrope first (obj.eos = <barotrope>)')
+                return
+            end
+            
             t_rlx = tic;
             
             % Optional communication
@@ -86,9 +91,9 @@ classdef CMSPlanet < handle
             end
             
             % Main loop
-            dM = Inf;
+            dBar = Inf;
             iter = 1;
-            while (dM > obj.opts.dMtol) && (iter <= obj.opts.MaxIterBar)
+            while (dBar > obj.opts.dBtol) && (iter <= obj.opts.MaxIterBar)
                 t_pass = tic;
                 fprintf('Baropass %d (of max %d)...\n',...
                     iter, obj.opts.MaxIterBar)
@@ -97,15 +102,18 @@ classdef CMSPlanet < handle
                 obj.relax_to_HE;
                 
                 if (verb > 0), fprintf('\n'), end
-                obj.update_densities;
-                obj.match_total_mass;
+                dM = 1 - obj.match_total_mass;
+                dro = obj.update_densities;
+                dBar = max([mean(dro), var(dro), dM]);
                 
                 if (verb > 0), fprintf('\n'), end
                 fprintf('Baropass %d (of max %d)...done. (%g sec.)\n',...
                     iter, obj.opts.MaxIterBar, toc(t_pass))
                 if (verb > 0)
-                    fprintf('dM = %g; required tolerance = %g.\n\n',...
-                        dM, obj.opts.dMtol)
+                    fprintf(['<drho> = %g; var(drho) = %g; dM = %g;'...
+                        ' (required tolerance = %g).\n\n'],...
+                        mean(double(dro)), var(double(dro)), double(dM),...
+                        obj.opts.dBtol)
                 else
                     fprintf('\n')
                 end
@@ -117,8 +125,8 @@ classdef CMSPlanet < handle
                             'Baropass %d (of max %d)...done. (%g sec.)',...
                             iter, obj.opts.MaxIterBar, toc(t_pass));
                         msg{2} = sprintf(...
-                            'dM = %g; required tolerance = %g.',...
-                            dM, obj.opts.dMtol);
+                            'dBar = %g; required tolerance = %g.',...
+                            dBar, obj.opts.dBtol);
                         sendmail(obj.opts.email,sbj,msg)
                     catch
                     end
@@ -127,6 +135,15 @@ classdef CMSPlanet < handle
             end
             
             % Flags and maybe warnings
+            if (dBar > obj.opts.dBtol)
+                msg = ['Planet may not have fully relaxed to desired eos.\n',...
+                    'Try increasing the number of layers '...
+                    'and/or convergence tolerance (%s.opts.dBtol) ',...
+                    'and/or iteration limit (%s.opts.MaxIterBar).'];
+                warning off backtrace
+                warning(msg, inputname(1), inputname(1))
+                warning on backtrace
+            end
             
             ET = toc(t_rlx);
             
