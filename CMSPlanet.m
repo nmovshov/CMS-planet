@@ -104,7 +104,8 @@ classdef CMSPlanet < handle
                 if (verb > 0), fprintf('\n'), end
                 dM = 1 - obj.match_total_mass;
                 dro = obj.update_densities;
-                dBar = max([mean(dro), var(dro), dM]);
+                %dBar = max([mean(dro), var(dro), dM]);
+                dBar = var(dro);
                 
                 if (verb > 0), fprintf('\n'), end
                 fprintf('Baropass %d (of max %d)...done. (%g sec.)\n',...
