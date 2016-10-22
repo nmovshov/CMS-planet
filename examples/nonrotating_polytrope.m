@@ -41,6 +41,32 @@ cmp.eos = eos;
 
 %% Relax to desired barotrope
 cmp.opts.verbosity = 2;
-cmp.opts.dBtol = 0.01;
+cmp.opts.dBtol = 0.0001;
 cmp.opts.MaxIterBar = 10;
 cmp.relax_to_barotrope;
+
+%% Compare computed and analytic density structure
+close all
+% calculate
+a = sqrt(2*pi*G/K);
+R = pi/a;
+rho_av = 3*cmp.M_calc/(4*pi*R^3);
+rho_c = (pi^2/3)*rho_av;
+r = linspace(0,1)*cmp.a0;
+rho_exact = rho_c*sin(a*r)./(a*r);
+rho_exact(1) = rho_c;
+
+% plot
+ah = axes; hold(ah);
+l1 = plot(r/cmp.a0, rho_exact/rho_c);
+l2 = plot(cmp.ai/cmp.a0, cmp.rhoi/rho_c, 'o');
+
+% annotate
+l1.DisplayName = '$\rho_c\sin(ar)/(ar)$';
+l2.DisplayName = '$\rho_i, i=1,\ldots{},N$';
+
+xlabel('normalized radius')
+ylabel('normalized density')
+
+legend(ah, 'show')
+ah.FontSize = 12;
