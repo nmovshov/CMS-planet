@@ -1,10 +1,29 @@
-%% INTERIOR STRUCTURE OF A NONROTATING INDEX 1 POLYTROPE
+%% INTERIOR STRUCTURE OF A NON-ROTATING INDEX 1 POLYTROPE
 % Example and test of the CMSPlanet class. We construct and converge a
-% model of a nonrotating fluid planet with the pressure-density law
+% model of a non-rotating fluid planet with the pressure-density law
 %
 % $$P = K\rho^2$$
 %
-% with a polytropic constant $K$.
+% with a polytropic constant $K$. This script demonstrates how to set up a
+% CMSPlanet object with a specified barotrope and converge to a density
+% structure in hydrostatic equilibrium with the given barotrope. The default
+% starting density profile is that of a homogeneous sphere.
+%
+% Reminder: the density as a function of radius of a non-rotating, index-1
+% polytropic planet in hydrostatic equilibrium is
+% 
+% $$\rho(r) = \rho_c \sin(ar)/(ar)$$
+%
+% where
+% 
+% $$a = \sqrt{2\pi{G}/K}$$
+% 
+% and
+% 
+% $$\rho_c = 3M/(4\pi{R^3})$$
+%
+% where $M$ is the planet's mass and $R = \pi/a$, which is independent of mass.
+% 
 
 %% Prepare workspace
 clear
@@ -22,7 +41,7 @@ G = si.gravity;
 M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
-cmp = CMSPlanet(16);
+cmp = CMSPlanet(32);
 cmp.name = 'nrpoly';
 cmp.desc = 'A nonrotating polytropic planet';
 cmp.M = M;
