@@ -41,7 +41,7 @@ G = si.gravity;
 M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
-cmp = CMSPlanet(32);
+cmp = CMSPlanet(16);
 cmp.name = 'nrpoly';
 cmp.desc = 'A nonrotating polytropic planet';
 cmp.M = M;
@@ -59,7 +59,7 @@ eos = barotropes.Polytrope(K, n);
 cmp.eos = eos;
 
 %% Relax to desired barotrope
-cmp.opts.verbosity = 2;
+cmp.opts.verbosity = 1;
 cmp.opts.dBtol = 0.0001;
 cmp.opts.MaxIterBar = 10;
 cmp.relax_to_barotrope;
@@ -82,7 +82,7 @@ rho_exact(1) = rho_c;
 % plot
 ah = axes; hold(ah);
 l1 = plot(r/cmp.a0, rho_exact/rho_c);
-l2 = stairs(cmp.ai/cmp.a0, cmp.rhoi/rho_c, '-o');
+l2 = stairs(cmp.ai/cmp.a0, cmp.rhoi/rho_c, '-');
 
 % annotate
 l1.DisplayName = '$\sin(ar)/(ar)$';
