@@ -46,7 +46,11 @@ cmp.opts.MaxIterBar = 10;
 cmp.relax_to_barotrope;
 
 %% Compare computed and analytic density structure
-close all
+% prepare
+set(groot, 'defaultTextInterpreter', 'latex')
+set(groot, 'defaultLegendInterpreter', 'latex')
+set(groot, 'defaultAxesBox', 'on')
+
 % calculate
 a = sqrt(2*pi*G/K);
 R = pi/a;
@@ -59,14 +63,21 @@ rho_exact(1) = rho_c;
 % plot
 ah = axes; hold(ah);
 l1 = plot(r/cmp.a0, rho_exact/rho_c);
-l2 = plot(cmp.ai/cmp.a0, cmp.rhoi/rho_c, 'o');
+l2 = stairs(cmp.ai/cmp.a0, cmp.rhoi/rho_c, '-o');
 
 % annotate
-l1.DisplayName = '$\rho_c\sin(ar)/(ar)$';
-l2.DisplayName = '$\rho_i, i=1,\ldots{},N$';
+l1.DisplayName = '$\sin(ar)/(ar)$';
+l2.DisplayName = '$\rho_i/\rho_c, i=1,\ldots{},N$';
 
-xlabel('normalized radius')
-ylabel('normalized density')
+xlabel('$r/a_0$')
+ylabel('$\rho/\rho_c$')
 
 legend(ah, 'show')
-ah.FontSize = 12;
+
+% errors
+P_err = (cmp.P_c - cmp.eos.pressure(rho_c))/cmp.eos.pressure(rho_c);
+M_err = (cmp.M_calc - cmp.M)/cmp.M;
+s_tit = sprintf(['$N_\\mathrm{layers}=%g$; ',...
+    '$\\Delta M_\\mathrm{tot}=%g\\%%$; $\\Delta P_c=%g\\%%$'],...
+    cmp.nlayers, double(M_err)*100, double(P_err)*100);
+title(s_tit)
