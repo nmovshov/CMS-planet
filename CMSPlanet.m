@@ -34,6 +34,7 @@ classdef CMSPlanet < handle
         rho_s   % mean density (uses mean radius)
         M_calc  % mass from current state of cms
         P_c     % central pressure
+        P_mid   % layer internal pressure (avg. of surface pressures)
     end
     properties (Access = private)
         
@@ -70,6 +71,11 @@ classdef CMSPlanet < handle
         function ET = relax_to_barotrope(obj)
             % Iterate relaxation to HE and density updates until converged.
             
+            if isempty(obj.eos)
+                warning('Set valid barotrope first (obj.eos = <barotrope>)')
+                return
+            end
+            
             t_rlx = tic;
             
             % Optional communication
@@ -85,9 +91,9 @@ classdef CMSPlanet < handle
             end
             
             % Main loop
-            dM = Inf;
+            dBar = Inf;
             iter = 1;
-            while (dM > obj.opts.dMtol) && (iter <= obj.opts.MaxIterBar)
+            while (abs(dBar) > obj.opts.dBtol) && (iter <= obj.opts.MaxIterBar)
                 t_pass = tic;
                 fprintf('Baropass %d (of max %d)...\n',...
                     iter, obj.opts.MaxIterBar)
@@ -95,36 +101,50 @@ classdef CMSPlanet < handle
                 
                 obj.relax_to_HE;
                 
-                fprintf('\n  ')
-                obj.update_densities;
-                obj.match_total_mass;
+                if (verb > 0), fprintf('\n'), end
+                dM = 1 - obj.match_total_mass;
+                dro = obj.update_densities;
+                %dBar = max([mean(dro), var(dro), dM]);
+                dBar = var(dro);
                 
                 if (verb > 0), fprintf('\n'), end
                 fprintf('Baropass %d (of max %d)...done. (%g sec.)\n',...
                     iter, obj.opts.MaxIterBar, toc(t_pass))
                 if (verb > 0)
-                    fprintf('\n')
+                    fprintf(['<drho> = %g; var(drho) = %g; dM = %g;'...
+                        ' (required tolerance = %g).\n\n'],...
+                        mean(double(dro)), var(double(dro)), double(dM),...
+                        obj.opts.dBtol)
                 else
                     fprintf('\n')
                 end
-                if (verb > 3)
-%                     try
-%                         sbj = ['CMP.relax_to_barotrope() on ',...
-%                             getenv('computername')];
-%                         msg{1} = sprintf(...
-%                             'Baropass %d (of max %d)...done. (%g sec.)',...
-%                             iter, obj.opts., toc(t_pass));
-%                         msg{2} = sprintf(...
-%                             'dM = %g; required tolerance = %g.',...
-%                             dM, obj.opts.);
-%                         sendmail(obj.opts.email,sbj,msg)
-%                     catch
-%                     end
+                if (verb > 2)
+                    try
+                        sbj = ['CMP.relax_to_barotrope() on ',...
+                            getenv('computername')];
+                        msg{1} = sprintf(...
+                            'Baropass %d (of max %d)...done. (%g sec.)',...
+                            iter, obj.opts.MaxIterBar, toc(t_pass));
+                        msg{2} = sprintf(...
+                            'dBar = %g; required tolerance = %g.',...
+                            dBar, obj.opts.dBtol);
+                        sendmail(obj.opts.email,sbj,msg)
+                    catch
+                    end
                 end
                 iter = iter + 1;
             end
             
             % Flags and maybe warnings
+            if (dBar > obj.opts.dBtol)
+                msg = ['Planet may not have fully relaxed to desired eos.\n',...
+                    'Try increasing the number of layers '...
+                    'and/or convergence tolerance (%s.opts.dBtol) ',...
+                    'and/or iteration limit (%s.opts.MaxIterBar).'];
+                warning off backtrace
+                warning(msg, inputname(1), inputname(1))
+                warning on backtrace
+            end
             
             ET = toc(t_rlx);
             
@@ -149,7 +169,7 @@ classdef CMSPlanet < handle
             t_rho = tic;
             verb = obj.opts.verbosity;
             if (verb > 0)
-                fprintf('Updating layer densities...')
+                fprintf('  Updating layer densities...')
             end
             P = obj.Pi;
             newro = obj.eos.density((P(1:end-1) + P(2:end))/2);
@@ -346,6 +366,7 @@ classdef CMSPlanet < handle
         end
         
         function val = get.Pi(obj)
+            %#ok<*PROP> 
             if isempty(obj.rho0), val = []; return, end
             try
                 si = setUnits; % if you have physunits
@@ -371,7 +392,14 @@ classdef CMSPlanet < handle
             U = mean(obj.cms.Upu, 2)*G*obj.M/obj.a0;
             U_center = -G*obj.M/obj.a0*...
                 sum(obj.cms.Js.tilde_prime(:,1).*obj.cms.lambdas.^-1);
-            val = obj.Pi(end) + obj.rhoi(end)*(U_center - U(end));
+            P = obj.Pi; % matlab answers 307052
+            val = P(end) + obj.rhoi(end)*(U_center - U(end));
+        end
+        
+        function val = get.P_mid(obj)
+            P = obj.Pi;
+            val = (P(1:end-1) + P(2:end))/2;
+            val(end+1) = (P(end) + obj.P_c)/2;
         end
         
         function set.P_c(~,~)
