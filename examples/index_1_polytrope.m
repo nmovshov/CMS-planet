@@ -28,7 +28,7 @@ G = si.gravity;
 M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
-cmp = CMSPlanet(32);
+cmp = CMSPlanet(16);
 cmp.name = 'poly1';
 cmp.desc = 'An index-1 polytropic planet';
 cmp.M = M;
@@ -36,11 +36,13 @@ cmp.a0 = R;
 cmp.qrot = 0.089195487; % used in Hubbard (2013)
 
 %% Construct a polytrope of index 1 to represent the planet's eos
-% The value of K is chosen to match the given radius if the planet were not
-% rotating. We cannot expect an exact match when we specify mass, radius, and
-% eos at the same time as this over determines the planet's structure. The CMS
-% method will try to match the density structure to the barotrope and equatorial
-% radius, leaving the total mass different from the specified value.
+% The initial value of K is chosen to match the given radius if the planet were
+% not rotating. We cannot expect an exact match when we specify mass, radius,
+% and eos at the same time as this over determines the planet's structure. The
+% CMS method will try to match the density structure to the barotrope and
+% equatorial radius, leaving the total mass different from the specified value.
+% Then the polytropic constant is adjusted to match the total mass. I _think_
+% this is what is done in Hubbard (2013).
 n = 1; % polytrope index
 K = 2*G/pi*R^2; % polytrope constant
 eos = barotropes.Polytrope(K, n);
