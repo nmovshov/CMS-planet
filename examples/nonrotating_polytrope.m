@@ -7,7 +7,8 @@
 % with a polytropic constant $K$. This script demonstrates how to set up a
 % CMSPlanet object with a specified barotrope and converge to a density
 % structure in hydrostatic equilibrium with the given barotrope. The default
-% starting density profile is that of a homogeneous sphere.
+% starting density profile is that of a homogeneous sphere. This scripts also
+% explores how increasing the number of layers reduces the discretization error.
 %
 % Reminder: the density as a function of radius of a non-rotating, index-1
 % polytropic planet in hydrostatic equilibrium is
@@ -37,11 +38,11 @@ catch
 end
 G = si.gravity;
 
-%% Set up a CMS Planet with arbitrary mass and radius
+%% Set up some CMS Planets with arbitrary mass and radius
 M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
-cmp = CMSPlanet(16);
+cmp = CMSPlanet(8);
 cmp.name = 'nrpoly';
 cmp.desc = 'A nonrotating polytropic planet';
 cmp.M = M;
@@ -73,7 +74,7 @@ set(groot, 'defaultAxesBox', 'on')
 % calculate
 a = sqrt(2*pi*G/K);
 R = pi/a;
-rho_av = 3*cmp.M_calc/(4*pi*R^3);
+rho_av = 3*cmp.M/(4*pi*R^3);
 rho_c = (pi^2/3)*rho_av;
 r = linspace(0,1)*cmp.a0;
 rho_exact = rho_c*sin(a*r)./(a*r);
