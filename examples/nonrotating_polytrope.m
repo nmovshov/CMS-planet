@@ -51,7 +51,7 @@ cmp.qrot = 0;
 %% Construct a polytrope of index 1 to represent the planet's eos
 % A non-rotating, index-1 polytrope is completely defined by K. The radius is
 % independent of mass. The density structure normalized to the central density
-% is also independent of mass, and the absolute valaue of density is determined
+% is also independent of mass, and the absolute value of density is determined
 % with the known average density.
 n = 1; % polytrope index
 K = 2*G/pi*R^2; % polytrope constant

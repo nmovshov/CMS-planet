@@ -1,12 +1,12 @@
 %% CONSTANT DENSITY PLANET
 % Example and test of the CMSPlanet class. We will construct and converge a
 % model of a rotating fluid planet with constant density. The underlying
-% concentric Maclauring spheroids model handles the solution of the shape
+% concentric Maclaurin spheroids model handles the solution of the shape
 % functions and resulting gravity moments (see constant_density_ellipsoid.m) but
-% the preffered way to initiallize the CMS object when working with physical
+% the preferred way to initialize the CMS object when working with physical
 % bodies is to use the CMSPlanet class. This interface class will translate
 % between the physical parameters defining the planet of interest and the
-% nondimensional variables used in CMS theory.
+% non-dimensional variables used in CMS theory.
 
 %% Prepare workspace
 clear
