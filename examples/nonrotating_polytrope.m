@@ -42,12 +42,17 @@ G = si.gravity;
 M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
-cmp = CMSPlanet(8);
-cmp.name = 'nrpoly';
-cmp.desc = 'A nonrotating polytropic planet';
-cmp.M = M;
-cmp.a0 = R;
-cmp.qrot = 0;
+%#ok<*SAGROW>
+nbl = [16, 64, 256];
+%nbl = [8, 16];
+for k=1:length(nbl)
+    cmp(k) = CMSPlanet(nbl(k));
+    cmp(k).name = ['CMS',int2str(nbl(k))];
+    cmp(k).desc = 'A nonrotating polytropic planet';
+    cmp(k).M = M;
+    cmp(k).a0 = R;
+    cmp(k).qrot = 0;
+end
 
 %% Construct a polytrope of index 1 to represent the planet's eos
 % A non-rotating, index-1 polytrope is completely defined by K. The radius is
@@ -57,13 +62,15 @@ cmp.qrot = 0;
 n = 1; % polytrope index
 K = 2*G/pi*R^2; % polytrope constant
 eos = barotropes.Polytrope(K, n);
-cmp.eos = eos;
+[cmp.eos] = deal(eos);
 
 %% Relax to desired barotrope
-cmp.opts.verbosity = 1;
-cmp.opts.dBtol = 0.0001;
-cmp.opts.MaxIterBar = 10;
-cmp.relax_to_barotrope;
+for k=1:length(nbl)
+    cmp(k).opts.verbosity = 1;
+    cmp(k).opts.dBtol = 0.0001;
+    cmp(k).opts.MaxIterBar = 10;
+    cmp(k).relax_to_barotrope;
+end
 
 %% Compare computed and analytic density structure
 % prepare
@@ -74,30 +81,40 @@ set(groot, 'defaultAxesBox', 'on')
 % calculate
 a = sqrt(2*pi*G/K);
 R = pi/a;
-rho_av = 3*cmp.M/(4*pi*R^3);
+rho_av = 3*M/(4*pi*R^3);
 rho_c = (pi^2/3)*rho_av;
-r = linspace(0,1)*cmp.a0;
+r = linspace(0,1)*R;
 rho_exact = rho_c*sin(a*r)./(a*r);
 rho_exact(1) = rho_c;
 
 % plot
 ah = axes; hold(ah);
-l1 = plot(r/cmp.a0, rho_exact/rho_c);
-l2 = stairs(cmp.ai/cmp.a0, cmp.rhoi/rho_c, '-');
+l1 = plot(r/R, rho_exact/rho_c);
+l1.DisplayName = '$\sin(ar)/(ar)$';
+for k=1:length(nbl)
+    l2(k) = stairs(cmp(k).ai/R, cmp(k).rhoi/rho_c, '-');
+    l2(k).DisplayName = ['$\rho_i/\rho_c$; ',cmp(k).name];
+end
 
 % annotate
-l1.DisplayName = '$\sin(ar)/(ar)$';
-l2.DisplayName = '$\rho_i/\rho_c, i=1,\ldots{},N$';
-
-xlabel('$r/a_0$')
+xlabel('$r/R$')
 ylabel('$\rho/\rho_c$')
 
 legend(ah, 'show')
 
 % errors
-P_err = (cmp.P_c - cmp.eos.pressure(rho_c))/cmp.eos.pressure(rho_c);
-M_err = (cmp.M_calc - cmp.M)/cmp.M;
+n = length(nbl);
+P_err = (cmp(n).P_c - cmp(n).eos.pressure(rho_c))/cmp(n).eos.pressure(rho_c);
+M_err = (cmp(n).M_calc - cmp(n).M)/cmp(n).M;
 s_tit = sprintf(['$N_\\mathrm{layers}=%g$; ',...
     '$\\Delta M_\\mathrm{tot}=%g\\%%$; $\\Delta P_c=%g\\%%$'],...
-    cmp.nlayers, double(M_err)*100, double(P_err)*100);
+    cmp(n).nlayers, double(M_err)*100, double(P_err)*100);
 title(s_tit)
+
+% polytrope definitions
+s_poly{1} = '$a=\sqrt{2\pi{}G/K}$';
+s_poly{2} = '$R=\pi/a$';
+s_poly{3} = '$\rho_c = \frac{\pi{M}}{4R^3}$';
+th = annotation('textbox',0.1 + [pos(1), pos(2), 0, 0]);
+th.Interpreter = 'latex';
+th.String = s_poly;
