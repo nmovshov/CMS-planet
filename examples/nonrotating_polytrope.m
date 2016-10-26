@@ -94,14 +94,15 @@ l1 = plot(r/R, rho_exact/rho_c);
 l1.DisplayName = '$\sin(ar)/(ar)$';
 for k=1:length(nbl)
     l2(k) = stairs(cmp(k).ai/R, cmp(k).rhoi/rho_c, '-');
-    l2(k).DisplayName = ['$\rho_i/\rho_c$; ',cmp(k).name];
+    l2(k).DisplayName = ['$\rho_i/\rho_c$ ',cmp(k).name];
 end
 
 % annotate
 xlabel('$r/R$')
 ylabel('$\rho/\rho_c$')
 
-legend(ah, 'show')
+lh = legend(ah, 'show');
+lh.FontSize = 12;
 
 % errors
 n = length(nbl);
@@ -116,8 +117,9 @@ title(s_tit)
 s_poly{1} = '$a=\sqrt{2\pi{}G/K}$';
 s_poly{2} = '$R=\pi/a$';
 s_poly{3} = '$\rho_c = \frac{\pi{M}}{4R^3}$';
-pos = ah.Position;
-th = annotation('textbox',0.1 + [pos(1), pos(2), 0, 0]);
+th = annotation('textbox');
 th.Interpreter = 'latex';
 th.String = s_poly;
-th.FontSize = 14;
+th.FontSize = 12;
+th.Position = [lh.Position(1), lh.Position(2)-th.Position(4),...
+    lh.Position(3), th.Position(4)];
