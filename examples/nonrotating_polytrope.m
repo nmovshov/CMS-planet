@@ -43,8 +43,9 @@ M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
 %#ok<*SAGROW>
-nbl = [16, 64, 256];
+%nbl = [16, 64, 256];
 %nbl = [8, 16];
+nbl = [16, 32, 128];
 for k=1:length(nbl)
     cmp(k) = CMSPlanet(nbl(k));
     cmp(k).name = ['CMS',int2str(nbl(k))];
@@ -115,6 +116,8 @@ title(s_tit)
 s_poly{1} = '$a=\sqrt{2\pi{}G/K}$';
 s_poly{2} = '$R=\pi/a$';
 s_poly{3} = '$\rho_c = \frac{\pi{M}}{4R^3}$';
+pos = ah.Position;
 th = annotation('textbox',0.1 + [pos(1), pos(2), 0, 0]);
 th.Interpreter = 'latex';
 th.String = s_poly;
+th.FontSize = 14;
