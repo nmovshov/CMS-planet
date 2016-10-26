@@ -126,7 +126,7 @@ classdef CMSPlanet < handle
                             iter, obj.opts.MaxIterBar, toc(t_pass));
                         msg{2} = sprintf(...
                             'dBar = %g; required tolerance = %g.',...
-                            dBar, obj.opts.dBtol);
+                            double(dBar), obj.opts.dBtol);
                         sendmail(obj.opts.email,sbj,msg)
                     catch
                     end
