@@ -67,9 +67,9 @@ eos = barotropes.Polytrope(K, n);
 
 %% Relax to desired barotrope
 for k=1:length(nbl)
-    cmp(k).opts.verbosity = 1;
-    cmp(k).opts.dBtol = 0.0001;
-    cmp(k).opts.MaxIterBar = 10;
+    cmp(k).opts.verbosity = 0;
+    cmp(k).opts.dBtol = 1e-10; % default 1e-10
+    cmp(k).opts.MaxIterBar = 40; % default 40
     cmp(k).relax_to_barotrope;
 end
 
