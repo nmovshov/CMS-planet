@@ -42,10 +42,19 @@ K = 2*G/pi*R^2; % ...matches radius just for show, K has no effect on the Js
 eos = barotropes.Polytrope(K, n);
 cmp.eos = eos;
 
+%% To speed up convergence start with an approximate density structure
+a = sqrt(2*pi*G/K);
+r = pi/a;
+rho_av = 3*M/(4*pi*r^3);
+rho_c = (pi^2/3)*rho_av;
+x = (cmp.ai(1:end-1) + cmp.ai(2:end))/2;
+x(end+1) = cmp.ai(end)/2;
+cmp.rhoi = rho_c*sin(a*x)./(a*x);
+
 %% Relax to desired barotrope
 cmp.opts.verbosity = 3;
-cmp.opts.dBtol = 0.0001;
-cmp.opts.MaxIterBar = 10;
+cmp.opts.MaxIterHE = 12;
+cmp.opts.dBtol = 1e-12;
 cmp.opts.email = 'nmovshov@gmail.com';
 cmp.relax_to_barotrope;
 
@@ -78,4 +87,9 @@ format
 
 %% Save and deliver
 save('index1polytrope', 'cmp', 'T')
+try
 sendmail('nmovshov@gmail.com','n=1 polytrope','','index1polytrope.mat')
+catch
+end
+!shutdown /s /t 30
+exit force
