@@ -14,9 +14,9 @@ function options = cmsset(varargin)
 %nangles - Number of colatitude points used to define level surfaces [ positive integer {48} ]
 %kmax - Degree to carry out mulitpole expansion of gravity moments [ positive even {30} ]
 %dJtol - Convergence tolerance for gravity moments [ positive real {1e-10} ]
-%dBtol - Convergence tolerance for barotrope adjustment [ positive real {1e-4} ]
-%MaxIterHE - Maximum number of iterations allowed for relaxation to hydrostatic equilibrium [ positive integer {60} ]
-%MaxIterBar - Maximum number of iterations allowed for relaxation to barotrope [ positive integer {10} ]
+%dBtol - Convergence tolerance for barotrope adjustment [ positive real {1e-10} ]
+%MaxIterHE - Maximum number of iterations allowed for relaxation to hydrostatic equilibrium [ positive integer {20} ]
+%MaxIterBar - Maximum number of iterations allowed for relaxation to barotrope [ positive integer {40} ]
 %rcore - Core radius, normalized [ {0.15} ]
 %qrot - Dimensionless rotation parameter [ {0} ]
 %J_integration_method - Choice of integration algorithm to compute J moments [ 'adaptive' | {'gauss'} ]
@@ -41,9 +41,9 @@ p.addParameter('nlayers',512,@isposintscalar)
 p.addParameter('nangles',48,@isposintscalar)
 p.addParameter('kmax',30,@isposintscalar)
 p.addParameter('dJtol',1e-10,@isposscalar)
-p.addParameter('dBtol',1e-4,@isposscalar)
-p.addParameter('MaxIterHE',60,@isposintscalar)
-p.addParameter('MaxIterBar',10,@isposintscalar)
+p.addParameter('dBtol',1e-10,@isposscalar)
+p.addParameter('MaxIterHE',20,@isposintscalar)
+p.addParameter('MaxIterBar',40,@isposintscalar)
 p.addParameter('rcore',0.15,@isposnormalscalar)
 p.addParameter('qrot',0,@isnonnegscalar)
 p.addParameter('verbosity',1,@isnonnegintscalar)
