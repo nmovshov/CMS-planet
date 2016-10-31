@@ -55,7 +55,7 @@ cmp.rhoi = rho_c*sin(a*x)./(a*x);
 cmp.opts.verbosity = 3;
 cmp.opts.MaxIterHE = 12;
 cmp.opts.dBtol = 1e-12;
-cmp.opts.email = 'nmovshov@gmail.com';
+cmp.opts.email = '';
 cmp.relax_to_barotrope;
 
 %% Compare computed and analytic density structure
@@ -86,10 +86,10 @@ disp(T)
 format
 
 %% Save and deliver
-save('index1polytrope', 'cmp', 'T')
-try
-sendmail('nmovshov@gmail.com','n=1 polytrope','','index1polytrope.mat')
-catch
-end
-!shutdown /s /t 30
-exit force
+% save('index1polytrope', 'cmp', 'T')
+% try
+% sendmail('address','n=1 polytrope','','index1polytrope.mat')
+% catch
+% end
+% !shutdown /s /t 30
+% exit force
