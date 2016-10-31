@@ -102,18 +102,17 @@ classdef CMSPlanet < handle
                 obj.relax_to_HE;
                 
                 if (verb > 0), fprintf('\n'), end
-                dM = 1 - obj.match_total_mass;
+                dM = (obj.M_calc - obj.M)/obj.M;
                 dro = obj.update_densities;
-                %dBar = max([mean(dro), var(dro), dM]);
                 dBar = var(dro);
                 
                 if (verb > 0), fprintf('\n'), end
                 fprintf('Baropass %d (of max %d)...done. (%g sec.)\n',...
                     iter, obj.opts.MaxIterBar, toc(t_pass))
                 if (verb > 0)
-                    fprintf(['<drho> = %g; var(drho) = %g; dM = %g;'...
+                    fprintf(['|drho| < %g; var(drho) = %g; dM = %g;'...
                         ' (required tolerance = %g).\n\n'],...
-                        mean(double(dro)), var(double(dro)), double(dM),...
+                        max(abs(double(dro))), var(double(dro)), double(dM),...
                         obj.opts.dBtol)
                 else
                     fprintf('\n')
@@ -127,7 +126,7 @@ classdef CMSPlanet < handle
                             iter, obj.opts.MaxIterBar, toc(t_pass));
                         msg{2} = sprintf(...
                             'dBar = %g; required tolerance = %g.',...
-                            dBar, obj.opts.dBtol);
+                            double(dBar), obj.opts.dBtol);
                         sendmail(obj.opts.email,sbj,msg)
                     catch
                     end
@@ -179,13 +178,6 @@ classdef CMSPlanet < handle
                 fprintf('done. (%g sec.)\n', toc(t_rho))
             end
             obj.rhoi = newro;
-        end
-        
-        function fac = match_total_mass(obj)
-            % Rescale layer densities to match planet mass; return scale factor.
-            if isempty(obj.rhoi), fac = []; return, end
-            fac = obj.M/obj.M_calc;
-            obj.rhoi = obj.rhoi*fac;
         end
         
         function ah = show(obj)
@@ -333,7 +325,7 @@ classdef CMSPlanet < handle
             if isempty(obj.M) || isempty(obj.a0)
                 val = [];
             else
-                val = obj.M./(4*pi/3*obj.a0^3);
+                val = obj.M/(4*pi/3*obj.a0^3);
             end
         end
 
@@ -341,7 +333,7 @@ classdef CMSPlanet < handle
             if isempty(obj.M) || isempty(obj.s0)
                 val = [];
             else
-                val = obj.M./(4*pi/3*obj.s0^3);
+                val = obj.M/(4*pi/3*obj.s0^3);
             end
         end
 

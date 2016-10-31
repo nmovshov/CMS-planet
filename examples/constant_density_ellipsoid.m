@@ -4,7 +4,7 @@
 % numerical CMS solution with the expected analytic solution.
 
 %% Maclaurin's solution
-% The equillibrium shape of a constant density rotating fluid can be shown
+% The equilibrium shape of a constant density rotating fluid can be shown
 % (although not by me) to be an ellipsoid of revolution such that the radius $r$
 % follows
 % 
