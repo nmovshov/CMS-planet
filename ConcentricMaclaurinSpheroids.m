@@ -1071,7 +1071,7 @@ function [x,w] = gauleg(x1,x2,n)
 % Brian P. Flannery. 2007. Numerical Recipes 3rd Edition: The Art of Scientific
 % Computing (3 ed.). Cambridge University Press, New York, NY, USA.
 
-%% Input parsing and minimal assertions
+% Input parsing and minimal assertions
 narginchk(3,3)
 nargoutchk(2,2)
 validateattributes(x1,{'numeric'},{'scalar','finite','real'},1)
@@ -1079,7 +1079,7 @@ validateattributes(x2,{'numeric'},{'scalar','finite','real'},2)
 validateattributes(n,{'numeric'},{'scalar','finite','integer','>=',2},3)
 assert(x2 > x1, 'Interval must be positive.');
 
-%% Local variables
+% Local variables
 tol = 1e-14;
 m = ceil(n/2);
 xmid = (x1 + x2)/2;
@@ -1087,7 +1087,7 @@ dx = (x2 - x1);
 x = NaN(1,n);
 w = NaN(1,n);
 
-%% Main loop
+% Main loop
 for j=1:m
     % Get j-th root of Legendre polynomial Pn, along with Pn' value there.
     z = cos(pi*((j - 1) + 0.75)/(n + 0.5)); % initial guess for j-th root
@@ -1118,7 +1118,7 @@ for j=1:m
     w(n+1-j) = w(j);
 end
 
-%% Verify and return
+% Verify and return
 assert(all(isfinite(x)))
 assert(all(isfinite(w)))
 end

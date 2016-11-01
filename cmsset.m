@@ -10,7 +10,7 @@ function options = cmsset(varargin)
 %
 %KNOWN PROPERTIES
 %
-%nlayers - Number of constant density layers [ positive integer {512} ]
+%nlayers - Number of constant density layers [ positive integer {32} ]
 %nangles - Number of colatitude points used to define level surfaces [ positive integer {48} ]
 %kmax - Degree to carry out mulitpole expansion of gravity moments [ positive even {30} ]
 %dJtol - Convergence tolerance for gravity moments [ positive real {1e-10} ]
@@ -37,7 +37,7 @@ end
 p = inputParser;
 p.FunctionName = mfilename;
 
-p.addParameter('nlayers',512,@isposintscalar)
+p.addParameter('nlayers',32,@isposintscalar)
 p.addParameter('nangles',48,@isposintscalar)
 p.addParameter('kmax',30,@isposintscalar)
 p.addParameter('dJtol',1e-10,@isposscalar)
