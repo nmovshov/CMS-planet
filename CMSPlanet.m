@@ -368,9 +368,11 @@ classdef CMSPlanet < handle
             G = si.gravity;
             U = mean(obj.cms.Upu, 2)*G*obj.M/obj.a0;
             val = zeros(obj.nlayers, 1)*si.Pa;
+            rho = obj.rhoi;
             for j=2:obj.nlayers
-                val(j) = val(j-1) + obj.rhoi(j-1)*(U(j) - U(j-1));
+                val(j) = val(j-1) + rho(j-1)*(U(j) - U(j-1)); %*TODO
             end
+            %* JIT will optimize this when physunits is disabled, consider?
         end
         
         function val = get.P_c(obj)
@@ -385,7 +387,8 @@ classdef CMSPlanet < handle
             U_center = -G*obj.M/obj.a0*...
                 sum(obj.cms.Js.tilde_prime(:,1).*obj.cms.lambdas.^-1);
             P = obj.Pi; % matlab answers 307052
-            val = P(end) + obj.rhoi(end)*(U_center - U(end));
+            rho = obj.rhoi;
+            val = P(end) + rho(end)*(U_center - U(end));
         end
         
         function val = get.P_mid(obj)
