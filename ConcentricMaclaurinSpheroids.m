@@ -28,9 +28,11 @@ classdef ConcentricMaclaurinSpheroids < handle
         Pnone       % values of Legendre polynomials at pole
         gws         % weight factors for Gauss integration (correspond to mus)
         zeta1s      % normalized rescaled level-surface polar radii
+        realVpu     % stores values of Vpu for quick retrieval
         os          % optimset struct for use by fzero
         cooked      % flag indicating obj.relax() was run
         fullyCooked % flag indicating successful convergence
+        realVpuMod  % flag triggering recalculation of realVpu
     end
     properties (Dependent) % Convenience names
         nlayers % number of layers
@@ -197,6 +199,9 @@ classdef ConcentricMaclaurinSpheroids < handle
             elseif (verb > 0)
                 fprintf('done.\n')
             end
+            
+            % Flag Vpu re-calc
+            obj.realVpuMod = true;
         end
         
         function dJ = update_Js(obj)
@@ -229,6 +234,9 @@ classdef ConcentricMaclaurinSpheroids < handle
             elseif (verb > 0)
                 fprintf('done.\n')
             end
+            
+            % Flag Vpu re-calc
+            obj.realVpuMod = true;
         end
         
         function TF = validate(obj)
@@ -425,6 +433,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Set flags and counters
             obj.cooked = false;
             obj.fullyCooked = false;
+            obj.realVpuMod = true;
         end
         
         function dJ = update_Js_gauss(obj)
@@ -771,6 +780,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.lambdas = usval(:);
             obj.cooked = false; %#ok<MCSUP>
             obj.fullyCooked = false; %#ok<MCSUP>
+            obj.realVpuMod = true; %#ok<MCSUP>
             
         end
         
@@ -836,6 +846,9 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function val = get.Vpu(obj)
+            if (~obj.realVpuMod)
+                val = obj.realVpu;
+            else
             val = NaN(size(obj.zetas));
             lam = obj.lambdas;
             zet = obj.zetas;
@@ -861,6 +874,9 @@ classdef ConcentricMaclaurinSpheroids < handle
                    end
                    val(j,alfa) = val(j,alfa)*(-1/(lam(j)*zet(j,alfa)));
                 end
+            end
+            obj.realVpu = val;
+            obj.realVpuMod = false;
             end
         end
         
