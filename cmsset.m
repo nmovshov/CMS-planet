@@ -10,12 +10,12 @@ function options = cmsset(varargin)
 %
 %KNOWN PROPERTIES
 %
-%nlayers - Number of constant density layers [ positive integer {512} ]
+%nlayers - Number of constant density layers [ positive integer {32} ]
 %nangles - Number of colatitude points used to define level surfaces [ positive integer {48} ]
 %kmax - Degree to carry out mulitpole expansion of gravity moments [ positive even {30} ]
 %dJtol - Convergence tolerance for gravity moments [ positive real {1e-10} ]
 %dBtol - Convergence tolerance for barotrope adjustment [ positive real {1e-10} ]
-%MaxIterHE - Maximum number of iterations allowed for relaxation to hydrostatic equilibrium [ positive integer {20} ]
+%MaxIterHE - Maximum number of iterations allowed for relaxation to hydrostatic equilibrium [ positive integer {40} ]
 %MaxIterBar - Maximum number of iterations allowed for relaxation to barotrope [ positive integer {40} ]
 %rcore - Core radius, normalized [ {0.15} ]
 %qrot - Dimensionless rotation parameter [ {0} ]
@@ -25,7 +25,7 @@ function options = cmsset(varargin)
 %IntTol - Relative tolerance for adaptive integrals [ positive real {1e-9} ]
 %rootfinder - Algorithm choice for solving the zeta equations [ {'fzero'} | 'lionhunt' ]
 %TolX - Termination tolerance for root finding algorithms [ positive real {1e-13} ]
-%   Note: defaults chosen to match Hubbard (2013) example.
+%equipotential_squeeze - How to collapse U(i,mu) to U(i) on equipotential surfaces [ 'mean' | {'polar'} ]
 
 % If no arguments print usage and return.
 if (nargin == 0) && (nargout == 0)
@@ -37,12 +37,12 @@ end
 p = inputParser;
 p.FunctionName = mfilename;
 
-p.addParameter('nlayers',512,@isposintscalar)
+p.addParameter('nlayers',32,@isposintscalar)
 p.addParameter('nangles',48,@isposintscalar)
 p.addParameter('kmax',30,@isposintscalar)
 p.addParameter('dJtol',1e-10,@isposscalar)
 p.addParameter('dBtol',1e-10,@isposscalar)
-p.addParameter('MaxIterHE',20,@isposintscalar)
+p.addParameter('MaxIterHE',40,@isposintscalar)
 p.addParameter('MaxIterBar',40,@isposintscalar)
 p.addParameter('rcore',0.15,@isposnormalscalar)
 p.addParameter('qrot',0,@isnonnegscalar)
@@ -53,6 +53,7 @@ p.addParameter('IntTol',1e-9,@isposscalar)
 p.addParameter('rootfinder','fzero',@isvalidrootfinder)
 p.addParameter('TolX',1e-13,@isposscalar)
 p.addParameter('email','',@isvalidemail)
+p.addParameter('equipotential_squeeze','polar',@isvalidequiUsqueeze)
 
 % Parse name-value pairs and return.
 p.parse(varargin{:})
@@ -103,6 +104,13 @@ function isvalidrootfinder(x)
 validateattributes(x,{'char'},{'row'})
 if ~any(strcmpi(x,{'fzero','lionhunt'}))
     error('Unknown root finding algorithm %s.',x)
+end
+end
+
+function isvalidequiUsqueeze(x)
+validateattributes(x,{'char'},{'row'})
+if ~any(strcmpi(x,{'mean','polar'}))
+    error('Unknown equipotential squeeze option %s.',x)
 end
 end
 
