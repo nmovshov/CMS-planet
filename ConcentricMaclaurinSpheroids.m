@@ -20,6 +20,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         Vpu     % gravitational potential on fixed angles in planetary units
         Qpu     % rotation potential on fixed angles in planetary units
         Upu     % total potential on fixed angles in planetary units
+        equiUpu % total potential at pole of (assumed) equipotential surfaces
     end
     properties (Access = private)
         N           % real nlayers
@@ -28,9 +29,11 @@ classdef ConcentricMaclaurinSpheroids < handle
         Pnone       % values of Legendre polynomials at pole
         gws         % weight factors for Gauss integration (correspond to mus)
         zeta1s      % normalized rescaled level-surface polar radii
+        realVpu     % stores values of Vpu for quick retrieval
         os          % optimset struct for use by fzero
         cooked      % flag indicating obj.relax() was run
         fullyCooked % flag indicating successful convergence
+        realVpuMod  % flag triggering recalculation of realVpu
     end
     properties (Dependent) % Convenience names
         nlayers % number of layers
@@ -197,6 +200,9 @@ classdef ConcentricMaclaurinSpheroids < handle
             elseif (verb > 0)
                 fprintf('done.\n')
             end
+            
+            % Flag Vpu re-calc
+            obj.realVpuMod = true;
         end
         
         function dJ = update_Js(obj)
@@ -229,6 +235,9 @@ classdef ConcentricMaclaurinSpheroids < handle
             elseif (verb > 0)
                 fprintf('done.\n')
             end
+            
+            % Flag Vpu re-calc
+            obj.realVpuMod = true;
         end
         
         function TF = validate(obj)
@@ -386,7 +395,7 @@ classdef ConcentricMaclaurinSpheroids < handle
     end % End of public methods block
     
     %% Private methods
-    methods (Access = private) % to become private
+    methods (Access = private)
         function InitCMS(obj,op)
             % (Re)Initialize a CMS object.
             
@@ -425,6 +434,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Set flags and counters
             obj.cooked = false;
             obj.fullyCooked = false;
+            obj.realVpuMod = true;
         end
         
         function dJ = update_Js_gauss(obj)
@@ -771,6 +781,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.lambdas = usval(:);
             obj.cooked = false; %#ok<MCSUP>
             obj.fullyCooked = false; %#ok<MCSUP>
+            obj.realVpuMod = true; %#ok<MCSUP>
             
         end
         
@@ -836,6 +847,9 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function val = get.Vpu(obj)
+            if (~obj.realVpuMod)
+                val = obj.realVpu;
+            else
             val = NaN(size(obj.zetas));
             lam = obj.lambdas;
             zet = obj.zetas;
@@ -862,6 +876,9 @@ classdef ConcentricMaclaurinSpheroids < handle
                    val(j,alfa) = val(j,alfa)*(-1/(lam(j)*zet(j,alfa)));
                 end
             end
+            obj.realVpu = val;
+            obj.realVpuMod = false;
+            end
         end
         
         function val = get.Qpu(obj)
@@ -875,8 +892,34 @@ classdef ConcentricMaclaurinSpheroids < handle
             val = obj.Vpu + obj.Qpu;
         end
         
+        function val = get.equiUpu(obj)
+            % Return potential on equipotential surface by sampling the pole.
+            
+            val = zeros(obj.nlayers,1);
+            
+            lam = obj.lambdas;
+            zet = obj.zeta1s;
+            til = obj.Js.tilde;
+            tilp = obj.Js.tilde_prime;
+            tilpp = obj.Js.tpprime;
+            P2k = obj.Pnone;
+            n = (0:obj.opts.kmax)';
+            for j=1:obj.nlayers
+                V = 0;
+                for i=j:obj.nlayers
+                    V = V + sum((lam(i)/lam(j)).^n.*til(i,:)'.*zet(j).^-n.*P2k(:));
+                end
+                for i=1:j-1
+                    V = V + sum((lam(j)/lam(i)).^(n+1).*tilp(i,:)'.*zet(j).^(n+1).*P2k(:));
+                    V = V + (lam(j)/lam(i))^3*tilpp(i)*zet(j)^3;
+                end
+                V = V*(-1/(lam(j)*zet(j)));
+                val(j) = V;
+            end
+        end
+        
     end % End of access methods block
-
+    
     %% Static methods
     methods (Static)
         function obj = loadobj(s)
@@ -1071,7 +1114,7 @@ function [x,w] = gauleg(x1,x2,n)
 % Brian P. Flannery. 2007. Numerical Recipes 3rd Edition: The Art of Scientific
 % Computing (3 ed.). Cambridge University Press, New York, NY, USA.
 
-%% Input parsing and minimal assertions
+% Input parsing and minimal assertions
 narginchk(3,3)
 nargoutchk(2,2)
 validateattributes(x1,{'numeric'},{'scalar','finite','real'},1)
@@ -1079,7 +1122,7 @@ validateattributes(x2,{'numeric'},{'scalar','finite','real'},2)
 validateattributes(n,{'numeric'},{'scalar','finite','integer','>=',2},3)
 assert(x2 > x1, 'Interval must be positive.');
 
-%% Local variables
+% Local variables
 tol = 1e-14;
 m = ceil(n/2);
 xmid = (x1 + x2)/2;
@@ -1087,7 +1130,7 @@ dx = (x2 - x1);
 x = NaN(1,n);
 w = NaN(1,n);
 
-%% Main loop
+% Main loop
 for j=1:m
     % Get j-th root of Legendre polynomial Pn, along with Pn' value there.
     z = cos(pi*((j - 1) + 0.75)/(n + 0.5)); % initial guess for j-th root
@@ -1118,7 +1161,7 @@ for j=1:m
     w(n+1-j) = w(j);
 end
 
-%% Verify and return
+% Verify and return
 assert(all(isfinite(x)))
 assert(all(isfinite(w)))
 end
