@@ -365,14 +365,12 @@ classdef CMSPlanet < handle
             catch
                 si = setFUnits; % if you don't have physunits
             end
-            G = si.gravity;
-            U = mean(obj.cms.Upu, 2)*G*obj.M/obj.a0;
-            val = zeros(obj.nlayers, 1)*si.Pa;
-            rho = obj.rhoi;
-            for j=2:obj.nlayers
-                val(j) = val(j-1) + rho(j-1)*(U(j) - U(j-1)); %*TODO
-            end
-            %* JIT will optimize this when physunits is disabled, consider?
+            G = double(si.gravity);
+            U = double(mean(obj.cms.Upu, 2)*G*obj.M/obj.a0);
+            rho = double(obj.rhoi);
+            val = zeros(obj.nlayers, 1);
+            val(2:end) = cumsum(rho(1:end-1).*diff(U));
+            val = val*si.Pa;
         end
         
         function val = get.P_c(obj)
