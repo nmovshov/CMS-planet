@@ -20,6 +20,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         Vpu     % gravitational potential on fixed angles in planetary units
         Qpu     % rotation potential on fixed angles in planetary units
         Upu     % total potential on fixed angles in planetary units
+        equiUpu % total potential at pole of (assumed) equipotential surfaces
     end
     properties (Access = private)
         N           % real nlayers
@@ -394,7 +395,7 @@ classdef ConcentricMaclaurinSpheroids < handle
     end % End of public methods block
     
     %% Private methods
-    methods (Access = private) % to become private
+    methods (Access = private)
         function InitCMS(obj,op)
             % (Re)Initialize a CMS object.
             
@@ -891,8 +892,34 @@ classdef ConcentricMaclaurinSpheroids < handle
             val = obj.Vpu + obj.Qpu;
         end
         
+        function val = get.equiUpu(obj)
+            % Return potential on equipotential surface by sampling the pole.
+            
+            val = zeros(obj.nlayers,1);
+            
+            lam = obj.lambdas;
+            zet = obj.zeta1s;
+            til = obj.Js.tilde;
+            tilp = obj.Js.tilde_prime;
+            tilpp = obj.Js.tpprime;
+            P2k = obj.Pnone;
+            n = (0:obj.opts.kmax)';
+            for j=1:obj.nlayers
+                V = 0;
+                for i=j:obj.nlayers
+                    V = V + sum((lam(i)/lam(j)).^n.*til(i,:)'.*zet(j).^-n.*P2k(:));
+                end
+                for i=1:j-1
+                    V = V + sum((lam(j)/lam(i)).^(n+1).*tilp(i,:)'.*zet(j).^(n+1).*P2k(:));
+                    V = V + (lam(j)/lam(i))^3*tilpp(i)*zet(j)^3;
+                end
+                V = V*(-1/(lam(j)*zet(j)));
+                val(j) = V;
+            end
+        end
+        
     end % End of access methods block
-
+    
     %% Static methods
     methods (Static)
         function obj = loadobj(s)
