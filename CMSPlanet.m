@@ -33,6 +33,7 @@ classdef CMSPlanet < handle
         rho0    % reference density (uses equatorial radius)
         rho_s   % mean density (uses mean radius)
         M_calc  % mass from current state of cms
+        beta    % so called mass renormalization factor (M/M_calc)
         P_c     % central pressure
         P_mid   % layer internal pressure (avg. of surface pressures)
     end
@@ -341,6 +342,10 @@ classdef CMSPlanet < handle
             if isempty(obj.rhoi), val = []; return, end
             drho = [obj.rhoi(1); diff(obj.rhoi)];
             val = (4*pi/3)*(obj.a0^3)*sum(drho.*obj.cms.Vs);
+        end
+        
+        function val = get.beta(obj)
+            val = obj.M/obj.M_calc;
         end
         
         function val = get.bi(obj)
