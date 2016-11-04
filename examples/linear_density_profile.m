@@ -21,60 +21,60 @@ catch
 end
 G = si.gravity;
 
-%% Set up a CMS object
-cms = ConcentricMaclaurinSpheroids(16);
-cms.qrot = 0.088822426; % Hubbard (2013) Table 1
-
-%% Construct a density profile linear in a_i to start
+%% Set up a CMS object and give it a density profile linear in lambda to start
 % A constant lambda step (default) calls for constant delta step
+cms = ConcentricMaclaurinSpheroids(32);
+cms.qrot = 0.088822426; % Hubbard (2013) Table 1
 cms.deltas = ones(cms.nlayers, 1);
 cms.deltas(1) = 0;
 
 %% Relax to hydrostatic equilibrium
-cms.opts.verbosity = 2;
-cms.opts.MaxIterHE = 12;
+cms.opts.verbosity = 1;
+%cms.opts.MaxIterHE = 3;
 cms.opts.email = '';
 cms.relax;
 
-%% After initial relaxation, we iteratively converge deltas to linear in s
+%% After initial relaxation, we iteratively fix deltas ss and re-relax
 iter = 0;
-while (iter < 10)
+for iter=1:10
+    fprintf('\n  Fixing density profile to mean radii - iteration %i\n', iter)
     new_deltas = [0; -diff(cms.ss/cms.ss(1))];
-    new_deltas = new_deltas/max(new_deltas); % just for show
-    delta_deltas = max(abs(new_deltas - cms.deltas));
-    fprintf('\nAdjusting density profile by < %g.\n',delta_deltas)
-    if delta_deltas < 1e-2, break, end
+    new_deltas = new_deltas/max(new_deltas);
+    delta_deltas = sum(abs(new_deltas - cms.deltas));
+    fprintf('  deltas array modified by < %g.\n\n',delta_deltas)
     cms.deltas = new_deltas;
-    iter = iter + 1;
+    if delta_deltas < 1e-8, break, end
     cms.relax;
 end
+fprintf('  Density profile fixed.\n')
 
 %% Compare computed and analytic density structure
-% q = cms.qrot;
-% % Zharkov & Trubistyn (1978) eq. 34.12
-% ZT3 = [q;...
-%     (0.173273*q - 0.197027*q^2 + 0.15*q^3)*1e2;...
-%     (-0.081092*q^2 + 0.15*q^3)*-1e4;...
-%     (0.056329*q^3)*1e5;...
-%     nan; nan; nan];
-% % Hubbard (2013) Table 5
-% H13_256 = [q; 1.3991574; 5.3182810; 3.0118323; 2.1321157; 1.7406710; 1.5682179];
-% H13_512 = [q; 1.3989253; 5.3187997; 3.0122356; 2.1324628; 1.7409925; 1.5685327];
-% 
-% % CMSPlanet
-% CMP = [q; cms.Js(2)*1e2; -cms.Js(3)*1e4; cms.Js(4)*1e5; -cms.Js(5)*1e6;...
-%     cms.Js(6)*1e7; -cms.Js(7)*1e8;];
-% 
-% % Make it a table
-% T = table(ZT3, H13_256, H13_512, CMP);
-% T.Properties.RowNames = {'q','J2x10^2','-J4x10^4','J6x10^5','-J8x10^6',...
-%     'J10x10^7','-J12x10^8'};
-% 
-% % Display
-% format long
-% format compact
-% disp(T)
-% format
+q = cms.qrot;
+s3 = cms.bs(1); % mean radius, s^3=b*a^2 but a=1
+m = q*s3;
+
+% Zharkov & Trubistyn (1978) eq. 34.12
+ZT5 = [nan; 0.0830;...
+    nan;nan;nan;nan;nan;...
+    nan; nan];
+% Hubbard (2013) Table 1
+H13_128 = [q; 0.082999915; 1.4798138; 5.9269129; 3.4935680; 2.5493209; 2.1308951; 1.9564143; 1.9237724];
+
+% CMSPlanet
+CMP = [q; m; cms.Jn(2)*1e2; -cms.Jn(4)*1e4; cms.Jn(6)*1e5; -cms.Jn(8)*1e6;...
+    cms.Jn(10)*1e7; -cms.Jn(12)*1e8; cms.Jn(14)*1e9];
+
+% Make it a table
+T = table(ZT5, H13_128, CMP);
+T.Properties.RowNames = {'q','m','J2x10^2','-J4x10^4','J6x10^5','-J8x10^6',...
+    'J10x10^7','-J12x10^8','J14x10^9'};
+
+% Display
+format long
+format compact
+fprintf('\n')
+disp(T)
+format
 
 %% Save and deliver
 % save('index1polytrope', 'cmp', 'T')
