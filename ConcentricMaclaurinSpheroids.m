@@ -134,13 +134,15 @@ classdef ConcentricMaclaurinSpheroids < handle
             if (dJ < obj.opts.dJtol)
                 obj.fullyCooked = true;
             else
-                msg = ['Object may not have fully converged. ',...
-                       'Try running %s.relax() and increasing ',...
-                       'the convergence tolerance (%s.opts.dJtol) ',...
-                       'and/or iteration limit (%s.opts.MaxIterHE).'];
-                warning off backtrace
-                warning(msg, inputname(1), inputname(1), inputname(1))
-                warning on backtrace
+                if (verb > 0)
+                    msg = ['Object may not have fully converged.\n',...
+                        'Try increasing the convergence tolerance ',...
+                        '(%s.opts.dJtol) and/or iteration limit ',...
+                        '(%s.opts.MaxIterHE).\n'];
+                    warning off backtrace
+                    warning(msg, inputname(1), inputname(1))
+                    warning on backtrace
+                end
             end
             
             % Calculate polar radii
