@@ -23,20 +23,20 @@ G = si.gravity;
 
 %% Set up a CMS object and give it a density profile linear in lambda to start
 % A constant lambda step (default) calls for constant delta step
-cms = ConcentricMaclaurinSpheroids(32);
+cms = ConcentricMaclaurinSpheroids(128);
 cms.qrot = 0.088822426; % Hubbard (2013) Table 1
 cms.deltas = ones(cms.nlayers, 1);
 cms.deltas(1) = 0;
 
 %% Relax to hydrostatic equilibrium
-cms.opts.verbosity = 1;
-%cms.opts.MaxIterHE = 3;
+cms.opts.verbosity = 2;
+cms.opts.MaxIterHE = 40;
 cms.opts.email = '';
 cms.relax;
 
 %% After initial relaxation, we iteratively fix deltas ss and re-relax
 iter = 0;
-for iter=1:10
+for iter=1:20
     fprintf('\n  Fixing density profile to mean radii - iteration %i\n', iter)
     new_deltas = [0; -diff(cms.ss/cms.ss(1))];
     new_deltas = new_deltas/max(new_deltas);
@@ -77,7 +77,7 @@ disp(T)
 format
 
 %% Save and deliver
-% save('index1polytrope', 'cmp', 'T')
+save('linear_density_model', 'cms', 'T')
 % try
 % sendmail('address','n=1 polytrope','','index1polytrope.mat')
 % catch
