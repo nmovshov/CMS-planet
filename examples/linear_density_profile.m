@@ -40,6 +40,7 @@ for iter=1:20
     fprintf('\n  Fixing density profile to mean radii - iteration %i\n', iter)
     new_deltas = [0; -diff(cms.ss/cms.ss(1))];
     new_deltas = new_deltas/max(new_deltas);
+%    new_deltas = [0; cms.deltas(2:end).*diff(cms.ss)./diff(cms.lambdas)]; %H13?
     delta_deltas = sum(abs(new_deltas - cms.deltas));
     fprintf('  deltas array modified by < %g.\n\n',delta_deltas)
     cms.deltas = new_deltas;
@@ -53,12 +54,11 @@ q = cms.qrot;
 s3 = cms.bs(1); % mean radius, s^3=b*a^2 but a=1
 m = q*s3;
 
-% Zharkov & Trubistyn (1978) eq. 34.12
-ZT5 = [nan; 0.0830;...
-    nan;nan;nan;nan;nan;...
-    nan; nan];
+% Zharkov & Trubistyn (1978) Table 3.1
+ZT5 = [nan; 0.0830; 1.4798; 5.929; 3.497; 2.52; 2.4; nan; nan];
 % Hubbard (2013) Table 1
-H13_128 = [q; 0.082999915; 1.4798138; 5.9269129; 3.4935680; 2.5493209; 2.1308951; 1.9564143; 1.9237724];
+H13_128 = [q; 0.082999915; 1.4798138; 5.9269129; 3.4935680; 2.5493209;...
+    2.1308951; 1.9564143; 1.9237724];
 
 % CMSPlanet
 CMP = [q; m; cms.Jn(2)*1e2; -cms.Jn(4)*1e4; cms.Jn(6)*1e5; -cms.Jn(8)*1e6;...
