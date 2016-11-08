@@ -77,7 +77,7 @@ disp(T)
 format
 
 %% Save and deliver
-save('linear_density_model', 'cms', 'T')
+% save('linear_density_model', 'cms', 'T')
 % try
 % sendmail('address','n=1 polytrope','','index1polytrope.mat')
 % catch
