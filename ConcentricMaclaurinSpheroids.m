@@ -23,17 +23,19 @@ classdef ConcentricMaclaurinSpheroids < handle
         equiUpu % total potential at pole of (assumed) equipotential surfaces
     end
     properties (Access = private)
-        N           % real nlayers
-        Pnmu        % values of Legendre polynomials at fixed colatitudes
-        Pnzero      % values of Legendre polynomials at equator
-        Pnone       % values of Legendre polynomials at pole
-        gws         % weight factors for Gauss integration (correspond to mus)
-        zeta1s      % normalized rescaled level-surface polar radii
-        realVpu     % stores values of Vpu for quick retrieval
-        os          % optimset struct for use by fzero
-        cooked      % flag indicating obj.relax() was run
-        fullyCooked % flag indicating successful convergence
-        realVpuMod  % flag triggering recalculation of realVpu
+        N            % real nlayers
+        Pnmu         % values of Legendre polynomials at fixed colatitudes
+        Pnzero       % values of Legendre polynomials at equator
+        Pnone        % values of Legendre polynomials at pole
+        gws          % weight factors for Gauss integration (correspond to mus)
+        zeta1s       % normalized rescaled level-surface polar radii
+        realVpu      % stores values of Vpu for quick retrieval
+        realequiU    % stores values of equiUpu for quick access
+        os           % optimset struct for use by fzero
+        cooked       % flag indicating obj.relax() was run
+        fullyCooked  % flag indicating successful convergence
+        realVpuMod   % flag triggering recalculation of realVpu
+        realequiUMod % flag triggering recalculation of realequiU
     end
     properties (Dependent) % Convenience names
         nlayers % number of layers
@@ -203,8 +205,9 @@ classdef ConcentricMaclaurinSpheroids < handle
                 fprintf('done.\n')
             end
             
-            % Flag Vpu re-calc
+            % Flag Vpu and equiUpu re-calc
             obj.realVpuMod = true;
+            obj.realequiUMod = true;
         end
         
         function dJ = update_Js(obj)
@@ -238,8 +241,9 @@ classdef ConcentricMaclaurinSpheroids < handle
                 fprintf('done.\n')
             end
             
-            % Flag Vpu re-calc
+            % Flag Vpu and equiUpu re-calc
             obj.realVpuMod = true;
+            obj.realequiUMod = true;
         end
         
         function TF = validate(obj)
@@ -437,6 +441,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.cooked = false;
             obj.fullyCooked = false;
             obj.realVpuMod = true;
+            obj.realequiUMod = true;
         end
         
         function dJ = update_Js_gauss(obj)
@@ -784,6 +789,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.cooked = false; %#ok<MCSUP>
             obj.fullyCooked = false; %#ok<MCSUP>
             obj.realVpuMod = true; %#ok<MCSUP>
+            obj.realequiUMod = true; %#ok<MCSUP>
             
         end
         
@@ -897,8 +903,12 @@ classdef ConcentricMaclaurinSpheroids < handle
         function val = get.equiUpu(obj)
             % Return potential on equipotential surface by sampling the pole.
             
-            val = zeros(obj.nlayers,1);
+            if (~obj.realequiUMod)
+                val = obj.realequiU;
+                return
+            end
             
+            val = zeros(obj.nlayers,1);
             lam = obj.lambdas;
             zet = obj.zeta1s;
             til = obj.Js.tilde;
@@ -918,6 +928,8 @@ classdef ConcentricMaclaurinSpheroids < handle
                 V = V*(-1/(lam(j)*zet(j)));
                 val(j) = V;
             end
+            obj.realequiU = val;
+            obj.realequiUMod = false;
         end
         
     end % End of access methods block
