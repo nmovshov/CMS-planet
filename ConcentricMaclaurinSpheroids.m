@@ -21,6 +21,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         Qpu     % rotation potential on fixed angles in planetary units
         Upu     % total potential on fixed angles in planetary units
         equiUpu % total potential at pole of (assumed) equipotential surfaces
+        NMoI    % normalized moment of inertia
     end
     properties (Access = private)
         N            % real nlayers
@@ -932,6 +933,18 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.realequiUMod = false;
         end
         
+        function val = get.NMoI(obj)
+            % C/Ma^2, see eq. 5 in Hubbard & Militzer 2016
+            num = 0;
+            den = 0;
+            for j=1:obj.N
+                num = num + obj.deltas(j)*...
+                    ((obj.zetas(j,:)*obj.lambdas(j)).^5)*obj.gws';
+                den = den + obj.deltas(j)*...
+                    ((obj.zetas(j,:)*obj.lambdas(j)).^3)*obj.gws';
+            end
+            val = 2/5*num/den + 2/3*obj.Js.Jn(2);
+        end
     end % End of access methods block
     
     %% Static methods

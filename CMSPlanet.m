@@ -27,6 +27,7 @@ classdef CMSPlanet < handle
         qrot    % rotation parameter 
         nlayers % layers of constant density 
         Js      % external gravity moments (even, 0:2:kmax degree)
+        NMoI    % normalized moment of inertia
         s0      % mean radius
         b0      % polar radius
         f0      % flattening, a.k.a, oblateness: (a - b)/a
@@ -406,6 +407,10 @@ classdef CMSPlanet < handle
             P = obj.Pi;
             val = (P(1:end-1) + P(2:end))/2;
             val(end+1) = (P(end) + obj.P_c)/2;
+        end
+        
+        function val = get.NMoI(obj)
+            val = obj.cms.NMoI;
         end
         
         function set.P_c(~,~)
