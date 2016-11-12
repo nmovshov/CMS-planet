@@ -33,6 +33,7 @@
 \newcommand{\ptk}{P_{2k}}
 \newcommand{\sumonk}{\sum_{k=0}^{\inf}}
 \newcommand{\sumoni}{\sum_{i=0}^{N-1}}
+\newcommand{\sumonj}{\sum_{j=0}^{N-1}}
 \newcommand{\dro}{\delta\rho}
 \newcommand{\intonmu}{\int_{-1}^{1}}
 \newcommand{\mupint}{\int_{0}^{1}d\mu'\,}
@@ -864,6 +865,46 @@ V\sub{center} = -\frac{GM}{a_0}\sum_{i=0}^{N-1}J'_{i,0} =
 -\frac{GM}{a_0}\sum_{i=0}^{N-1}\Jtil'_{i,0}\lambda_i^{-1}.
 \end{equation}
 (Note typo in \citep{Hubbard2013}.)
+
+\subsubsection{Normalized moment of inertia}
+Like the gravitational potential, the moment of inertia integrals also obey a
+principle of superposition, so that rather than compute the moment of inertia of
+stacked constant density layers we may compute the moment of inertia of concentric
+constant density spheroids. Consider the moment of inertia about the rotation axis
+of the $i$-th spheroid:
+\begin{equation}
+I_i = \int_{\tau}dm'\,(r'\sin{\theta'})^2 = 4\pi\dro_i\int_0^1{}d\mu'\int_0^{r_i
+(\mu')}dr'\,r'^4(1 - \mu'^2) = \frac{4\pi}{5}a_0^5\dro_i\int_0^1{}d\mu'\,\xi_i^5
+(\mu')(1 - \mu'^2).
+\end{equation}
+Using $P_2(\mu) = \frac{3}{2}\mu^2-\frac{1}{2}$ we write $(1-\mu^2) = \frac{2}{3}
+- \frac{2}{3}P_2(\mu)$ so that
+\begin{equation}
+I_i = \frac{4\pi}{5}\frac{2}{3}a_0^5\dro_i\int_0^1{}d\mu'\,\xi_i^5
+(\mu')[1 - P_2(\mu')].
+\end{equation}
+The normalized moment of inertia is then
+\begin{equation}
+\frac{I_i}{Ma_0^2} = \frac{2}{5}\frac{\dro_i\int_0^1d\mu'\,\xi_i^5(\mu')[1 -
+P_2
+(\mu')]}{\sumonj\dro_j\int_0^1d\mu'\,\xi_i^3(\mu')}.
+\end{equation}
+We can separate a $J_2$ contribution. Using eq.~\eqref{eq:J_i_2k},
+\begin{equation}
+J_{i,2} = -\frac{3}{5}\dro_i\frac{d\mu'\,P_2(\mu')\xi_i^5(\mu')}
+{\sumonj\dro_j\int_0^1d\mu'\,\xi_j^3(\mu')}.
+\end{equation}
+So
+\begin{equation}
+\frac{I_i}{Ma_0^2} = \frac{2}{5}\frac{\dro_i\int_0^1d\mu'\,\xi_i^5(\mu')
+P_2(\mu')}{\sumonj\dro_j\int_0^1d\mu'\,\xi_i^3(\mu')} + \frac{2}{3}J_{i,2}.
+\end{equation}
+And the total normalized moment of inertia is
+\begin{equation}
+\frac{I}{Ma_0^2} = \frac{2}{5}\frac{\sumoni\dro_i\int_0^1d\mu'\,\xi_i^5(\mu')}
+{\sumonj\dro_j\int_0^1d\mu'\,\xi_j^3(\mu')} + \frac{2}{3}J_{2}.
+\end{equation}
+
 
 % References
 \bibliographystyle{plainnat} % [plainnat|abbrvnat|agu08|agufull08|...]
