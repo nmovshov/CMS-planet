@@ -182,8 +182,8 @@ classdef CMSPlanet < handle
             obj.rhoi = newro;
         end
         
-        function ah = show(obj)
-            % Visualize a CMSPlanet object, return axes handle.
+        function ah = plot_equipotential_surfaces(obj)
+            % Visualize a CMSPlanet object by plotting equipotential contours.
             
             % Require R2016a to use the amazing polarplot features
             if verLessThan('matlab','9')
