@@ -381,6 +381,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 xi = [xi, fliplr(xi)]; %#ok<AGROW>
                 xi = [xi, fliplr(xi)]; %#ok<AGROW>
                 lh(k) = polarplot(pax, th, xi);
+                lh(k).Tag = 'equisurface';
                 if (rho(k) <= romin)
                     ci = 1;
                 elseif (rho(k) >= romax)
@@ -394,6 +395,14 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Make outer surface more distinct
             lh(1).LineWidth = 2;
             lh(1).Color = 'k';
+            
+            % Show grid lines above contours
+            pax.Layer = 'top';
+            
+            % Fake a solid core color (xi and ci already set)
+            for scl=0:0.05:1
+                polarplot(pax, th, xi*scl, 'color', cmap(ci,:), 'tag', 'core');
+            end
             
             % Return handle if requested
             if (nargout == 1), ah = pax; end            
