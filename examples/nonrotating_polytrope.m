@@ -63,6 +63,7 @@ end
 n = 1; % polytrope index
 K = 2*G/pi*R^2; % polytrope constant
 eos = barotropes.Polytrope(K, n);
+eos.name = sprintf('$P\\propto\\rho^2$');
 [cmp.eos] = deal(eos);
 
 %% Relax to desired barotrope
@@ -89,7 +90,7 @@ rho_exact = rho_c*sin(a*r)./(a*r);
 rho_exact(1) = rho_c;
 
 % plot
-ah = axes; hold(ah);
+ah = axes; hold(ah, 'on');
 l1 = plot(r/R, rho_exact/rho_c);
 l1.DisplayName = '$\sin(ar)/(ar)$';
 for k=1:length(nbl)
@@ -123,3 +124,7 @@ th.String = s_poly;
 th.FontSize = 12;
 th.Position = [lh.Position(1), lh.Position(2)-th.Position(4),...
     lh.Position(3), th.Position(4)];
+
+% Also plot converged and input barotrope
+cmp(end).plot_barotrope;
+title(s_tit);

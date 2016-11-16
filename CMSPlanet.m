@@ -241,7 +241,11 @@ classdef CMSPlanet < handle
             end
             if ~isempty(obj.eos)
                 lh(2).Color = 'r';
-                lh(2).DisplayName = 'input barotrope';
+                if isempty(obj.eos.name)
+                    lh(2).DisplayName = 'input barotrope';
+                else
+                    lh(2).DisplayName = obj.eos.name;
+                end
             end
             
             % Style and annotate axes
@@ -253,7 +257,8 @@ classdef CMSPlanet < handle
             ylabel('$P$ [GPa]')
             
             % Legend
-            gh = legend('show','location','nw'); %#ok<NASGU>
+            gh = legend('show','location','nw');
+            gh.FontSize = 11;
             
         end
     end % End of public methods block
