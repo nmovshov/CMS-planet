@@ -206,6 +206,56 @@ classdef CMSPlanet < handle
                     sprintf('1.0\\times{}%g km',double(obj.a0)/1e3);
             end
         end
+        
+        function ah = plot_barotrope(obj)
+            % Plot P(rho) of current model and of input barotrope.
+            
+            % Prepare the canvas
+            fh = figure;
+            set(fh, 'defaultTextInterpreter', 'latex')
+            set(fh, 'defaultLegendInterpreter', 'latex')
+            ah = axes;
+            hold(ah, 'on')
+            
+            % Prepare the data
+            x_cms = double(obj.rhoi);
+            y_cms = double(obj.Pi);
+            if ~isempty(obj.eos)
+                x_bar = logspace(-4, 4); % expected range in SI units
+                y_bar = double(obj.eos.pressure(x_bar));
+            end
+            
+            % Plot the lines (pressure in GPa)
+            lh(1) = stairs(x_cms, y_cms/1e9);
+            if ~isempty(obj.eos)
+                lh(2) = line(x_bar, y_bar/1e9);
+            end
+            
+            % Style and annotate lines
+            lh(1).LineWidth = 2;
+            lh(1).Color = [0.31, 0.31, 0.31];
+            if isempty(obj.name)
+                lh(1).DisplayName = 'CMS model';
+            else
+                lh(1).DisplayName = obj.name;
+            end
+            if ~isempty(obj.eos)
+                lh(2).Color = 'r';
+                lh(2).DisplayName = 'input barotrope';
+            end
+            
+            % Style and annotate axes
+            ah.Box = 'on';
+            ah.XScale = 'log';
+            ah.YScale = 'log';
+            xlim([min(x_cms),max(x_cms)])
+            xlabel('$\rho$ [kg/m$^3$]')
+            ylabel('$P$ [GPa]')
+            
+            % Legend
+            gh = legend('show','location','nw'); %#ok<NASGU>
+            
+        end
     end % End of public methods block
     
     %% Private methods
