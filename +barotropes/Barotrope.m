@@ -5,6 +5,10 @@ classdef (Abstract) Barotrope < handle
     %   subclasses.
     
     %% Properties
+    properties
+        name = ''
+    end
+    
     properties (Constant)
         
     end
@@ -13,7 +17,6 @@ classdef (Abstract) Barotrope < handle
     methods
         function obj = Barotrope()
         % ABC constructor called implicitly with no arguments by subclass.
-            
         end
     end
     
