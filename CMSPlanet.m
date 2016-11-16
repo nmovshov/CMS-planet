@@ -191,6 +191,19 @@ classdef CMSPlanet < handle
             end
             
             ah = obj.cms.plot();
+            
+            % Add a colorbar
+            if ~isempty(obj.rhoi)
+                ch = colorbar;
+                ch.Label.String =...
+                    sprintf('\\times %g kg/m^3', double(max(obj.rhoi)));
+            end
+            
+            % Indicate equatorial radius
+            if ~isempty(obj.a0)
+                ah.RTickLabel{end} =...
+                    sprintf('\\times %g km',double(obj.a0)/1e3);
+            end
         end
     end % End of public methods block
     
