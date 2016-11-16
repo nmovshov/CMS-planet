@@ -219,7 +219,7 @@ classdef CMSPlanet < handle
             
             % Prepare the data
             x_cms = double(obj.rhoi);
-            y_cms = double(obj.Pi);
+            y_cms = double(obj.P_mid);
             if ~isempty(obj.eos)
                 x_bar = logspace(-4, 4); % expected range in SI units
                 y_bar = double(obj.eos.pressure(x_bar));
