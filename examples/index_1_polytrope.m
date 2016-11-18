@@ -30,7 +30,7 @@ M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
 cmp = CMSPlanet(512);
-cmp.name = 'poly1';
+cmp.name = [int2str(cmp.nlayers),'-layer CMS'];
 cmp.desc = 'An index-1 polytropic planet';
 cmp.M = M;
 cmp.a0 = R;
@@ -40,6 +40,7 @@ cmp.qrot = 0.089195487; % Hubbard (2013) Table 5
 n = 1;
 K = 2*G/pi*R^2; % ...matches radius just for show, K has no effect on the Js
 eos = barotropes.Polytrope(K, n);
+eos.name = '$P\propto\rho^2$';
 cmp.eos = eos;
 
 %% To speed up convergence start with an approximate density structure
@@ -84,6 +85,11 @@ format long
 format compact
 disp(T)
 format
+try
+    cmp.plot_equipotential_surfaces;
+    cmp.plot_barotrope;
+catch
+end
 
 %% Save and deliver
 % save('index1polytrope', 'cmp', 'T')
