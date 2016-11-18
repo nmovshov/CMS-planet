@@ -1,4 +1,4 @@
-classdef (Abstract) Barotrope < handle
+classdef (Abstract) Barotrope < handle & matlab.mixin.Heterogeneous
     %BAROTROPE Interface base class for all barotropes.
     %   The BAROTROPE abstract base class will implement only initialization of
     %   named constants and define syntax for interface to specialized
