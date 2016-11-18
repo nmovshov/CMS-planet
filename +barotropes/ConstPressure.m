@@ -1,5 +1,5 @@
 classdef ConstPressure < barotropes.Barotrope
-    %CONSTPRESSURE A test implementation of constant pressure barotrope.
+    %CONSTPRESSURE A constant pressure barotrope.
     
     properties (Access = public)
         P0; % reference pressure
