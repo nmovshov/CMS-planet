@@ -172,9 +172,15 @@ classdef CMSPlanet < handle
             if (verb > 0)
                 fprintf('  Updating layer densities...')
             end
-            P = obj.Pi;
-            newro = obj.eos.density((P(1:end-1) + P(2:end))/2);
-            newro(end+1) = obj.eos.density((P(end) + obj.P_c)/2);
+            P = obj.P_mid;
+            if isscalar(obj.eos)
+                newro = obj.eos.density(P);
+            else
+                newro = repmat(obj.rho0, obj.nlayers, 1);
+                for k=1:length(newro)
+                    newro(k) = obj.eos(k).density(P(k));
+                end
+            end
             dro = ((newro - obj.rhoi)./obj.rhoi);
             if (verb > 0)
                 fprintf('done. (%g sec.)\n', toc(t_rho))
@@ -365,7 +371,7 @@ classdef CMSPlanet < handle
             validateattributes(val,{'numeric'},{'real','finite','vector'},...
                 '','rhoi')
             assert(numel(val) == obj.nlayers,...
-                'length(rhoi) = %g ~= nlayers = %g',...
+                'length(rhoi) == %g ~= nlayers == %g',...
                 numel(val),obj.nlayers)
             assert(all(double(val) >= 0), 'layer densities must be nonnegative')
             assert(~isempty(obj.a0) && ~isempty(obj.M),...
@@ -377,7 +383,11 @@ classdef CMSPlanet < handle
             if ~isa(val,'barotropes.Barotrope')
                 error('eos must be a valid instance of class Barotrope')
             end
-            obj.eos = val;
+            n = obj.nlayers; %#ok<MCSUP>
+            assert(isscalar(val) || (numel(val) == n),...
+                'length(eos) == %g ~= nlayers == %g',...
+                numel(val),n)
+            obj.eos = val(:);
         end
         
         function val = get.s0(obj)
