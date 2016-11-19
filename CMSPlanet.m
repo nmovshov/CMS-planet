@@ -226,14 +226,14 @@ classdef CMSPlanet < handle
             % Prepare the data
             x_cms = double(obj.rhoi);
             y_cms = double(obj.P_mid);
-            if ~isempty(obj.eos)
-                x_bar = logspace(-4, 4); % expected range in SI units
+            if isscalar(obj.eos)
+                x_bar = logspace(-1, 4); % expected range in SI units
                 y_bar = double(obj.eos.pressure(x_bar));
             end
             
             % Plot the lines (pressure in GPa)
             lh(1) = stairs(x_cms, y_cms/1e9);
-            if ~isempty(obj.eos)
+            if isscalar(obj.eos)
                 lh(2) = line(x_bar, y_bar/1e9);
             end
             
@@ -245,7 +245,7 @@ classdef CMSPlanet < handle
             else
                 lh(1).DisplayName = obj.name;
             end
-            if ~isempty(obj.eos)
+            if isscalar(obj.eos)
                 lh(2).Color = 'r';
                 if isempty(obj.eos.name)
                     lh(2).DisplayName = 'input barotrope';
@@ -258,7 +258,9 @@ classdef CMSPlanet < handle
             ah.Box = 'on';
             ah.XScale = 'log';
             ah.YScale = 'log';
-            xlim([min(x_cms),max(x_cms)])
+            if (range(x_cms) > 0)
+                xlim([min(x_cms),max(x_cms)])
+            end
             xlabel('$\rho$ [kg/m$^3$]')
             ylabel('$P$ [GPa]')
             
