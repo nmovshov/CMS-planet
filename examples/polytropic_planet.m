@@ -57,13 +57,20 @@ eos_core.name = '$\rho=rho_c$';
 cmp.eos = [repmat(eos_env,N-1,1); eos_core];
 
 %% To speed up convergence try to start with an approximate density structure
-% a = sqrt(2*pi*G/poly_K);
-% r = pi/a;
-% rho_av = 3*M/(4*pi*r^3);
-% rho_c = (pi^2/3)*rho_av;
-% x = (cmp.ai(1:end-1) + cmp.ai(2:end))/2;
-% x(end+1) = cmp.ai(end)/2;
-% cmp.rhoi = rho_c*(sin(a*x)./(a*x));
+% We use the density profile of a non-rotating n=1 polytrope but we have to
+% guard against negative densities and mismatched dimensions. The benefit is a
+% skipping a few iterations of relaxation loop. Comment out this section to
+% start from a uniform density structure.
+a = double(sqrt(2*pi*G/poly_K));
+r = pi/a;
+rho_av = double(3*M/(4*pi*r^3));
+rho_c = (pi^2/3)*rho_av;
+x = double(cmp.ai(1:end-1) + cmp.ai(2:end))/2;
+x(end+1) = double(cmp.ai(end))/2;
+rho_guess = rho_c*(sin(a*x)./(a*x));
+rho_guess(rho_guess < 0) = 0;
+cmp.rhoi = rho_guess*cmp.rho0;
+cmp.rhoi = cmp.rhoi*cmp.M/cmp.M_calc;
 
 % %% Relax to desired barotrope
 % cmp.opts.verbosity = 3;
