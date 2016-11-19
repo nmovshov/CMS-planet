@@ -373,7 +373,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Plot level surfaces colored by layer density
             cmap = parula;
             rho = cumsum(obj.deltas);
-            romin = min(rho); romax = max(rho);%TODO: colorbar
+            romin = min(rho); romax = max(rho);
             lh = gobjects(size(obj.lambdas));
             for k=1:obj.nlayers
                 xi = obj.zetas(k,:)*obj.lambdas(k);

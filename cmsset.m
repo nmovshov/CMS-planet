@@ -36,7 +36,7 @@ end
 p = inputParser;
 p.FunctionName = mfilename;
 
-p.addParameter('nlayers',32,@isposintscalar)
+p.addParameter('nlayers',32,@isposintscalar)%TODO: make required?
 p.addParameter('nangles',48,@isposintscalar)
 p.addParameter('kmax',30,@isposintscalar)
 p.addParameter('dJtol',1e-10,@isposscalar)
