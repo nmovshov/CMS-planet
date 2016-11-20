@@ -51,23 +51,23 @@ classdef ConcentricMaclaurinSpheroids < handle
     
     %% The constructor
     methods
-        function obj = ConcentricMaclaurinSpheroids(varargin)
+        function obj = ConcentricMaclaurinSpheroids(nlay,varargin)
             %CONCENTRICMACLAURINSPHEROIDS Class constructor.
             
             % The constructor only dispatches to InitCMS().
-            warning off CMS:obsolete
             if nargin == 0
-                op = cmsset();
-            else
-                if isnumeric(varargin{1})
-                    varargin = {'nlayers',varargin{1},varargin{2:end}};
-                end
-                op = cmsset(varargin{:});
+                error(['Required argument missing: specify number of layers',...
+                    ' as first input argument.'])
             end
+            validateattributes(nlay,...
+                {'numeric'},{'positive','integer','scalar'},...
+                '','nlayers',1)
+            warning off CMS:obsolete
+            op = cmsset(varargin{:});
+            obj.opts = op; % (calls set.opts which calls cmsset(op) again)
             warning on CMS:obsolete
             
-            obj.opts = op; % (calls set.opts which calls cmsset(op) again)
-            obj.InitCMS(op);
+            obj.InitCMS(nlay, op);
         end
     end % End of constructor block
     
@@ -412,28 +412,28 @@ classdef ConcentricMaclaurinSpheroids < handle
     
     %% Private methods
     methods (Access = private)
-        function InitCMS(obj,op)
+        function InitCMS(obj,nlay, op)
             % (Re)Initialize a CMS object.
             
             % The one required and immutable parameter
-            obj.N = op.nlayers;
+            obj.N = nlay;
             
             % Default layer setup is linear
-            obj.lambdas = linspace(1, 1/op.nlayers, op.nlayers)';
+            obj.lambdas = linspace(1, 1/nlay, nlay)';
             
             % Default deltas setup is constant density
-            obj.deltas = zeros(op.nlayers, 1);
+            obj.deltas = zeros(nlay, 1);
             obj.deltas(1) = 1;
             
             % Default mu setup is almost never used!
             obj.mus = linspace(0,1,op.nangles); % will be modified by gauss
             
             % Default zetas setup is spherical
-            obj.zetas = ones(op.nlayers, op.nangles);
-            obj.zeta1s = ones(op.nlayers, 1);
+            obj.zetas = ones(nlay, op.nangles);
+            obj.zeta1s = ones(nlay, 1);
             
             % Default Js setup is spherical
-            obj.allocate_spherical_Js(op.nlayers, op.kmax);
+            obj.allocate_spherical_Js(nlay, op.kmax);
             
             % Get mus and weights for Gaussian quadrature
             if strcmpi(op.J_integration_method, 'gauss')

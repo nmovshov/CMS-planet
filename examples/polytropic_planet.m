@@ -34,7 +34,7 @@ m_core = 5*si.earth_mass; % core mass
 
 % Model options
 N = 12;        % number of spheroids to use, including core
-name = '';     % optional
+name = '';     % optional name
 desc = '';     % optional description
 %opts = cmsset; %TODO: use this after removing default nlayers in cmsset
 

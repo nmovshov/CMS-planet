@@ -193,7 +193,7 @@ classdef CMSPlanet < handle
             
             % Require R2016a to use the amazing polarplot features
             if verLessThan('matlab','9')
-                error('CMS plotting requires R2016a or later')
+                error('CMS equipotential plots require R2016a or later')
             end
             
             ah = obj.cms.plot();
