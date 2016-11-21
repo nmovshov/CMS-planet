@@ -44,23 +44,24 @@ classdef CMSPlanet < handle
     
     %% The constructor
     methods
-        function obj = CMSPlanet(varargin)
+        function obj = CMSPlanet(nlay, varargin)
             %CMSPLANET Class constructor.
             
-            % Empty, integer, or name/value arguments.
-            warning off CMS:obsolete
+            % The constructor only dispatches to InitCMS().
             if nargin == 0
-                op = cmsset();
-            else
-                if isnumeric(varargin{1})
-                    varargin = {'nlayers',varargin{1},varargin{2:end}};
-                end
-                op = cmsset(varargin{:});
+                error(['Required argument missing: specify number of layers',...
+                    ' as first input argument.'])
             end
+            validateattributes(nlay,...
+                {'numeric'},{'positive','integer','scalar'},...
+                '','nlayers',1)
+            warning off CMS:obsolete
+            op = cmsset(varargin{:});
+            obj.opts = op; % (calls set.opts which calls cmsset(op) again)
             warning on CMS:obsolete
             
             % Call InitPlanet to finish the construction
-            obj.InitPlanet(op);
+            obj.InitPlanet(nlay, op);
         end
     end % End of constructor block
     
@@ -273,10 +274,10 @@ classdef CMSPlanet < handle
     
     %% Private methods
     methods (Access = private)
-        function InitPlanet(obj,op)
+        function InitPlanet(obj,nlay,op)
            % (Re)Initialize a CMSPlanet object.
            
-           obj.cms = ConcentricMaclaurinSpheroids(op);
+           obj.cms = ConcentricMaclaurinSpheroids(nlay, op);
         end
     end % End of private methods block
     

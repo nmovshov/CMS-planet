@@ -523,7 +523,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Do common denominator in eqs. (40-43)
             denom = 0;
-            for j=1:obj.opts.nlayers
+            for j=1:obj.nlayers
                 fun = @(mu)obj.zeta_j_of_mus(j, mu).^3;
                 I = integral(fun, 0, 1, 'RelTol', obj.opts.IntTol);
                 denom = denom + obj.deltas(j)*obj.lambdas(j)^3*I;
@@ -531,7 +531,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Do J tilde, eq. (40)
             new_tilde = zeros(size(obj.Js.tilde));
-            for ii=1:obj.opts.nlayers
+            for ii=1:obj.nlayers
                 for kk=0:obj.opts.kmax
                     if rem(kk, 2), continue, end
                     fun = @(mu)Pn(kk,mu).*obj.zeta_j_of_mus(ii, mu).^(kk+3);
@@ -542,7 +542,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Do J tilde prime, eqs. (41,42)
             new_tprime = zeros(size(obj.Js.tilde_prime));
-            for ii=1:obj.opts.nlayers
+            for ii=1:obj.nlayers
                 for kk=0:obj.opts.kmax
                     if rem(kk, 2), continue, end
                     if kk == 2
@@ -562,13 +562,13 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Do J double prime, eq. (27)
             new_pprime = zeros(size(obj.Js.pprime));
             denom = 0;
-            for j=1:obj.opts.nlayers
+            for j=1:obj.nlayers
                 fun = @(mu)obj.zeta_j_of_mus(j, mu).^3;
                 I = obj.lambdas(j)*integral(fun, 0, 1, 'RelTol', obj.opts.IntTol);
                 denom = denom + obj.deltas(j)*I;
             end
             denom = 2*denom;
-            for ii=1:obj.opts.nlayers
+            for ii=1:obj.nlayers
                 new_pprime(ii) = obj.deltas(ii)/denom;
             end
             
@@ -754,17 +754,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % First filter through cmsset again.
             val = cmsset(val);
             
-            % You can't change nlayers
-            if ~isempty(obj.opts)
-                if val.nlayers ~= obj.opts.nlayers
-                    msg = ['Changing number of layers in an existing ',...
-                        'CMS object makes no sense; create a new object ',...
-                        'instead.'];
-                    error(msg)
-                end
-            end
-            
-            % Also, don't change these horses mid-stream, it's just too messy.
+            % Don't change these horses mid-stream, it's just too messy.
             triggerFields = {'kmax','nangles'};
             if ~isempty(obj.opts) % for the call in the constructor
                 for k=1:length(triggerFields)
@@ -776,7 +766,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 end
             end
 
-            % Finally, assign the new opts, unflag cooked, and return.
+            % Assign the new opts, unflag cooked, and return.
             obj.opts = val;
             obj.fullyCooked = false; %#ok<MCSUP>
         end
@@ -800,7 +790,6 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.fullyCooked = false; %#ok<MCSUP>
             obj.realVpuMod = true; %#ok<MCSUP>
             obj.realequiUMod = true; %#ok<MCSUP>
-            
         end
         
         function set.deltas(obj,val)
@@ -811,12 +800,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 numel(val),obj.nlayers) %#ok<MCSUP>
             obj.deltas = double(val(:));
             obj.cooked = false; %#ok<MCSUP>
-            obj.fullyCooked = false; %#ok<MCSUP>
-            
-            % just for fun, really hitting it heavy on the MCSUP warning...
-%             if ~isempty(obj.lambdas) %#ok<MCSUP>
-%                 obj.allocate_spherical_Js(obj.opts.nlayers,obj.opts.kmax); %#ok<MCSUP>
-%             end
+            obj.fullyCooked = false; %#ok<MCSUP>            
         end
         
         function val = get.nlayers(obj)
