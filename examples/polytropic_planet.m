@@ -33,13 +33,13 @@ r_core = 0.15*R;          % core equatorial radius
 m_core = 5*si.earth_mass; % core mass
 
 % Model options
-N = 12;        % number of spheroids to use, including core
-name = '';     % optional name
-desc = '';     % optional description
-%opts = cmsset; %TODO: use this after removing default nlayers in cmsset
+N = 12;          % number of spheroids to use, including core
+name = '';       % optional name
+desc = '';       % optional description
+opts = cmsset(); % use for all other model options, see help cmsset for a list
 
 %% Create the CMSPlanet object
-cmp = CMSPlanet(N);
+cmp = CMSPlanet(N, opts);
 cmp.name = name;
 cmp.desc = desc;
 cmp.M = M;
@@ -72,19 +72,16 @@ rho_guess(rho_guess < 0) = 0;
 cmp.rhoi = rho_guess*cmp.rho0;
 cmp.rhoi = cmp.rhoi*cmp.M/cmp.M_calc;
 
-% %% Relax to desired barotrope
-% cmp.opts.verbosity = 3;
-% cmp.opts.MaxIterHE = 12;
-% cmp.opts.dBtol = 1e-12;
-% cmp.opts.email = '';
-% cmp.relax_to_barotrope;
-% 
-% %% Display
-% try
-%     cmp.plot_equipotential_surfaces;
-%     cmp.plot_barotrope;
-% catch
-% end
+%% Relax to desired barotrope
+cmp.opts.email = '';
+cmp.relax_to_barotrope;
+
+%% Display
+try
+    cmp.plot_equipotential_surfaces;
+    cmp.plot_barotrope;
+catch
+end
 
 %% (Optional) Save and deliver
 % save('filename', 'cmp')
