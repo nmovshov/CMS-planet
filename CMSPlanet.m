@@ -107,7 +107,7 @@ classdef CMSPlanet < handle
                 if (verb > 0), fprintf('\n'), end
                 dM = (obj.M_calc - obj.M)/obj.M;
                 dro = obj.update_densities;
-                dBar = var(dro);
+                dBar = var(dro(~isnan(dro)));
                 
                 if (verb > 0), fprintf('\n'), end
                 fprintf('Baropass %d (of max %d)...done. (%g sec.)\n',...
@@ -115,7 +115,7 @@ classdef CMSPlanet < handle
                 if (verb > 0)
                     fprintf(['|drho| < %g; var(drho) = %g; dM = %g;'...
                         ' (required tolerance = %g).\n\n'],...
-                        max(abs(double(dro))), var(double(dro)), double(dM),...
+                        max(abs(double(dro))), double(dBar), double(dM),...
                         obj.opts.dBtol)
                 else
                     fprintf('\n')
