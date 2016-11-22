@@ -145,6 +145,7 @@ y.atmosphere   = 1.01325e+5*y.pascal;
 y.atm          = y.atmosphere;
 y.millimeterHg = 133.322*y.pascal;
 y.mmHg         = y.millimeterHg;
+y.GPa          = y.giga*y.pascal;
 
 %% Selected units of energy
 y.electronvolt = y.electron_charge*y.volt;
