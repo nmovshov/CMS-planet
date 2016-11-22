@@ -943,7 +943,8 @@ classdef ConcentricMaclaurinSpheroids < handle
     %% Static methods
     methods (Static)
         function obj = loadobj(s)
-            obj = ConcentricMaclaurinSpheroids(s.opts);
+            obj = ConcentricMaclaurinSpheroids(1);
+            obj.N = s.N;
             obj.opts = s.opts;
             obj.lambdas = s.lambdas;
             obj.deltas = s.deltas;
@@ -951,13 +952,17 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.zetas = s.zetas;
             obj.zeta1s = s.zeta1s;
             obj.Js = s.Js;
-            obj.N = s.N;
             obj.Pnmu = s.Pnmu;
             obj.Pnzero = s.Pnzero;
             obj.Pnone = s.Pnone;
             obj.gws = s.gws;
+            obj.os = s.os;
             obj.cooked = s.cooked;
             obj.fullyCooked = s.fullyCooked;
+            obj.realVpu = s.realVpu;
+            obj.realequiU = s.realequiU;
+            obj.realVpuMod = s.realVpuMod;
+            obj.realequiUMod = s.realequiUMod;
         end
         
     end % End of static methods block
