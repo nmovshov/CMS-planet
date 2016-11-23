@@ -232,17 +232,26 @@ classdef CMSPlanet < handle
             % Prepare the data
             x_cms = double(obj.rhoi);
             y_cms = double(obj.P_mid);
-            x_bar = logspace(-1, 4); % expected range in SI units
-            v = 1:length(x_cms);
-            ind = interp1(x_cms, v, x_bar, 'nearest', 'extrap');
-            y_bar = nan(size(x_bar));
-            for k=1:length(x_bar)
-                y_bar(k) = double(obj.eos(ind(k)).pressure(x_bar(k)));
+            
+            if ~isempty(obj.eos)
+                x_bar = linspace(min(x_cms), max(x_cms));
+                if isscalar(obj.eos)
+                    y_bar = double(obj.eos.pressure(x_bar));
+                else
+                    v = 1:length(x_cms);
+                    ind = interp1(x_cms, v, x_bar, 'nearest', 'extrap');
+                    y_bar = nan(size(x_bar));
+                    for k=1:length(x_bar)
+                        y_bar(k) = double(obj.eos(ind(k)).pressure(x_bar(k)));
+                    end
+                end
             end
             
             % Plot the lines (pressure in GPa)
             lh(1) = stairs(x_cms, y_cms/1e9);
-            lh(2) = line(x_bar, y_bar/1e9);
+            if exist('y_bar','var') && any(isfinite(y_bar))
+                lh(2) = line(x_bar, y_bar/1e9);
+            end
             
             % Style and annotate lines
             lh(1).LineWidth = 2;
@@ -252,13 +261,13 @@ classdef CMSPlanet < handle
             else
                 lh(1).DisplayName = obj.name;
             end
-            lh(2).Color = 'r';
-            lh(2).DisplayName = 'input barotrope';
+            if length(lh) == 2
+                lh(2).Color = 'r';
+                lh(2).DisplayName = 'input barotrope';
+            end
             
             % Style and annotate axes
             ah.Box = 'on';
-            ah.XScale = 'log';
-            ah.YScale = 'log';
             if (range(x_cms) > 0)
                 xlim([min(x_cms),max(x_cms)])
             end
