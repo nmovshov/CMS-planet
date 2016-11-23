@@ -21,12 +21,12 @@ classdef ConstPressure < barotropes.Barotrope
             disp(obj)
         end
         
-        function P = pressure(obj,~)
-            P = obj.P0;
+        function P = pressure(obj,rho)
+            P = obj.P0*ones(size(rho));
         end
         
-        function rho = density(~,~)
-            rho = NaN;
+        function rho = density(~,P)
+            rho = NaN(size(P));
         end
     end
     
