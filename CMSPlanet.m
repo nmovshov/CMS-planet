@@ -217,6 +217,11 @@ classdef CMSPlanet < handle
         function ah = plot_barotrope(obj)
             % Plot P(rho) of current model and of input barotrope.
             
+            if isempty(obj.Pi)
+                warning('Uninitialized object.')
+                return
+            end
+            
             % Prepare the canvas
             fh = figure;
             set(fh, 'defaultTextInterpreter', 'latex')
@@ -227,16 +232,17 @@ classdef CMSPlanet < handle
             % Prepare the data
             x_cms = double(obj.rhoi);
             y_cms = double(obj.P_mid);
-            if isscalar(obj.eos)
-                x_bar = logspace(-1, 4); % expected range in SI units
-                y_bar = double(obj.eos.pressure(x_bar));
+            x_bar = logspace(-1, 4); % expected range in SI units
+            v = 1:length(x_cms);
+            ind = interp1(x_cms, v, x_bar, 'nearest', 'extrap');
+            y_bar = nan(size(x_bar));
+            for k=1:length(x_bar)
+                y_bar(k) = double(obj.eos(ind(k)).pressure(x_bar(k)));
             end
             
             % Plot the lines (pressure in GPa)
             lh(1) = stairs(x_cms, y_cms/1e9);
-            if isscalar(obj.eos)
-                lh(2) = line(x_bar, y_bar/1e9);
-            end
+            lh(2) = line(x_bar, y_bar/1e9);
             
             % Style and annotate lines
             lh(1).LineWidth = 2;
@@ -246,14 +252,8 @@ classdef CMSPlanet < handle
             else
                 lh(1).DisplayName = obj.name;
             end
-            if isscalar(obj.eos)
-                lh(2).Color = 'r';
-                if isempty(obj.eos.name)
-                    lh(2).DisplayName = 'input barotrope';
-                else
-                    lh(2).DisplayName = obj.eos.name;
-                end
-            end
+            lh(2).Color = 'r';
+            lh(2).DisplayName = 'input barotrope';
             
             % Style and annotate axes
             ah.Box = 'on';
