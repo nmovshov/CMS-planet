@@ -6,7 +6,7 @@
 clear
 clc
 close all
-addpath(fullfile(pwd,'..'))
+%addpath(fullfile(pwd,'..'))
 try
     si = setUnits; % <FEX>/13018-physunits-module-from-fortran
 catch
