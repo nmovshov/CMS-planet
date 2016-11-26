@@ -4,7 +4,6 @@
 clear
 clc
 close all
-addpath(fullfile(getenv('userprofile'),'CMS-planet'))
 
 %% Time cms.relax() for several values of nlayers
 % I will use a CMS model with a linear density profile and equally spaced
