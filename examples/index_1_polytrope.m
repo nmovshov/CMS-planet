@@ -29,7 +29,7 @@ G = si.gravity;
 M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
-cmp = CMSPlanet(512);
+cmp = CMSPlanet(12);
 cmp.name = [int2str(cmp.nlayers),'-layer CMS'];
 cmp.desc = 'An index-1 polytropic planet';
 cmp.M = M;
