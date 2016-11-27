@@ -185,7 +185,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             verb = obj.opts.verbosity;
             if (verb > 0)
                 t_z_pass = tic;
-                fprintf('    Updating zetas....')
+                fprintf('    Updating zetas (OPTIM)....')
             end
             
             % Loop over layers (outer) and colatitudes (inner)
@@ -646,7 +646,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             x1 = 0;
             for ii=1:nbLayers
                 for kk=2:2:nbMoments % (note ind shift, start ind, odd J=0)
-                    x1 = x1 + Jt(ii,kk+1)*lambda(ii)^kk*P0(kk+1);
+                    %x1 = x1 + Jt(ii,kk+1)*lambda(ii)^kk*P0(kk+1);
+                    x1 = x1 + Jt(ii,kk+1)*obj.lamratpow(ii,1,kk+1)*P0(kk+1);
                 end
             end
             
@@ -654,7 +655,8 @@ classdef ConcentricMaclaurinSpheroids < handle
             x2 = 0;
             for ii=1:nbLayers
                 for kk=2:2:nbMoments % (note ind shift, start ind, odd J=0)
-                    x2 = x2 + Jt(ii,kk+1)*lambda(ii)^kk*zeta0^(-kk)*Pmu(kk+1);
+                    %x2 = x2 + Jt(ii,kk+1)*lambda(ii)^kk*zeta0^(-kk)*Pmu(kk+1);
+                    x2 = x2 + Jt(ii,kk+1)*obj.lamratpow(ii,1,kk+1)*zeta0^(-kk)*Pmu(kk+1);
                 end
             end
             
@@ -683,8 +685,10 @@ classdef ConcentricMaclaurinSpheroids < handle
             for ii=jj:nbLayers
                 for kk=0:2:nbMoments % (note ind shift, start ind, odd J=0)
                     %x1 = x1 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*zeta_j^(-kk)*Pmu(kk+1);
-                    x1 = x1 + Jt(ii,kk+1)*obj.lamratpow(ii,jj,kk+1)*zeta_j^(-kk)*Pmu(kk+1);
+                    %x1 = x1 + Jt(ii,kk+1)*obj.lamratpow(ii,jj,kk+1)*zeta_j^(-kk)*Pmu(kk+1);
                 end
+                rats = squeeze(obj.lamratpow(ii,jj,1:nbMoments+1))';
+                x1 = x1 + (Jt(ii,:).*rats.*(zeta_j.^-(0:nbMoments)))*Pmu(:);
             end
             
             % Double sum, row 2
@@ -692,24 +696,29 @@ classdef ConcentricMaclaurinSpheroids < handle
             for ii=1:jj-1
                 for kk=0:2:nbMoments
                     %x2 = x2 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*zeta_j^(kk+1)*Pmu(kk+1);
-                    x2 = x2 + Jtp(ii,kk+1)*obj.lamratpow(jj,ii,kk+2)*zeta_j^(kk+1)*Pmu(kk+1);
+                    %x2 = x2 + Jtp(ii,kk+1)*obj.lamratpow(jj,ii,kk+2)*zeta_j^(kk+1)*Pmu(kk+1);
                 end
+                rats = squeeze(obj.lamratpow(jj,ii,2:nbMoments+2))';
+                x2 = x2 + Jtp(ii,:).*rats.*(zeta_j.^(0:nbMoments))*Pmu(:);
             end
             
             % Single sum, row 2
             x3 = 0;
             for ii=1:jj-1
                 %x3 = x3 + Jpp(ii)*lambda(jj)^3*zeta_j^3;
-                x3 = x3 + Jpp(ii)*obj.lamratpow(jj,1,4)*zeta_j^3;
+                %x3 = x3 + Jpp(ii)*obj.lamratpow(jj,1,4)*zeta_j^3;
             end
+            x3 = x3 + sum(Jpp(1:jj-1))*obj.lamratpow(jj,1,4)*zeta_j^3;
             
             % Double sum, row 3
             x4 = 0;
             for ii=jj:nbLayers
                 for kk=0:2:nbMoments
                     %x4 = x4 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*P0(kk+1);
-                    x4 = x4 + Jt(ii,kk+1)*obj.lamratpow(ii,jj,kk+1)*P0(kk+1);
+                    %x4 = x4 + Jt(ii,kk+1)*obj.lamratpow(ii,jj,kk+1)*P0(kk+1);
                 end
+                rats = squeeze(obj.lamratpow(ii,jj,1:nbMoments+1))';
+                x4 = x4 + (Jt(ii,:).*rats)*P0(:);
             end
             
             % Double sum, row 4
@@ -717,16 +726,19 @@ classdef ConcentricMaclaurinSpheroids < handle
             for ii=1:jj-1
                 for kk=0:2:nbMoments
                     %x5 = x5 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*P0(kk+1);
-                    x5 = x5 + Jtp(ii,kk+1)*obj.lamratpow(jj,ii,kk+2)*P0(kk+1);
+                    %x5 = x5 + Jtp(ii,kk+1)*obj.lamratpow(jj,ii,kk+2)*P0(kk+1);
                 end
+                rats = squeeze(obj.lamratpow(jj,ii,2:nbMoments+2))';
+                x5 = x5 + (Jtp(ii,:).*rats)*P0(:);
             end
             
             % Single sum, row 4
             x6 = 0;
             for ii=1:jj-1
                 %x6 = x6 + Jpp(ii)*lambda(jj)^3;
-                x6 = x6 + Jpp(ii)*obj.lamratpow(jj,1,4);
+                %x6 = x6 + Jpp(ii)*obj.lamratpow(jj,1,4);
             end
+            x6 = x6 + sum(Jpp(1:jj-1))*obj.lamratpow(jj,1,4);
             
             % And combine
             y = -(1/zeta_j)*(x1 + x2 + x3) + ...
