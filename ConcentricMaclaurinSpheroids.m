@@ -970,6 +970,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Pnmu = s.Pnmu;
             obj.Pnzero = s.Pnzero;
             obj.Pnone = s.Pnone;
+            obj.lamratpow = s.lamratpow;
             obj.gws = s.gws;
             obj.os = s.os;
             obj.cooked = s.cooked;
