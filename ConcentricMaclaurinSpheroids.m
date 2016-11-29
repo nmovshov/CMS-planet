@@ -30,6 +30,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         Pnone        % values of Legendre polynomials at pole
         gws          % weight factors for Gauss integration (correspond to mus)
         zeta1s       % normalized rescaled level-surface polar radii
+        lamratpow    % stores values of lamdas-ratios-powers for quick retrieval
         realVpu      % stores values of Vpu for quick retrieval
         realequiU    % stores values of equiUpu for quick access
         os           % optimset struct for use by fzero
@@ -179,7 +180,20 @@ classdef ConcentricMaclaurinSpheroids < handle
         
         function update_zetas(obj)
             % Update level surfaces using current value of Js.
-
+            
+            % Precompute powers of ratios of lambdas
+            if isempty(obj.lamratpow)
+                obj.lamratpow = nan(obj.opts.kmax+2, obj.N, obj.N);
+                for ii=1:obj.N
+                    for jj=1:obj.N
+                        for kk=1:obj.opts.kmax+2
+                            obj.lamratpow(kk,ii,jj) =...
+                                (obj.lambdas(ii)/obj.lambdas(jj))^(kk-1);
+                        end
+                    end
+                end
+            end
+            
             % Optional communication
             verb = obj.opts.verbosity;
             if (verb > 0)
@@ -624,16 +638,16 @@ classdef ConcentricMaclaurinSpheroids < handle
             nbLayers = obj.N;
             nbMoments = obj.opts.kmax;
             Jt = obj.Js.tilde;
-            lambda = obj.lambdas;
             q = obj.opts.qrot;
             P0 = obj.Pnzero;
             Pmu = obj.Pnmu(:,alfa);
+            rats = obj.lamratpow;
             
             % Double sum in eq. (47)
             x1 = 0;
             for ii=1:nbLayers
                 for kk=2:2:nbMoments % (note ind shift, start ind, odd J=0)
-                    x1 = x1 + Jt(ii,kk+1)*lambda(ii)^kk*P0(kk+1);
+                    x1 = x1 + Jt(ii,kk+1)*rats(kk+1,ii,1)*P0(kk+1);
                 end
             end
             
@@ -641,7 +655,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             x2 = 0;
             for ii=1:nbLayers
                 for kk=2:2:nbMoments % (note ind shift, start ind, odd J=0)
-                    x2 = x2 + Jt(ii,kk+1)*lambda(ii)^kk*zeta0^(-kk)*Pmu(kk+1);
+                    x2 = x2 + Jt(ii,kk+1)*rats(kk+1,ii,1)*zeta0^(-kk)*Pmu(kk+1);
                 end
             end
             
@@ -664,12 +678,13 @@ classdef ConcentricMaclaurinSpheroids < handle
             q = obj.opts.qrot;
             P0 = obj.Pnzero;
             Pmu = obj.Pnmu(:,alfa);
+            rats = obj.lamratpow;
             
             % Double sum, row 1
             x1 = 0;
             for ii=jj:nbLayers
                 for kk=0:2:nbMoments % (note ind shift, start ind, odd J=0)
-                    x1 = x1 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*zeta_j^(-kk)*Pmu(kk+1);
+                    x1 = x1 + Jt(ii,kk+1)*rats(kk+1,ii,jj)*zeta_j^(-kk)*Pmu(kk+1);
                 end
             end
             
@@ -677,21 +692,21 @@ classdef ConcentricMaclaurinSpheroids < handle
             x2 = 0;
             for ii=1:jj-1
                 for kk=0:2:nbMoments
-                    x2 = x2 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*zeta_j^(kk+1)*Pmu(kk+1);
+                    x2 = x2 + Jtp(ii,kk+1)*rats(kk+2,jj,ii)*zeta_j^(kk+1)*Pmu(kk+1);
                 end
             end
             
             % Single sum, row 2
             x3 = 0;
             for ii=1:jj-1
-                x3 = x3 + Jpp(ii)*lambda(jj)^3*zeta_j^3;
+                x3 = x3 + Jpp(ii)*rats(4,jj,1)*zeta_j^3;
             end
             
             % Double sum, row 3
             x4 = 0;
             for ii=jj:nbLayers
                 for kk=0:2:nbMoments
-                    x4 = x4 + Jt(ii,kk+1)*(lambda(ii)/lambda(jj))^kk*P0(kk+1);
+                    x4 = x4 + Jt(ii,kk+1)*rats(kk+1,ii,jj)*P0(kk+1);
                 end
             end
             
@@ -699,14 +714,14 @@ classdef ConcentricMaclaurinSpheroids < handle
             x5 = 0;
             for ii=1:jj-1
                 for kk=0:2:nbMoments
-                    x5 = x5 + Jtp(ii,kk+1)*(lambda(jj)/lambda(ii))^(kk+1)*P0(kk+1);
+                    x5 = x5 + Jtp(ii,kk+1)*rats(kk+2,jj,ii)*P0(kk+1);
                 end
             end
             
             % Single sum, row 4
             x6 = 0;
             for ii=1:jj-1
-                x6 = x6 + Jpp(ii)*lambda(jj)^3;
+                x6 = x6 + Jpp(ii)*rats(4,jj,1);
             end
             
             % And combine
@@ -955,6 +970,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Pnmu = s.Pnmu;
             obj.Pnzero = s.Pnzero;
             obj.Pnone = s.Pnone;
+            obj.lamratpow = s.lamratpow;
             obj.gws = s.gws;
             obj.os = s.os;
             obj.cooked = s.cooked;

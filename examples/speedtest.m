@@ -23,7 +23,7 @@ for k=1:length(nvec)
     cms.opts.verbosity = 2;
     cms.opts.MaxIterHE = 10; % usually NOT enough to achieve convergence
     
-    tvec(k) = cms.relax()/cms.opts.MaxIter;
+    tvec(k) = cms.relax()/cms.opts.MaxIterHE;
 end
 
 %% Extrapolate timing based on asymptotic scaling of t~O(n^2)
