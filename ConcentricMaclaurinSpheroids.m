@@ -198,7 +198,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             verb = obj.opts.verbosity;
             if (verb > 0)
                 t_z_pass = tic;
-                fprintf('    Updating zetas (OPTIM)....')
+                fprintf('    Updating zetas....')
             end
             
             % Loop over layers (outer) and colatitudes (inner)
