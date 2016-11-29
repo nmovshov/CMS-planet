@@ -12,7 +12,7 @@
 clear
 clc
 close all
-addpath(fullfile(pwd,'..'))
+%addpath(fullfile(pwd,'..'))
 try
     si = setUnits; % if you have physunits
 catch

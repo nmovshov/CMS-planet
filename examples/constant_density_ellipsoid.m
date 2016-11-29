@@ -27,7 +27,7 @@
 clear
 clc
 close all
-addpath(fullfile(pwd,'..'))
+%addpath(fullfile(pwd,'..'))
 
 %% Construct an exact normalized (a=1) Maclaurin ellipsoid
 m = 0.1; % small rotation parameter
