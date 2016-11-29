@@ -180,7 +180,20 @@ classdef ConcentricMaclaurinSpheroids < handle
         
         function update_zetas(obj)
             % Update level surfaces using current value of Js.
-
+            
+            % Precompute powers of ratios of lambdas
+            if isempty(obj.lamratpow)
+                obj.lamratpow = nan(obj.opts.kmax+2, obj.N, obj.N);
+                for ii=1:obj.N
+                    for jj=1:obj.N
+                        for kk=1:obj.opts.kmax+2
+                            obj.lamratpow(kk,ii,jj) =...
+                                (obj.lambdas(ii)/obj.lambdas(jj))^(kk-1);
+                        end
+                    end
+                end
+            end
+            
             % Optional communication
             verb = obj.opts.verbosity;
             if (verb > 0)
@@ -448,17 +461,6 @@ classdef ConcentricMaclaurinSpheroids < handle
                 obj.Pnone(k+1,1) = Pn(k, 1);
             end
             
-            % Precompute powers of ratios of lambdas (see eq. 52 in CMS.pdf)
-            obj.lamratpow = nan(op.kmax+2, nlay, nlay);
-            for ii=1:nlay
-                for jj=1:nlay
-                    for kk=1:op.kmax+2
-                        obj.lamratpow(kk,ii,jj) =...
-                           (obj.lambdas(ii)/obj.lambdas(jj))^(kk-1);
-                    end
-                end
-            end
-                                
             % Set flags and counters
             obj.cooked = false;
             obj.fullyCooked = false;
