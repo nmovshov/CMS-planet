@@ -22,15 +22,28 @@ end
 G = si.gravity;
 
 %% Set up a CMS object and give it a density profile linear in lambda to start
-% A constant lambda step (default) calls for constant delta step
-cms = ConcentricMaclaurinSpheroids(128);
-cms.qrot = 0.088822426; % Hubbard (2013) Table 1
-cms.deltas = ones(cms.nlayers, 1);
+N = 128;
+cms = ConcentricMaclaurinSpheroids(N);
+
+% The lambda array follows Hubbard's IDL code
+dl = 1/(N - 1);
+lam(1) = 1;
+lam(2) = 1 - dl/2;
+for k=3:N
+    lam(k) = lam(k-1) - dl;
+end
+cms.lambdas = lam;
+
+% The deltas array follows Hubard's IDL code
 cms.deltas(1) = 0;
+cms.deltas(2:end) = dl;
+
+cms.qrot = 0.088822426; % Hubbard (2013) Table 1
 
 %% Relax to hydrostatic equilibrium
 cms.opts.verbosity = 2;
 cms.opts.MaxIterHE = 40;
+cms.opts.dJtol = 1e-12;
 cms.opts.email = '';
 cms.relax;
 
@@ -38,13 +51,18 @@ cms.relax;
 iter = 0;
 for iter=1:20
     fprintf('\n  Fixing density profile to mean radii - iteration %i\n', iter)
-    new_deltas = [0; -diff(cms.ss/cms.ss(1))];
-    new_deltas = new_deltas/max(new_deltas);
-%    new_deltas = [0; cms.deltas(2:end).*diff(cms.ss)./diff(cms.lambdas)]; %H13?
+
+    % Following setup_linear_iterated.pro
+    sos0 = cms.ss/cms.ss(1);
+    dsos0 = [-diff(sos0); sos0(end)];
+    dlambda = [-diff(cms.lambdas); cms.lambdas(end)];
+    delta0 = [0; ones(N-1,1)/(N-1)];
+    new_deltas = delta0.*dsos0./dlambda;
+    
     delta_deltas = sum(abs(new_deltas - cms.deltas));
     fprintf('  deltas array modified by < %g.\n\n',delta_deltas)
     cms.deltas = new_deltas;
-    if delta_deltas < 1e-8, break, end
+    if delta_deltas < 1e-12, break, end
     cms.relax;
 end
 fprintf('  Density profile fixed.\n')
