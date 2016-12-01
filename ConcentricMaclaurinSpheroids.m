@@ -107,7 +107,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                 dJ = obj.update_Js();
                 if (verb > 0)
                     fprintf('    ')
-                    fprintf('Pass %d (of max %d)...done. (%g sec.)\n',...
+                    fprintf('Pass %d (of max %d)...done. (%g sec)\n',...
                         iter, obj.opts.MaxIterHE, toc(t_pass))
                     if (verb > 1)
                         fprintf('    ')
