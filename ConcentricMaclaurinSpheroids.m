@@ -121,7 +121,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                     try
                         sbj = ['CMS.relax() on ', getenv('computername')];
                         msg{1} = sprintf(...
-                            'Pass %d (of max %d)...done. (%g sec.)',...
+                            'Pass %d (of max %d)...done. (%g sec)',...
                             iter, obj.opts.MaxIterHE, toc(t_pass));
                         msg{2} = sprintf(...
                             'dJ = %g; required tolerance = %g.',...
@@ -215,7 +215,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Optional communication
             if (verb > 1)
                 t_z_pass = toc(t_z_pass);
-                fprintf('done. (%g sec.)\n', t_z_pass)
+                fprintf('done. (%g sec)\n', t_z_pass)
             elseif (verb > 0)
                 fprintf('done.\n')
             end
@@ -251,7 +251,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Optional communication
             if (verb > 1)
                 t_J_pass = toc(t_J_pass);
-                fprintf('done. (%g sec).\n', t_J_pass)
+                fprintf('done. (%g sec)\n', t_J_pass)
             elseif (verb > 0)
                 fprintf('done.\n')
             end
