@@ -15,8 +15,10 @@ classdef Tabular < barotropes.Barotrope
     %% The constructor
     methods
         function obj = Tabular(P, rho, intm, extm)
-            if (nargin == 0) && (nargout == 0)
+            if (nargin == 0)
+                if nargout > 0, return, end
                 print_usage()
+                clear obj
                 return
             end
             try
@@ -25,7 +27,8 @@ classdef Tabular < barotropes.Barotrope
                 if nargin < 3, intm = 'linear'; end
                 assert(isnumeric(P) && isvector(P) && all(double(P) >= 0))
                 assert(isnumeric(rho) && isvector(rho) && all(double(rho) >= 0))
-                assert(length(P) == length(rho))
+                assert(length(P) == length(rho),...
+                    'len(P) = %i ~= %i = len(rho)', length(P), length(rho))
                 assert(interp1(P, rho, P(1), intm, extm) == rho(1))
             catch ME
                 print_usage()
@@ -56,7 +59,7 @@ end
 
 %% Usage message
 function print_usage()
-fprintf('Usage: barotropes.tabular(P, rho)\n')
+fprintf('Usage: barotropes.tabular(P, rho, intm, extm)\n')
 fprintf('positional arguments:\n')
 fprintf('  P    a vector of pressure values [ real nonnegative ]\n')
 fprintf('  rho  a vector of density values [ real nonnegative ]\n')
