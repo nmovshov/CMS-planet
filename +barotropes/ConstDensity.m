@@ -17,8 +17,8 @@ classdef ConstDensity < barotropes.Barotrope
     
     % Required barotrope methods
     methods
-        function test(obj)
-            disp(obj)
+        function PF = test(~)
+            PF = true;
         end
         
         function P = pressure(~,rho)
