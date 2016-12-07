@@ -11,8 +11,10 @@ classdef Polytrope < barotropes.Barotrope
     %% The constructor
     methods
         function obj = Polytrope(K, n)
-            if (nargin == 0) && (nargout == 0)
+            if (nargin == 0)
+                if nargout > 0, return, end
                 print_usage()
+                clear obj
                 return
             end
             try
@@ -31,8 +33,8 @@ classdef Polytrope < barotropes.Barotrope
     
     %% Required barotrope methods
     methods
-        function test(obj)
-            disp(obj)
+        function PF = test(~)
+            PF = true;
         end
         
         function P = pressure(obj,rho)

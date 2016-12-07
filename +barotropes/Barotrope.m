@@ -25,7 +25,7 @@ classdef (Abstract) Barotrope < handle & matlab.mixin.Heterogeneous
     % corresponding concrete method in subclasses. However it is best practice
     % to pretend that it does.
     methods (Abstract)
-        test(obj)
+        test(obj) % in most subclasses this simply returns true
         pressure(obj, rho)
         density(obj, P)
     end
