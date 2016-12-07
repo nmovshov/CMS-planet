@@ -1,12 +1,12 @@
 classdef eos_table < barotropes.Tabular
     %EOS_TABLE Example of a tabular barotrope that constructs from file.
     %   Use this class as a template for creating subclasses derived from
-    %   barotropes.Tabular that initilize by reading a table from a file. All
+    %   barotropes.Tabular that initialize by reading a table from a file. All
     %   the required methods are already implemented in the base class Tabular.
     %   the derived subclasses only need to implement a constructor that takes a
     %   file name, reads the data in the appropriate format, potentially post
     %   processes missing values etc., and then assigns a vector of P values in
-    %   Pascals and a vecor of rho values in kg/m^3 to the P_vals and rho_vals
+    %   Pascals and a vector of rho values in kg/m^3 to the P_vals and rho_vals
     %   properties derived from Tabular.
 
     %% Properties
@@ -33,7 +33,7 @@ classdef eos_table < barotropes.Tabular
             raw = dlmread(filename,'',1,0);
             
             % Some post processing
-            P = 10.^raw(:,1)*0.1; % 1st col is log(P) in dynes/cm^2
+            P = 10.^raw(:,1)*0.1; % 1st col is log(P) in dyne/cm^2
             rho = 10.^raw(:,2)*1000; % 2nd col is log(rho) in g/cm^3
             
             % Assign to base class derived properties
