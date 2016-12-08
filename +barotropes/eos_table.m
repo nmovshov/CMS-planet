@@ -36,12 +36,17 @@ classdef eos_table < barotropes.Tabular
             P = 10.^raw(:,1)*0.1; % 1st col is log(P) in dyne/cm^2
             rho = 10.^raw(:,2)*1000; % 2nd col is log(rho) in g/cm^3
             
-            % Assign to base class derived properties
+            % Assign to base class properties
             obj.P_vals = P;
             obj.rho_vals = rho;
             
+            % (Optional) select interpolation options
+            obj.interpolation_method = 'linear'; % doc interp1 for options
+            obj.extrapolation_method = nan;      % doc interp1 for options
+            
             % That's it but you can assign some meta data if desired
             obj.meta.original_units = 'cgs';
+            obj.meta.raw_table_in = filename;
         end
     end
 end
