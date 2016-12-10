@@ -182,8 +182,24 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Update zetas plus polar radii.
             
             obj.update_zetas;
+            obj.update_polar_radii;
+        end
+        
+        function update_polar_radii(obj)
+            % Calculate polar radii (slower than zetas).
+            
+            verb = obj.opts.verbosity;
+            if (verb > 0)
+                t_shp = tic;
+                fprintf('    Updating polar radii....')
+            end
             for ii=1:obj.nlayers
                 obj.zeta1s(ii) = obj.zeta_j_of_mu(ii, 1);
+            end
+            if (verb > 1)
+                fprintf('done. (%g sec)\n', toc(t_shp))
+            elseif (verb > 0)
+                fprintf('done.\n')
             end
         end
         
