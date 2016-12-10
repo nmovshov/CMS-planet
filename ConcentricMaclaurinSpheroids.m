@@ -178,6 +178,15 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
         end
         
+        function update_shape(obj)
+            % Update zetas plus polar radii.
+            
+            obj.update_zetas;
+            for ii=1:obj.nlayers
+                obj.zeta1s(ii) = obj.zeta_j_of_mu(ii, 1);
+            end
+        end
+        
         function update_zetas(obj)
             % Update level surfaces using current value of Js.
             

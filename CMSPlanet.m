@@ -71,6 +71,104 @@ classdef CMSPlanet < handle
             ET = obj.cms.relax();
         end
         
+        function ET = relax_to_barotrope_m(obj)
+            % Relax shape function, Js, and density simultaneously.
+            
+            if isempty(obj.eos)
+                warning('Set valid barotrope first (obj.eos = <barotrope>)')
+                return
+            end
+            
+            t_rlx = tic;
+            
+            % Optional communication
+            verb = obj.opts.verbosity;
+            fprintf('Relaxing CMP to desired barotrope...\n\n')
+            if (verb > 2)
+                try
+                    sbj = ['CMP.relax_to_barotrope() started on ',...
+                        getenv('computername')];
+                    sendmail(obj.opts.email,sbj)
+                catch
+                end
+            end
+            
+            % Main loop
+            dBar = Inf;
+            iter = 1;
+            while (abs(dBar) > obj.opts.dBtol) && (iter <= obj.opts.MaxIterBar)
+                t_pass = tic;
+                fprintf('Baropass %d (of max %d)...\n',...
+                    iter, obj.opts.MaxIterBar)
+                if (verb > 0), fprintf('\n'), end
+                
+                obj.cms.update_shape;
+                dJ = obj.cms.update_Js;
+                dro = obj.update_densities;
+                if (verb > 0), fprintf('\n'), end
+                
+                % The convergence tolerance is a mix of Js and rhos
+                vdro = var(dro(~isnan(dro)));
+                dBar = max([vdro, dJ]);
+                
+                if (verb > 0), fprintf('\n'), end
+                fprintf('Baropass %d (of max %d)...done. (%g sec.)\n',...
+                    iter, obj.opts.MaxIterBar, toc(t_pass))
+                if (verb > 0)
+                    fprintf(['|drho| < %g; var(drho) = %g; dJ = %g;'...
+                        ' (required tolerance = %g).\n\n'],...
+                        max(abs(double(dro))), double(vdro), double(dJ),...
+                        obj.opts.dBtol)
+                else
+                    fprintf('\n')
+                end
+                if (verb > 2)
+                    try
+                        sbj = ['CMP.relax_to_barotrope() on ',...
+                            getenv('computername')];
+                        msg{1} = sprintf(...
+                            'Baropass %d (of max %d)...done. (%g sec.)',...
+                            iter, obj.opts.MaxIterBar, toc(t_pass));
+                        msg{2} = sprintf(...
+                            'dBar = %g; required tolerance = %g.',...
+                            double(dBar), obj.opts.dBtol);
+                        sendmail(obj.opts.email,sbj,msg)
+                    catch
+                    end
+                end
+                iter = iter + 1;
+            end
+            
+            % Flags and maybe warnings
+            if (dBar > obj.opts.dBtol)
+                msg = ['Planet may not have fully relaxed to desired eos.\n',...
+                    'Try increasing the number of layers '...
+                    'and/or convergence tolerance (%s.opts.dBtol) ',...
+                    'and/or iteration limit (%s.opts.MaxIterBar).'];
+                warning off backtrace
+                warning(msg, inputname(1), inputname(1))
+                warning on backtrace
+            end
+            
+            ET = toc(t_rlx);
+            
+            % Optional communication
+            fprintf('Relaxing CMP to desired barotrope...done.\n')
+            try
+                fprintf('Total elapsed time %s\n',lower(seconds2human(ET)))
+            catch
+                fprintf('Total elapsed time %g sec.\n', ET)
+            end
+            if (verb > 2)
+                try
+                    sbj = ['CMP.relax_to_barotrope() finished on ',...
+                        getenv('computername')];
+                    sendmail(obj.opts.email,sbj)
+                catch
+                end
+            end
+        end
+        
         function ET = relax_to_barotrope(obj)
             % Iterate relaxation to HE and density updates until converged.
             
