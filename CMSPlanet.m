@@ -71,7 +71,7 @@ classdef CMSPlanet < handle
             ET = obj.cms.relax();
         end
         
-        function ET = relax_to_barotrope_m(obj)
+        function ET = relax_to_barotrope(obj)
             % Relax shape function, Js, and density simultaneously.
             
             if isempty(obj.eos)
@@ -100,25 +100,22 @@ classdef CMSPlanet < handle
                 t_pass = tic;
                 fprintf('Baropass %d (of max %d)...\n',...
                     iter, obj.opts.MaxIterBar)
-                if (verb > 0), fprintf('\n'), end
                 
                 obj.cms.update_shape;
                 dJ = obj.cms.update_Js;
+                if (verb > 0), fprintf('  '), end
                 dro = obj.update_densities;
-                if (verb > 0), fprintf('\n'), end
                 
-                % The convergence tolerance is a mix of Js and rhos
+                % The convergence tolerance is the max of dJs and drhos
                 vdro = var(dro(~isnan(dro)));
                 dBar = max([vdro, dJ]);
                 
-                if (verb > 0), fprintf('\n'), end
-                fprintf('Baropass %d (of max %d)...done. (%g sec.)\n',...
+                fprintf('Baropass %d (of max %d)...done. (%g sec)\n',...
                     iter, obj.opts.MaxIterBar, toc(t_pass))
                 if (verb > 0)
-                    fprintf(['|drho| < %g; var(drho) = %g; dJ = %g;'...
+                    fprintf(['var(drho) = %g; dJ = %g;'...
                         ' (required tolerance = %g).\n\n'],...
-                        max(abs(double(dro))), double(vdro), double(dJ),...
-                        obj.opts.dBtol)
+                        double(vdro), double(dJ),obj.opts.dBtol)
                 else
                     fprintf('\n')
                 end
@@ -169,7 +166,7 @@ classdef CMSPlanet < handle
             end
         end
         
-        function ET = relax_to_barotrope(obj)
+        function ET = relax_to_barotrope_old(obj)
             % Iterate relaxation to HE and density updates until converged.
             
             if isempty(obj.eos)
@@ -281,8 +278,10 @@ classdef CMSPlanet < handle
                 end
             end
             dro = ((newro - obj.rhoi)./obj.rhoi);
-            if (verb > 0)
-                fprintf('done. (%g sec.)\n', toc(t_rho))
+            if (verb > 1)
+                fprintf('done. (%g sec)\n', toc(t_rho))
+            elseif (verb > 0)
+                fprintf('done.\n')
             end
             obj.rhoi = newro;
         end
