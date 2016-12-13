@@ -23,7 +23,7 @@ function options = cmsset(varargin)
 %IntTol - Relative tolerance for adaptive integrals [ positive real {1e-9} ]
 %rootfinder - Algorithm choice for solving the zeta equations [ {'fzero'} | 'lionhunt' ]
 %TolX - Termination tolerance for root finding algorithms [ positive real {1e-13} ]
-%equipotential_squeeze - How to collapse U(i,mu) to U(i) on equipotential surfaces [ 'mean' | {'polar'} ]
+%equipotential_squeeze - How to collapse U(i,mu) to U(i) on equipotential surfaces [ {'mean'} | 'polar' ]
 
 % If no arguments print usage and return.
 if (nargin == 0) && (nargout == 0)
@@ -49,7 +49,7 @@ p.addParameter('IntTol',1e-9,@isposscalar)
 p.addParameter('rootfinder','fzero',@isvalidrootfinder)
 p.addParameter('TolX',1e-13,@isposscalar)
 p.addParameter('email','',@isvalidemail)
-p.addParameter('equipotential_squeeze','polar',@isvalidequiUsqueeze)
+p.addParameter('equipotential_squeeze','mean',@isvalidequiUsqueeze)
 
 % Parse name-value pairs and return.
 p.parse(varargin{:})

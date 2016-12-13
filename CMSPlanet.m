@@ -101,7 +101,10 @@ classdef CMSPlanet < handle
                 fprintf('Baropass %d (of max %d)...\n',...
                     iter, obj.opts.MaxIterBar)
                 
-                obj.cms.update_shape;
+                obj.cms.update_zetas;
+                if isequal(obj.opts.equipotential_squeeze, 'polar')
+                    obj.cms.update_polar_radii;
+                end
                 dJ = obj.cms.update_Js;
                 if (verb > 0), fprintf('  '), end
                 dro = obj.update_densities;
@@ -136,6 +139,12 @@ classdef CMSPlanet < handle
                 iter = iter + 1;
             end
             
+            % Update polar radii if we haven't already
+            if ~isequal(obj.opts.equipotential_squeeze, 'polar')
+                obj.cms.update_polar_radii;
+                if (verb > 0), fprintf('\n'), end
+            end
+            
             % Flags and maybe warnings
             if (dBar > obj.opts.dBtol)
                 msg = ['Planet may not have fully relaxed to desired eos.\n',...
@@ -145,6 +154,7 @@ classdef CMSPlanet < handle
                 warning off backtrace
                 warning(msg, inputname(1), inputname(1))
                 warning on backtrace
+                if (verb > 0), fprintf('\n'), end
             end
             
             ET = toc(t_rlx);
