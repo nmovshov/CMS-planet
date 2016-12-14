@@ -54,7 +54,7 @@ cmp.rhoi = rho_c*sin(a*x)./(a*x);
 
 %% Relax to desired barotrope
 cmp.opts.verbosity = 3;
-cmp.opts.MaxIterHE = 12;
+cmp.opts.MaxIterBar = 40;
 cmp.opts.dBtol = 1e-12;
 cmp.opts.email = '';
 cmp.relax_to_barotrope;
