@@ -935,20 +935,37 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function val = get.equiUpu(obj)
-            % Return potential on equipotential surface by sampling the pole.
+            % Return potential on equipotential surface by sampling one lat.
             
             if (~obj.realequiUMod)
                 val = obj.realequiU;
                 return
             end
             
+            if strcmp(obj.opts.equipotential_squeeze, 'mean')
+                val = mean(obj.Upu, 2);
+                obj.realequiU = val;
+                obj.realequiUMod = false;
+                return
+            end
+            
             val = zeros(obj.nlayers,1);
             lam = obj.lambdas;
-            zet = obj.zeta1s;
             til = obj.Js.tilde;
             tilp = obj.Js.tilde_prime;
             tilpp = obj.Js.tpprime;
-            P2k = obj.Pnone;
+            q = obj.qrot;
+            if strcmp(obj.opts.equipotential_squeeze, 'polar')
+                zet = obj.zeta1s;
+                P2k = obj.Pnone;
+            elseif strcmp(obj.opts.equipotential_squeeze, 'midlat')
+                al = floor(obj.opts.nangles/2);
+                zet = obj.zetas(:,al);
+                P2k = obj.Pnmu(:,al);
+            else
+                val = NaN;
+                return
+            end
             n = (0:obj.opts.kmax)';
             for j=1:obj.nlayers
                 V = 0;
@@ -960,6 +977,9 @@ classdef ConcentricMaclaurinSpheroids < handle
                     V = V + (lam(j)/lam(i))^3*tilpp(i)*zet(j)^3;
                 end
                 V = V*(-1/(lam(j)*zet(j)));
+                if strcmp(obj.opts.equipotential_squeeze, 'midlat')
+                    V = V + (1/3)*q*lam(j)^2*zet(j)^2*(1 - P2k(3));
+                end
                 val(j) = V;
             end
             obj.realequiU = val;

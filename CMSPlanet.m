@@ -570,10 +570,10 @@ classdef CMSPlanet < handle
                 si = setFUnits; % if you don't have physunits
             end
             G = double(si.gravity);
-            if isequal(obj.opts.equipotential_squeeze, 'polar')
-                U = double(obj.cms.equiUpu*G*obj.M/obj.a0);
-            else
+            if strcmp(obj.opts.equipotential_squeeze, 'mean')
                 U = double(mean(obj.cms.Upu, 2)*G*obj.M/obj.a0);
+            else
+                U = double(obj.cms.equiUpu*G*obj.M/obj.a0);
             end
             rho = double(obj.rhoi);
             val = zeros(obj.nlayers, 1);
@@ -589,10 +589,10 @@ classdef CMSPlanet < handle
                 si = setFUnits; % if you don't have physunits
             end
             G = si.gravity;
-            if isequal(obj.opts.equipotential_squeeze, 'polar')
-                U = obj.cms.equiUpu*G*obj.M/obj.a0;
-            else
+            if strcmp(obj.opts.equipotential_squeeze, 'mean')
                 U = mean(obj.cms.Upu, 2)*G*obj.M/obj.a0;
+            else
+                U = obj.cms.equiUpu*G*obj.M/obj.a0;
             end
             U_center = -G*obj.M/obj.a0*...
                 sum(obj.cms.Js.tilde_prime(:,1).*obj.cms.lambdas.^-1);
