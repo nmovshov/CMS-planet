@@ -565,30 +565,46 @@ classdef CMSPlanet < handle
             %#ok<*PROP> 
             if isempty(obj.rho0), val = []; return, end
             try
-                si = setUnits; % if you have physunits
+                % are we using doubles...
+                obj.rho0 > 1; %#ok<VUNUS>
+                si = setFUnits;
+                G = si.gravity;
+                if strcmp(obj.opts.equipotential_squeeze, 'mean')
+                    U = double(mean(obj.cms.Upu, 2)*G*obj.M/obj.a0);
+                else
+                    U = double(obj.cms.equiUpu*G*obj.M/obj.a0);
+                end
+                rho = double(obj.rhoi);
+                val = zeros(obj.nlayers, 1);
+                val(2:end) = cumsum(rho(1:end-1).*diff(U));
             catch
-                si = setFUnits; % if you don't have physunits
+                % ... or preals
+                si = setUnits;
+                G = double(si.gravity);
+                if strcmp(obj.opts.equipotential_squeeze, 'mean')
+                    U = double(mean(obj.cms.Upu, 2)*G*obj.M/obj.a0);
+                else
+                    U = double(obj.cms.equiUpu*G*obj.M/obj.a0);
+                end
+                rho = double(obj.rhoi);
+                val = zeros(obj.nlayers, 1);
+                val(2:end) = cumsum(rho(1:end-1).*diff(U));
+                val = val*si.Pa;
             end
-            G = double(si.gravity);
-            if strcmp(obj.opts.equipotential_squeeze, 'mean')
-                U = double(mean(obj.cms.Upu, 2)*G*obj.M/obj.a0);
-            else
-                U = double(obj.cms.equiUpu*G*obj.M/obj.a0);
-            end
-            rho = double(obj.rhoi);
-            val = zeros(obj.nlayers, 1);
-            val(2:end) = cumsum(rho(1:end-1).*diff(U));
-            val = val*si.Pa;
         end
         
         function val = get.P_c(obj)
             if isempty(obj.rho0), val = []; return, end
             try
-                si = setUnits; % if you have physunits
+                % are we using doubles...
+                obj.rho0 > 1; %#ok<VUNUS>
+                si = setFUnits;
+                G = si.gravity;
             catch
-                si = setFUnits; % if you don't have physunits
+                % ... or preals
+                si = setUnits;
+                G = si.gravity;
             end
-            G = si.gravity;
             if strcmp(obj.opts.equipotential_squeeze, 'mean')
                 U = mean(obj.cms.Upu, 2)*G*obj.M/obj.a0;
             else
@@ -602,6 +618,7 @@ classdef CMSPlanet < handle
         end
         
         function val = get.P_mid(obj)
+            if isempty(obj.rho0), val = []; return, end
             P = obj.Pi;
             val = (P(1:end-1) + P(2:end))/2;
             val(end+1) = (P(end) + obj.P_c)/2;
