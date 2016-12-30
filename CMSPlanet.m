@@ -569,28 +569,19 @@ classdef CMSPlanet < handle
                 obj.rho0 > 1; %#ok<VUNUS>
                 si = setFUnits;
                 G = si.gravity;
-                if strcmp(obj.opts.equipotential_squeeze, 'mean')
-                    U = double(mean(obj.cms.Upu, 2)*G*obj.M/obj.a0);
-                else
-                    U = double(obj.cms.equiUpu*G*obj.M/obj.a0);
-                end
-                rho = double(obj.rhoi);
-                val = zeros(obj.nlayers, 1);
-                val(2:end) = cumsum(rho(1:end-1).*diff(U));
             catch
                 % ... or preals
                 si = setUnits;
-                G = double(si.gravity);
-                if strcmp(obj.opts.equipotential_squeeze, 'mean')
-                    U = double(mean(obj.cms.Upu, 2)*G*obj.M/obj.a0);
-                else
-                    U = double(obj.cms.equiUpu*G*obj.M/obj.a0);
-                end
-                rho = double(obj.rhoi);
-                val = zeros(obj.nlayers, 1);
-                val(2:end) = cumsum(rho(1:end-1).*diff(U));
-                val = val*si.Pa;
+                G = si.gravity;
             end
+            if strcmp(obj.opts.equipotential_squeeze, 'mean')
+                U = mean(obj.cms.Upu, 2)*G*obj.M/obj.a0;
+            else
+                U = obj.cms.equiUpu*G*obj.M/obj.a0;
+            end
+            rho = obj.rhoi;
+            val = zeros(obj.nlayers, 1)*rho(1)*U(1);
+            val(2:end) = cumsum(rho(1:end-1).*diff(U));
         end
         
         function val = get.P_c(obj)
