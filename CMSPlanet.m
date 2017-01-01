@@ -79,12 +79,20 @@ classdef CMSPlanet < handle
                 return
             end
             
+            if isempty(obj.rho0)
+                warning('Make sure mass (%s.M) and radius (%s.a0) are set',...
+                    inputname(1), inputname(1))
+                return
+            end
+            
             t_rlx = tic;
             
             % Optional communication
             verb = obj.opts.verbosity;
-            fprintf('Relaxing CMP to desired barotrope...\n\n')
-            if (verb > 2)
+            if (verb > 0)
+                fprintf('Relaxing CMP to desired barotrope...\n\n')
+            end
+            if (verb > 3)
                 try
                     sbj = ['CMP.relax_to_barotrope() started on ',...
                         getenv('computername')];
@@ -98,31 +106,34 @@ classdef CMSPlanet < handle
             iter = 1;
             while (abs(dBar) > obj.opts.dBtol) && (iter <= obj.opts.MaxIterBar)
                 t_pass = tic;
-                fprintf('Baropass %d (of max %d)...\n',...
-                    iter, obj.opts.MaxIterBar)
-                
+                if (verb > 0)
+                    fprintf('Baropass %d (of max %d)...\n',...
+                        iter, obj.opts.MaxIterBar)
+                end
                 obj.cms.update_zetas;
                 if isequal(obj.opts.equipotential_squeeze, 'polar')
                     obj.cms.update_polar_radii;
                 end
                 dJ = obj.cms.update_Js;
-                if (verb > 0), fprintf('  '), end
+                if (verb > 1), fprintf('  '), end
                 dro = obj.update_densities;
                 
                 % The convergence tolerance is the max of dJs and drhos
                 vdro = var(dro(~isnan(dro)));
                 dBar = max([vdro, dJ]);
                 
-                fprintf('Baropass %d (of max %d)...done. (%g sec)\n',...
-                    iter, obj.opts.MaxIterBar, toc(t_pass))
                 if (verb > 0)
+                    fprintf('Baropass %d (of max %d)...done. (%g sec)\n',...
+                        iter, obj.opts.MaxIterBar, toc(t_pass))
+                end
+                if (verb > 1)
                     fprintf(['var(drho) = %g; dJ = %g;'...
                         ' (required tolerance = %g).\n\n'],...
                         double(vdro), double(dJ),obj.opts.dBtol)
-                else
+                elseif (verb > 0)
                     fprintf('\n')
                 end
-                if (verb > 2)
+                if (verb > 3)
                     try
                         sbj = ['CMP.relax_to_barotrope() on ',...
                             getenv('computername')];
@@ -142,7 +153,7 @@ classdef CMSPlanet < handle
             % Update polar radii if we haven't already
             if ~isequal(obj.opts.equipotential_squeeze, 'polar')
                 obj.cms.update_polar_radii;
-                if (verb > 0), fprintf('\n'), end
+                if (verb > 1), fprintf('\n'), end
             end
             
             % Flags and maybe warnings
@@ -154,19 +165,21 @@ classdef CMSPlanet < handle
                 warning off backtrace
                 warning(msg, inputname(1), inputname(1))
                 warning on backtrace
-                if (verb > 0), fprintf('\n'), end
+                if (verb > 1), fprintf('\n'), end
             end
             
             ET = toc(t_rlx);
             
             % Optional communication
-            fprintf('Relaxing CMP to desired barotrope...done.\n')
-            try
-                fprintf('Total elapsed time %s\n',lower(seconds2human(ET)))
-            catch
-                fprintf('Total elapsed time %g sec.\n', ET)
+            if (verb > 0)
+                fprintf('Relaxing CMP to desired barotrope...done.\n')
+                try
+                    fprintf('Total elapsed time %s\n',lower(seconds2human(ET)))
+                catch
+                    fprintf('Total elapsed time %g sec.\n', ET)
+                end
             end
-            if (verb > 2)
+            if (verb > 3)
                 try
                     sbj = ['CMP.relax_to_barotrope() finished on ',...
                         getenv('computername')];
@@ -189,7 +202,7 @@ classdef CMSPlanet < handle
             % Optional communication
             verb = obj.opts.verbosity;
             fprintf('Relaxing CMP to desired barotrope...\n\n')
-            if (verb > 2)
+            if (verb > 3)
                 try
                     sbj = ['CMP.relax_to_barotrope() started on ',...
                         getenv('computername')];
@@ -205,19 +218,19 @@ classdef CMSPlanet < handle
                 t_pass = tic;
                 fprintf('Baropass %d (of max %d)...\n',...
                     iter, obj.opts.MaxIterBar)
-                if (verb > 0), fprintf('\n'), end
+                if (verb > 1), fprintf('\n'), end
                 
                 obj.relax_to_HE;
                 
-                if (verb > 0), fprintf('\n'), end
+                if (verb > 1), fprintf('\n'), end
                 dM = (obj.M_calc - obj.M)/obj.M;
                 dro = obj.update_densities;
                 dBar = var(dro(~isnan(dro)));
                 
-                if (verb > 0), fprintf('\n'), end
+                if (verb > 1), fprintf('\n'), end
                 fprintf('Baropass %d (of max %d)...done. (%g sec.)\n',...
                     iter, obj.opts.MaxIterBar, toc(t_pass))
-                if (verb > 0)
+                if (verb > 1)
                     fprintf(['|drho| < %g; var(drho) = %g; dM = %g;'...
                         ' (required tolerance = %g).\n\n'],...
                         max(abs(double(dro))), double(dBar), double(dM),...
@@ -225,7 +238,7 @@ classdef CMSPlanet < handle
                 else
                     fprintf('\n')
                 end
-                if (verb > 2)
+                if (verb > 3)
                     try
                         sbj = ['CMP.relax_to_barotrope() on ',...
                             getenv('computername')];
@@ -262,7 +275,7 @@ classdef CMSPlanet < handle
             catch
                 fprintf('Total elapsed time %g sec.\n', ET)
             end
-            if (verb > 2)
+            if (verb > 3)
                 try
                     sbj = ['CMP.relax_to_barotrope() finished on ',...
                         getenv('computername')];
@@ -275,7 +288,7 @@ classdef CMSPlanet < handle
         function dro = update_densities(obj)
             t_rho = tic;
             verb = obj.opts.verbosity;
-            if (verb > 0)
+            if (verb > 1)
                 fprintf('  Updating layer densities...')
             end
             P = obj.P_mid;
@@ -288,9 +301,9 @@ classdef CMSPlanet < handle
                 end
             end
             dro = ((newro - obj.rhoi)./obj.rhoi);
-            if (verb > 1)
+            if (verb > 2)
                 fprintf('done. (%g sec)\n', toc(t_rho))
-            elseif (verb > 0)
+            elseif (verb > 1)
                 fprintf('done.\n')
             end
             obj.rhoi = newro;

@@ -81,11 +81,11 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Optional communication
             verb = obj.opts.verbosity;
-            if (verb > 0)
+            if (verb > 1)
                 fprintf('  ')
                 fprintf('Relaxing CMS to self-consistent level surfaces...\n\n')
             end
-            if (verb > 2)
+            if (verb > 3)
                 try
                     sbj = ['CMS.relax() started on ', getenv('computername')];
                     sendmail(obj.opts.email,sbj)
@@ -98,18 +98,18 @@ classdef ConcentricMaclaurinSpheroids < handle
             iter = 1;
             while (dJ > obj.opts.dJtol) && (iter <= obj.opts.MaxIterHE)
                 t_pass = tic;
-                if (verb > 0)
+                if (verb > 1)
                     fprintf('    ')
                     fprintf('Pass %d (of max %d)...\n', iter,...
                         obj.opts.MaxIterHE)
                 end
                 obj.update_zetas;
                 dJ = obj.update_Js();
-                if (verb > 0)
+                if (verb > 1)
                     fprintf('    ')
                     fprintf('Pass %d (of max %d)...done. (%g sec)\n',...
                         iter, obj.opts.MaxIterHE, toc(t_pass))
-                    if (verb > 1)
+                    if (verb > 2)
                         fprintf('    ')
                         fprintf('dJ = %g; required tolerance = %g.\n\n',...
                             dJ, obj.opts.dJtol)
@@ -117,7 +117,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                         fprintf('\n')
                     end
                 end
-                if (verb > 3)
+                if (verb > 4)
                     try
                         sbj = ['CMS.relax() on ', getenv('computername')];
                         msg{1} = sprintf(...
@@ -138,7 +138,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             if (dJ < obj.opts.dJtol)
                 obj.fullyCooked = true;
             else
-                if (verb > 0)
+                if (verb > 1)
                     msg = ['Object may not have fully converged.\n',...
                         'Try increasing the convergence tolerance ',...
                         '(%s.opts.dJtol) and/or iteration limit ',...
@@ -157,7 +157,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             ET = toc(t_rlx);
             
             % Optional communication
-            if (verb > 0)
+            if (verb > 1)
                 msg = 'Relaxing CMS to self-consistent level surfaces...done.';
                 fprintf('  ')
                 fprintf([msg, '\n'])
@@ -169,7 +169,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                     fprintf('Total elapsed time %g sec.\n', ET)
                 end
             end
-            if (verb > 2)
+            if (verb > 3)
                 try
                     sbj = ['CMS.relax() finished on ', getenv('computername')];
                     sendmail(obj.opts.email,sbj)
@@ -189,16 +189,16 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Calculate polar radii (slower than zetas).
             
             verb = obj.opts.verbosity;
-            if (verb > 0)
+            if (verb > 1)
                 t_shp = tic;
                 fprintf('    Updating polar radii....')
             end
             for ii=1:obj.nlayers
                 obj.zeta1s(ii) = obj.zeta_j_of_mu(ii, 1);
             end
-            if (verb > 1)
+            if (verb > 2)
                 fprintf('done. (%g sec)\n', toc(t_shp))
-            elseif (verb > 0)
+            elseif (verb > 1)
                 fprintf('done.\n')
             end
         end
@@ -221,7 +221,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Optional communication
             verb = obj.opts.verbosity;
-            if (verb > 0)
+            if (verb > 1)
                 t_z_pass = tic;
                 fprintf('    Updating zetas....')
             end
@@ -238,10 +238,10 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.zetas = newzetas;
             
             % Optional communication
-            if (verb > 1)
+            if (verb > 2)
                 t_z_pass = toc(t_z_pass);
                 fprintf('done. (%g sec)\n', t_z_pass)
-            elseif (verb > 0)
+            elseif (verb > 1)
                 fprintf('done.\n')
             end
             
@@ -255,7 +255,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             % Optional communication
             verb = obj.opts.verbosity;
-            if (verb > 0)
+            if (verb > 1)
                 t_J_pass = tic;
                 fprintf('    Updating Js....')
             end
@@ -274,10 +274,10 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.Jn = obj.Jn();
             
             % Optional communication
-            if (verb > 1)
+            if (verb > 2)
                 t_J_pass = toc(t_J_pass);
                 fprintf('done. (%g sec)\n', t_J_pass)
-            elseif (verb > 0)
+            elseif (verb > 1)
                 fprintf('done.\n')
             end
             
