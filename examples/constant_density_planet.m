@@ -46,6 +46,7 @@ cmp.a0 = 7e4*si.km;
 cmp.M = 317*si.earth_mass;
 cmp.rhoi = ones(cmp.nlayers,1)*cmp.rho0; % for illustration
 cmp.qrot = m/s3; % CMS method uses q=w^2a^3/GM as rotation parameter
+cmp.opts.verbosity = 2;
 cmp.relax_to_HE;
 
 %% Compare numerical and analytic solutions (still relies on underlying cms)
