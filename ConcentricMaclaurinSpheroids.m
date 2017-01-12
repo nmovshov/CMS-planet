@@ -193,9 +193,11 @@ classdef ConcentricMaclaurinSpheroids < handle
                 t_shp = tic;
                 fprintf('    Updating polar radii....')
             end
-            for ii=1:obj.nlayers
-                obj.zeta1s(ii) = obj.zeta_j_of_mu(ii, 1);
+            newzeta1s = NaN(size(obj.zeta1s));
+            parfor ii=1:obj.nlayers
+                newzeta1s(ii) = obj.zeta_j_of_mu(ii, 1); %#ok<PFBNS>
             end
+            obj.zeta1s = newzeta1s;
             if (verb > 2)
                 fprintf('done. (%g sec)\n', toc(t_shp))
             elseif (verb > 1)
