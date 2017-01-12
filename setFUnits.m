@@ -1,5 +1,5 @@
 function y = setFUnits
-%SETFUNITS Create an "fake units" structure.
+%SETFUNITS Create a "fake units" structure.
 % y = SETFUNITS returns a structure containing predefined SI units, as
 % well as non-SI units, derived units, physical constants etc., all scalars
 % of type DOUBLE. The field names use conventional notation as much as
