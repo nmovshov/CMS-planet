@@ -27,6 +27,9 @@ classdef CMSPlanet < handle
         qrot    % rotation parameter 
         nlayers % layers of constant density 
         Js      % external gravity moments (even, 0:2:kmax degree)
+        J2      % convenience name for Js(2)
+        J4      % convenience name for Js(3)
+        J6      % convenience name for Js(4)
         NMoI    % normalized moment of inertia
         s0      % mean radius
         b0      % polar radius
@@ -399,6 +402,44 @@ classdef CMSPlanet < handle
             gh.FontSize = 11;
             
         end
+        
+        function T = report_card(obj, obs)
+            % REPORT_CARD Table summary of model's vital statistics.
+            
+            % Minimal checks
+            if isempty(obj.M_calc)
+                warning('Uninitialized object.')
+                return
+            end
+            
+            % Basic table
+            vitals = {'Mass'; 'J2'; 'J4'; 'J6'};
+            CMP = [obj.M_calc; obj.J2; obj.J4; obj.J6];
+            T = table(CMP, 'RowNames', vitals);
+            if ~isempty(obj.name)
+                T.Properties.VariableNames{'CMP'} = obj.name;
+            end
+            
+            % Optionally advanced table
+            if nargin == 1, return, end
+            try
+                OBS = [obs.M; obs.J2; obs.J4; obs.J6];
+                T = [T table(OBS)];
+                if isfield(obs, 'name') && ~isempty(obs.name)
+                    T.Properties.VariableNames{'OBS'} = obs.name;
+                end
+            catch ME
+                if any(strcmp(ME.identifier, {'MATLAB:nonStrucReference', 'MATLAB:nonExistentField'}))
+                    msg = ['To compare model to observations supply a struct argument with fields:', ...
+                        '\n\tM\n\tdM\n\tJ2\n\tdJ2\n\tJ4\n\tdJ4\n\tJ6\n\tdJ6', ...
+                        '\nand optionally',...
+                        '\n\tname'];
+                    error(sprintf(msg)) %#ok<SPERR>
+                else
+                    rethrow(ME)
+                end
+            end
+        end
     end % End of public methods block
     
     %% Private methods
@@ -451,6 +492,18 @@ classdef CMSPlanet < handle
             val = obj.cms.Jn;
         end
         
+        function val = get.J2(obj)
+            val = obj.Js(2);
+        end
+        
+        function val = get.J4(obj)
+            val = obj.Js(3);
+        end
+        
+        function val = get.J6(obj)
+            val = obj.Js(4);
+        end
+        
         function set.M(obj,val)
             try
                 assert(isnumeric(val))
@@ -471,6 +524,16 @@ classdef CMSPlanet < handle
             catch
                 error('Radius must be a positive scalar.')
             end
+        end
+        
+        function set.name(obj,val)
+            validateattributes(val, {'char'}, {'row'})
+            obj.name = val;
+        end
+        
+        function set.desc(obj,val)
+            validateattributes(val, {'char'}, {'row'})
+            obj.desc = val;
         end
         
         function val = get.ai(obj)
