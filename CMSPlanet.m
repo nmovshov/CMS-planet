@@ -413,7 +413,7 @@ classdef CMSPlanet < handle
             end
             
             % Basic table
-            vitals = {'Mass'; 'J2'; 'J4'; 'J6'};
+            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'};
             CMP = [obj.M_calc; obj.J2; obj.J4; obj.J6];
             T = table(CMP, 'RowNames', vitals);
             if ~isempty(obj.name)
@@ -428,6 +428,16 @@ classdef CMSPlanet < handle
                 if isfield(obs, 'name') && ~isempty(obs.name)
                     T.Properties.VariableNames{'OBS'} = obs.name;
                 end
+                DIFF = [obj.M_calc - obs.M;...
+                    obj.J2 - obs.J2;...
+                    obj.J4 - obs.J4;...
+                    obj.J6 - obs.J6];
+                T = [T table(DIFF, 'VariableNames', {'diff'})];
+                dees = [obs.dM; obs.dJ2; obs.dJ4; obs.dJ6];
+                WE = T.diff./dees;
+                T = [T table(WE, 'VariableNames', {'weighted_error'})];
+                match = (T.weighted_error < 1) & (T.weighted_error > -1);
+                T = [T table(match)];
             catch ME
                 if any(strcmp(ME.identifier, {'MATLAB:nonStrucReference', 'MATLAB:nonExistentField'}))
                     msg = ['To compare model to observations supply a struct argument with fields:', ...
