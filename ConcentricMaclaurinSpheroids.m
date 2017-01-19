@@ -144,7 +144,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                         '(%s.opts.dJtol) and/or iteration limit ',...
                         '(%s.opts.MaxIterHE).\n'];
                     warning off backtrace
-                    warning(msg, inputname(1), inputname(1))
+                    warning('CMS:noconverge', msg, inputname(1), inputname(1))
                     warning on backtrace
                 end
             end
@@ -302,7 +302,7 @@ classdef ConcentricMaclaurinSpheroids < handle
                        'Try running %s.relax() and increasing ',...
                        'the convergence tolerance (%s.opts.dJtol) ',...
                        'and/or iteration limit (%s.opts.MaxIterHE).'];
-                warning(msg, inputname(1), inputname(1), inputname(1))
+                warning('CMS:noconverge', msg, inputname(1), inputname(1), inputname(1))
             end
             
             % Check for properly normalized zetas
