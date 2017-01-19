@@ -166,7 +166,7 @@ classdef CMSPlanet < handle
                     'and/or convergence tolerance (%s.opts.dBtol) ',...
                     'and/or iteration limit (%s.opts.MaxIterBar).'];
                 warning off backtrace
-                warning(msg, inputname(1), inputname(1))
+                warning('CMS:noconverge', msg, inputname(1), inputname(1))
                 warning on backtrace
                 if (verb > 1), fprintf('\n'), end
             end
@@ -265,7 +265,7 @@ classdef CMSPlanet < handle
                     'and/or convergence tolerance (%s.opts.dBtol) ',...
                     'and/or iteration limit (%s.opts.MaxIterBar).'];
                 warning off backtrace
-                warning(msg, inputname(1), inputname(1))
+                warning('CMS:noconverge', msg, inputname(1), inputname(1))
                 warning on backtrace
             end
             
