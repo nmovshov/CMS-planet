@@ -4,7 +4,8 @@ function cmp = double_polytrope(N, x)
 %    two barotropes.Polytrope eos objects. First polytrope defined by constant
 %    x(1) and index x(2), applied to lower-indexed layers. Second polytrope
 %    defined by constant x(3) and index x(4), applied to higher-indexed layers.
-%    Transition at layer index fix(N*(1 - x(5))).
+%    Transition is at layer index fix(N*(1 - x(5))). Layer equatorial radii are
+%    equally spaced.
 
 cmp = CMSPlanet(N);
 eos1 = barotropes.Polytrope(x(1), x(2));
