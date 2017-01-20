@@ -17,6 +17,7 @@ classdef CMSPlanet < handle
         si      % layer mean radii
         rhoi    % layer densities
         Pi      % layer surface pressure (top of layer)
+        Mi      % layer masses
     end
     properties
         cms     % a CMS object
@@ -537,12 +538,16 @@ classdef CMSPlanet < handle
         end
         
         function set.name(obj,val)
-            validateattributes(val, {'char'}, {'row'})
+            if ~isempty(val)
+                validateattributes(val, {'char'}, {'row'})
+            end
             obj.name = val;
         end
         
         function set.desc(obj,val)
-            validateattributes(val, {'char'}, {'row'})
+            if ~isempty(val)
+                validateattributes(val, {'char'}, {'row'})
+            end
             obj.desc = val;
         end
         
@@ -629,6 +634,12 @@ classdef CMSPlanet < handle
             val = (4*pi/3)*(obj.a0^3)*sum(drho.*obj.cms.Vs);
         end
         
+        function val = get.Mi(obj)
+            if isempty(obj.rhoi), val = []; return, end
+            dvs = [(obj.cms.Vs(1:end-1) - obj.cms.Vs(2:end)); obj.cms.Vs(end)];
+            val = (4*pi/3)*(obj.a0^3)*(dvs.*obj.rhoi);
+        end
+        
         function val = get.beta(obj)
             val = obj.M/obj.M_calc;
         end
@@ -711,6 +722,10 @@ classdef CMSPlanet < handle
         
         function set.Pi(~,~)
             error('Pi is a calculated property and cannot be assigned')
+        end
+        
+        function set.Mi(~,~)
+            error('Mi is a calculated property and cannot be assigned')
         end
     end % End of access methods block
     
