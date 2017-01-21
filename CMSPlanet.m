@@ -363,6 +363,8 @@ classdef CMSPlanet < handle
                     y_bar = double(obj.eos.pressure(x_bar));
                 else
                     v = 1:length(x_cms);
+                    %TODO: next line errors if any 2 rho values are equal (e.g.
+                    %with const density core.
                     ind = interp1(x_cms, v, x_bar, 'nearest', 'extrap');
                     y_bar = nan(size(x_bar));
                     for k=1:length(x_bar)
