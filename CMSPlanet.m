@@ -357,15 +357,13 @@ classdef CMSPlanet < handle
             x_cms = double(obj.rhoi);
             y_cms = double(obj.P_mid);
             
-            if ~isempty(obj.eos)
+            if ~isempty(obj.eos) && (range(x_cms) > 0)
                 x_bar = linspace(min(x_cms), max(x_cms));
                 if isscalar(obj.eos)
                     y_bar = double(obj.eos.pressure(x_bar));
                 else
-                    v = 1:length(x_cms);
-                    %TODO: next line errors if any 2 rho values are equal (e.g.
-                    %with const density core.
-                    ind = interp1(x_cms, v, x_bar, 'nearest', 'extrap');
+                    v = 1:length(unique(x_cms));
+                    ind = interp1(unique(x_cms), v, x_bar, 'nearest', 'extrap');
                     y_bar = nan(size(x_bar));
                     for k=1:length(x_bar)
                         y_bar(k) = double(obj.eos(ind(k)).pressure(x_bar(k)));
