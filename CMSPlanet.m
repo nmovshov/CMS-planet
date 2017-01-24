@@ -242,8 +242,13 @@ classdef CMSPlanet < handle
             end
         end
         
-        function ah = plot_barotrope(obj)
+        function ah = plot_barotrope(obj, showinput)
             % Plot P(rho) of current model and of input barotrope.
+            
+            % Minimal assertions
+            narginchk(1,2)
+            if nargin < 2, showinput = true; end
+            validateattributes(showinput, {'logical'}, {'scalar'}, 1)
             
             if isempty(obj.Pi)
                 warning('Uninitialized object.')
@@ -261,7 +266,7 @@ classdef CMSPlanet < handle
             x_cms = double(obj.rhoi);
             y_cms = double(obj.P_mid);
             
-            if ~isempty(obj.eos) && (range(x_cms) > 0)
+            if ~isempty(obj.eos) && (range(x_cms) > 0) && showinput
                 x_bar = linspace(min(x_cms), max(x_cms));
                 if isscalar(obj.eos)
                     y_bar = double(obj.eos.pressure(x_bar));
