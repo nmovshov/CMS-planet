@@ -193,102 +193,6 @@ classdef CMSPlanet < handle
             end
         end
         
-        function ET = relax_to_barotrope_old(obj)
-            % Iterate relaxation to HE and density updates until converged.
-            
-            if isempty(obj.eos)
-                warning('Set valid barotrope first (obj.eos = <barotrope>)')
-                return
-            end
-            
-            t_rlx = tic;
-            
-            % Optional communication
-            verb = obj.opts.verbosity;
-            fprintf('Relaxing CMP to desired barotrope...\n\n')
-            if (verb > 3)
-                try
-                    sbj = ['CMP.relax_to_barotrope() started on ',...
-                        getenv('computername')];
-                    sendmail(obj.opts.email,sbj)
-                catch
-                end
-            end
-            
-            % Main loop
-            dBar = Inf;
-            iter = 1;
-            while (abs(dBar) > obj.opts.dBtol) && (iter <= obj.opts.MaxIterBar)
-                t_pass = tic;
-                fprintf('Baropass %d (of max %d)...\n',...
-                    iter, obj.opts.MaxIterBar)
-                if (verb > 1), fprintf('\n'), end
-                
-                obj.relax_to_HE;
-                
-                if (verb > 1), fprintf('\n'), end
-                dM = (obj.M_calc - obj.M)/obj.M;
-                dro = obj.update_densities;
-                dBar = var(dro(~isnan(dro)));
-                
-                if (verb > 1), fprintf('\n'), end
-                fprintf('Baropass %d (of max %d)...done. (%g sec.)\n',...
-                    iter, obj.opts.MaxIterBar, toc(t_pass))
-                if (verb > 1)
-                    fprintf(['|drho| < %g; var(drho) = %g; dM = %g;'...
-                        ' (required tolerance = %g).\n\n'],...
-                        max(abs(double(dro))), double(dBar), double(dM),...
-                        obj.opts.dBtol)
-                else
-                    fprintf('\n')
-                end
-                if (verb > 3)
-                    try
-                        sbj = ['CMP.relax_to_barotrope() on ',...
-                            getenv('computername')];
-                        msg{1} = sprintf(...
-                            'Baropass %d (of max %d)...done. (%g sec.)',...
-                            iter, obj.opts.MaxIterBar, toc(t_pass));
-                        msg{2} = sprintf(...
-                            'dBar = %g; required tolerance = %g.',...
-                            double(dBar), obj.opts.dBtol);
-                        sendmail(obj.opts.email,sbj,msg)
-                    catch
-                    end
-                end
-                iter = iter + 1;
-            end
-            
-            % Flags and maybe warnings
-            if (dBar > obj.opts.dBtol)
-                msg = ['Planet may not have fully relaxed to desired eos.\n',...
-                    'Try increasing the number of layers '...
-                    'and/or convergence tolerance (%s.opts.dBtol) ',...
-                    'and/or iteration limit (%s.opts.MaxIterBar).'];
-                warning off backtrace
-                warning('CMS:noconverge', msg, inputname(1), inputname(1))
-                warning on backtrace
-            end
-            
-            ET = toc(t_rlx);
-            
-            % Optional communication
-            fprintf('Relaxing CMP to desired barotrope...done.\n')
-            try
-                fprintf('Total elapsed time %s\n',lower(seconds2human(ET)))
-            catch
-                fprintf('Total elapsed time %g sec.\n', ET)
-            end
-            if (verb > 3)
-                try
-                    sbj = ['CMP.relax_to_barotrope() finished on ',...
-                        getenv('computername')];
-                    sendmail(obj.opts.email,sbj)
-                catch
-                end
-            end
-        end
-        
         function dro = update_densities(obj)
             t_rho = tic;
             verb = obj.opts.verbosity;
@@ -459,6 +363,102 @@ classdef CMSPlanet < handle
            % (Re)Initialize a CMSPlanet object.
            
            obj.cms = ConcentricMaclaurinSpheroids(nlay, op);
+        end
+        
+        function ET = relax_to_barotrope_old(obj)
+            % Iterate relaxation to HE and density updates until converged.
+            
+            if isempty(obj.eos)
+                warning('Set valid barotrope first (obj.eos = <barotrope>)')
+                return
+            end
+            
+            t_rlx = tic;
+            
+            % Optional communication
+            verb = obj.opts.verbosity;
+            fprintf('Relaxing CMP to desired barotrope...\n\n')
+            if (verb > 3)
+                try
+                    sbj = ['CMP.relax_to_barotrope() started on ',...
+                        getenv('computername')];
+                    sendmail(obj.opts.email,sbj)
+                catch
+                end
+            end
+            
+            % Main loop
+            dBar = Inf;
+            iter = 1;
+            while (abs(dBar) > obj.opts.dBtol) && (iter <= obj.opts.MaxIterBar)
+                t_pass = tic;
+                fprintf('Baropass %d (of max %d)...\n',...
+                    iter, obj.opts.MaxIterBar)
+                if (verb > 1), fprintf('\n'), end
+                
+                obj.relax_to_HE;
+                
+                if (verb > 1), fprintf('\n'), end
+                dM = (obj.M_calc - obj.M)/obj.M;
+                dro = obj.update_densities;
+                dBar = var(dro(~isnan(dro)));
+                
+                if (verb > 1), fprintf('\n'), end
+                fprintf('Baropass %d (of max %d)...done. (%g sec.)\n',...
+                    iter, obj.opts.MaxIterBar, toc(t_pass))
+                if (verb > 1)
+                    fprintf(['|drho| < %g; var(drho) = %g; dM = %g;'...
+                        ' (required tolerance = %g).\n\n'],...
+                        max(abs(double(dro))), double(dBar), double(dM),...
+                        obj.opts.dBtol)
+                else
+                    fprintf('\n')
+                end
+                if (verb > 3)
+                    try
+                        sbj = ['CMP.relax_to_barotrope() on ',...
+                            getenv('computername')];
+                        msg{1} = sprintf(...
+                            'Baropass %d (of max %d)...done. (%g sec.)',...
+                            iter, obj.opts.MaxIterBar, toc(t_pass));
+                        msg{2} = sprintf(...
+                            'dBar = %g; required tolerance = %g.',...
+                            double(dBar), obj.opts.dBtol);
+                        sendmail(obj.opts.email,sbj,msg)
+                    catch
+                    end
+                end
+                iter = iter + 1;
+            end
+            
+            % Flags and maybe warnings
+            if (dBar > obj.opts.dBtol)
+                msg = ['Planet may not have fully relaxed to desired eos.\n',...
+                    'Try increasing the number of layers '...
+                    'and/or convergence tolerance (%s.opts.dBtol) ',...
+                    'and/or iteration limit (%s.opts.MaxIterBar).'];
+                warning off backtrace
+                warning('CMS:noconverge', msg, inputname(1), inputname(1))
+                warning on backtrace
+            end
+            
+            ET = toc(t_rlx);
+            
+            % Optional communication
+            fprintf('Relaxing CMP to desired barotrope...done.\n')
+            try
+                fprintf('Total elapsed time %s\n',lower(seconds2human(ET)))
+            catch
+                fprintf('Total elapsed time %g sec.\n', ET)
+            end
+            if (verb > 3)
+                try
+                    sbj = ['CMP.relax_to_barotrope() finished on ',...
+                        getenv('computername')];
+                    sendmail(obj.opts.email,sbj)
+                catch
+                end
+            end
         end
     end % End of private methods block
     
