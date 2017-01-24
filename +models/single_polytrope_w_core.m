@@ -1,6 +1,6 @@
 function cmp = single_polytrope_w_core(N, x)
 %SINGLE_POLYTROPE_W_CORE Toy model planet approximated by a polytrope and core.
-%    SINGLE_POLYTROPE_CORE(N, x) returns an N-layer CMSPlanet object constructed
+%    SINGLE_POLYTROPE_W_CORE(N, x) returns an N-layer CMSPlanet object constructed
 %    with a barotropes.Polytrope eos using the polytropic constant x(1) and the
 %    polytropic index x(2) applied to the first N-1 layers and a
 %    barotropes.ConstDensity eos with density x(3) applied to last layer. Layer
