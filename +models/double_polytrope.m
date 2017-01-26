@@ -1,5 +1,5 @@
 function cmp = double_polytrope(N, x)
-%DOUBLE_POLYTROPE Toy model planet approximated by two polytropes.
+%DOUBLE_POLYTROPE Model planet approximated by two polytropes.
 %    DOUBLE_POLYTROPE(N, x) returns an N-layer CMSPlanet object constructed with
 %    two barotropes.Polytrope eos objects. First polytrope defined by constant
 %    x(1) and index x(2), applied to lower-indexed layers. Second polytrope
