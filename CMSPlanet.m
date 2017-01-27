@@ -265,6 +265,10 @@ classdef CMSPlanet < handle
             % Prepare the data
             x_cms = double(obj.rhoi);
             y_cms = double(obj.P_mid);
+            if ~isempty(obj.eos) && isa(obj.eos(end), 'barotropes.ConstDensity')
+                x_cms(end) = [];
+                y_cms(end) = [];
+            end
             
             if ~isempty(obj.eos) && (range(x_cms) > 0) && showinput
                 x_bar = linspace(min(x_cms), max(x_cms));
