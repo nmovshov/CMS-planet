@@ -321,28 +321,47 @@ classdef CMSPlanet < handle
             % REPORT_CARD Table summary of model's vital statistics.
             
             % Minimal checks
+            narginchk(1,2);
+            
+            % Basic table
             if isempty(obj.M_calc)
-                warning('Uninitialized object.')
+                objM = NaN;
+            else
+                objM = obj.M_calc;
+            end
+            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'};
+            CMP1 = [objM; obj.J2; obj.J4; obj.J6];
+            T = table(CMP1, 'RowNames', vitals);
+            if ~isempty(obj.name)
+                T.Properties.VariableNames{'CMP1'} = obj.name;
+            end
+            if nargin == 1, return, end
+            
+            % Optionally compare with another CMSPlanet
+            if isa(obs, 'CMSPlanet')
+                if isempty(obs.M_calc)
+                    obsM = NaN;
+                else
+                    obsM = obs.M_calc;
+                end
+                CMP2 = [obsM; obs.J2; obs.J4; obs.J6];
+                T = [T table(CMP2)];
+                if ~isempty(obs.name)
+                    T.Properties.VariableNames{'CMP2'} = obs.name;
+                end
+                DIFF = (CMP1 - CMP2)./CMP1;
+                T = [T table(DIFF, 'VariableNames', {'fractional_diff'})];
                 return
             end
             
-            % Basic table
-            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'};
-            CMP = [obj.M_calc; obj.J2; obj.J4; obj.J6];
-            T = table(CMP, 'RowNames', vitals);
-            if ~isempty(obj.name)
-                T.Properties.VariableNames{'CMP'} = obj.name;
-            end
-            
-            % Optionally advanced table
-            if nargin == 1, return, end
+            % Or compare with observables set
             try
                 OBS = [obs.M; obs.J2; obs.J4; obs.J6];
                 T = [T table(OBS)];
                 if isfield(obs, 'name') && ~isempty(obs.name)
                     T.Properties.VariableNames{'OBS'} = obs.name;
                 end
-                DIFF = [obj.M_calc - obs.M;...
+                DIFF = [objM - obs.M;...
                     obj.J2 - obs.J2;...
                     obj.J4 - obs.J4;...
                     obj.J6 - obs.J6];
@@ -353,9 +372,12 @@ classdef CMSPlanet < handle
                 match = (T.weighted_error < 1) & (T.weighted_error > -1);
                 T = [T table(match)];
             catch ME
-                if any(strcmp(ME.identifier, {'MATLAB:nonStrucReference', 'MATLAB:nonExistentField'}))
-                    msg = ['To compare model to observations supply a struct argument with fields:', ...
-                        '\n\tM\n\tdM\n\tJ2\n\tdJ2\n\tJ4\n\tdJ4\n\tJ6\n\tdJ6', ...
+                if any(strcmp(ME.identifier, {'MATLAB:nonStrucReference',...
+                        'MATLAB:nonExistentField',...
+                        'MATLAB:structRefFromNonStruct'}))
+                    msg = ['To compare model to observations supply a',...
+                        'struct argument with fields:', ...
+                        '\n\tM\n\tdM\n\tJ2\n\tdJ2\n\tJ4\n\tdJ4\n\tJ6\n\tdJ6',...
                         '\nand optionally',...
                         '\n\tname'];
                     error(sprintf(msg)) %#ok<SPERR>
