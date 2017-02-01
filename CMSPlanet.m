@@ -329,8 +329,9 @@ classdef CMSPlanet < handle
             else
                 objM = obj.M_calc;
             end
-            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'; 'NMoI'};
-            CMP1 = [objM; obj.J2; obj.J4; obj.J6; obj.NMoI];
+            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'; 'J8'; 'J10'; 'NMoI'};
+            CMP1 = [objM; obj.J2; obj.J4; obj.J6;...
+                obj.Js(5); obj.Js(6); obj.NMoI];
             T = table(CMP1, 'RowNames', vitals);
             if ~isempty(obj.name)
                 vname = matlab.lang.makeValidName(obj.name);
@@ -345,7 +346,8 @@ classdef CMSPlanet < handle
                 else
                     obsM = obs.M_calc;
                 end
-                CMP2 = [obsM; obs.J2; obs.J4; obs.J6; obs.NMoI];
+                CMP2 = [obsM; obs.J2; obs.J4; obs.J6;...
+                    obs.Js(5); obs.Js(6); obs.NMoI];
                 T = [T table(CMP2)];
                 if ~isempty(obs.name)
                     vname = matlab.lang.makeValidName(obs.name);
@@ -364,7 +366,10 @@ classdef CMSPlanet < handle
             try
                 if ~isfield(obs, 'M'), obs.M = NaN; end
                 if ~isfield(obs, 'NMoI'), obs.NMoI = NaN; end
-                OBS = [obs.M; obs.J2; obs.J4; obs.J6; obs.NMoI];
+                if ~isfield(obs, 'J8'), obs.J8 = NaN; end
+                if ~isfield(obs, 'J10'), obs.J10 = NaN; end
+                OBS = [obs.M; obs.J2; obs.J4; obs.J6;...
+                    obs.J8; obs.J10; obs.NMoI];
                 T = [T table(OBS)];
                 if isfield(obs, 'name') && ~isempty(obs.name)
                     vname = matlab.lang.makeValidName(obs.name);
@@ -374,15 +379,14 @@ classdef CMSPlanet < handle
                         T.Properties.VariableNames{'OBS'} = ['x_',vname];
                     end
                 end
-                DIFF = [objM - obs.M;...
-                    obj.J2 - obs.J2;...
-                    obj.J4 - obs.J4;...
-                    obj.J6 - obs.J6;...
-                    obj.NMoI - obs.NMoI];
+                DIFF = CMP1 - OBS;
                 T = [T table(DIFF, 'VariableNames', {'diff'})];
                 if ~isfield(obs, 'dM'), obs.dM = NaN; end
                 if ~isfield(obs, 'dNMoI'), obs.dNMoI = NaN; end
-                dees = [obs.dM; obs.dJ2; obs.dJ4; obs.dJ6; obs.dNMoI];
+                if ~isfield(obs, 'dJ8'), obs.dJ8 = NaN; end
+                if ~isfield(obs, 'dJ10'), obs.dJ10 = NaN; end
+                dees = [obs.dM; obs.dJ2; obs.dJ4; obs.dJ6;...
+                    obs.dJ8; obs.dJ10; obs.dNMoI];
                 WE = T.diff./dees;
                 T = [T table(WE, 'VariableNames', {'weighted_error'})];
                 match = ((T.weighted_error < 1) & (T.weighted_error > -1)) | ...
