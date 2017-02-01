@@ -333,7 +333,8 @@ classdef CMSPlanet < handle
             CMP1 = [objM; obj.J2; obj.J4; obj.J6];
             T = table(CMP1, 'RowNames', vitals);
             if ~isempty(obj.name)
-                T.Properties.VariableNames{'CMP1'} = obj.name;
+                vname = matlab.lang.makeValidName(obj.name);
+                T.Properties.VariableNames{'CMP1'} = vname;
             end
             if nargin == 1, return, end
             
@@ -347,7 +348,12 @@ classdef CMSPlanet < handle
                 CMP2 = [obsM; obs.J2; obs.J4; obs.J6];
                 T = [T table(CMP2)];
                 if ~isempty(obs.name)
-                    T.Properties.VariableNames{'CMP2'} = obs.name;
+                    vname = matlab.lang.makeValidName(obs.name);
+                    try
+                        T.Properties.VariableNames{'CMP2'} = vname;
+                    catch
+                        T.Properties.VariableNames{'CMP2'} = ['x_',vname];
+                    end
                 end
                 DIFF = (CMP1 - CMP2)./CMP1;
                 T = [T table(DIFF, 'VariableNames', {'fractional_diff'})];
@@ -359,7 +365,12 @@ classdef CMSPlanet < handle
                 OBS = [obs.M; obs.J2; obs.J4; obs.J6];
                 T = [T table(OBS)];
                 if isfield(obs, 'name') && ~isempty(obs.name)
-                    T.Properties.VariableNames{'OBS'} = obs.name;
+                    vname = matlab.lang.makeValidName(obs.name);
+                    try
+                    T.Properties.VariableNames{'OBS'} = vname;
+                    catch
+                        T.Properties.VariableNames{'OBS'} = ['x_',vname];
+                    end
                 end
                 DIFF = [objM - obs.M;...
                     obj.J2 - obs.J2;...
