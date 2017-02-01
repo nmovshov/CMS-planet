@@ -329,8 +329,8 @@ classdef CMSPlanet < handle
             else
                 objM = obj.M_calc;
             end
-            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'};
-            CMP1 = [objM; obj.J2; obj.J4; obj.J6];
+            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'; 'NMoI'};
+            CMP1 = [objM; obj.J2; obj.J4; obj.J6; obj.NMoI];
             T = table(CMP1, 'RowNames', vitals);
             if ~isempty(obj.name)
                 vname = matlab.lang.makeValidName(obj.name);
@@ -345,7 +345,7 @@ classdef CMSPlanet < handle
                 else
                     obsM = obs.M_calc;
                 end
-                CMP2 = [obsM; obs.J2; obs.J4; obs.J6];
+                CMP2 = [obsM; obs.J2; obs.J4; obs.J6; obs.NMoI];
                 T = [T table(CMP2)];
                 if ~isempty(obs.name)
                     vname = matlab.lang.makeValidName(obs.name);
@@ -362,7 +362,9 @@ classdef CMSPlanet < handle
             
             % Or compare with observables set
             try
-                OBS = [obs.M; obs.J2; obs.J4; obs.J6];
+                if ~isfield(obs, 'M'), obs.M = NaN; end
+                if ~isfield(obs, 'NMoI'), obs.NMoI = NaN; end
+                OBS = [obs.M; obs.J2; obs.J4; obs.J6; obs.NMoI];
                 T = [T table(OBS)];
                 if isfield(obs, 'name') && ~isempty(obs.name)
                     vname = matlab.lang.makeValidName(obs.name);
@@ -375,12 +377,16 @@ classdef CMSPlanet < handle
                 DIFF = [objM - obs.M;...
                     obj.J2 - obs.J2;...
                     obj.J4 - obs.J4;...
-                    obj.J6 - obs.J6];
+                    obj.J6 - obs.J6;...
+                    obj.NMoI - obs.NMoI];
                 T = [T table(DIFF, 'VariableNames', {'diff'})];
-                dees = [obs.dM; obs.dJ2; obs.dJ4; obs.dJ6];
+                if ~isfield(obs, 'dM'), obs.dM = NaN; end
+                if ~isfield(obs, 'dNMoI'), obs.dNMoI = NaN; end
+                dees = [obs.dM; obs.dJ2; obs.dJ4; obs.dJ6; obs.dNMoI];
                 WE = T.diff./dees;
                 T = [T table(WE, 'VariableNames', {'weighted_error'})];
-                match = (T.weighted_error < 1) & (T.weighted_error > -1);
+                match = ((T.weighted_error < 1) & (T.weighted_error > -1)) | ...
+                    isnan(T.weighted_error);
                 T = [T table(match)];
             catch ME
                 if any(strcmp(ME.identifier, {'MATLAB:nonStrucReference',...
