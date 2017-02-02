@@ -79,7 +79,7 @@ cmp.relax_to_barotrope;
 %% Display
 try
     cmp.plot_equipotential_surfaces;
-    cmp.plot_barotrope;
+    cmp.plot_barotrope('showinput');
 catch
 end
 
