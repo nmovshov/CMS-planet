@@ -242,35 +242,49 @@ classdef CMSPlanet < handle
             end
         end
         
-        function ah = plot_barotrope(obj, showinput)
-            % Plot P(rho) of current model and of input barotrope.
+        function ah = plot_barotrope(obj, varargin)
+            % Plot P(rho) of current model and optionally of input barotrope.
             
-            % Minimal assertions
-            narginchk(1,2)
-            if nargin < 2, showinput = true; end
-            validateattributes(showinput, {'logical'}, {'scalar'}, 1)
-            
+            % Don't bother if there is no pressure
             if isempty(obj.Pi)
                 warning('Uninitialized object.')
                 return
             end
             
+            % Input parsing
+            p = inputParser;
+            p.FunctionName = mfilename;
+            p.addParameter('axes', [],...
+                @(x)isscalar(x) && isgraphics(x,'axes') && isvalid(x));
+            p.addParameter('showinput', false,...
+                @(x)isscalar(x) && islogical(x));
+            p.addParameter('includecore', false,...
+                @(x)isscalar(x) && islogical(x));
+            p.parse(varargin{:})
+            pr = p.Results;
+            
             % Prepare the canvas
-            fh = figure;
-            set(fh, 'defaultTextInterpreter', 'latex')
-            set(fh, 'defaultLegendInterpreter', 'latex')
-            ah = axes;
-            hold(ah, 'on')
+            if isempty(pr.axes)
+                fh = figure;
+                set(fh, 'defaultTextInterpreter', 'latex')
+                set(fh, 'defaultLegendInterpreter', 'latex')
+                ah = axes;
+                hold(ah, 'on')
+            else
+                ah = pr.axes;
+                hold(ah, 'on')
+            end
             
             % Prepare the data
             x_cms = double(obj.rhoi);
             y_cms = double(obj.P_mid);
-            if ~isempty(obj.eos) && isa(obj.eos(end), 'barotropes.ConstDensity')
+            if ~pr.includecore && ~isempty(obj.eos) && ...
+                    isa(obj.eos(end), 'barotropes.ConstDensity')
                 x_cms(end) = [];
                 y_cms(end) = [];
             end
             
-            if ~isempty(obj.eos) && (range(x_cms) > 0) && showinput
+            if pr.showinput && ~isempty(obj.eos) && (range(x_cms) > 0)
                 x_bar = linspace(min(x_cms), max(x_cms));
                 if isscalar(obj.eos)
                     y_bar = double(obj.eos.pressure(x_bar));
@@ -292,7 +306,9 @@ classdef CMSPlanet < handle
             
             % Style and annotate lines
             lh(1).LineWidth = 2;
-            lh(1).Color = [0.31, 0.31, 0.31];
+            if isempty(pr.axes)
+                lh(1).Color = [0.31, 0.31, 0.31];
+            end
             if isempty(obj.name)
                 lh(1).DisplayName = 'CMS model';
             else
@@ -304,15 +320,20 @@ classdef CMSPlanet < handle
             end
             
             % Style and annotate axes
-            ah.Box = 'on';
-            if (range(x_cms) > 0)
-                xlim([min(x_cms),max(x_cms)])
+            if isempty(pr.axes)
+                ah.Box = 'on';
+                if (range(x_cms) > 0)
+                    xlim([min(x_cms),max(x_cms)])
+                end
+                xlabel('$\rho$ [kg/m$^3$]')
+                ylabel('$P$ [GPa]')
+            else
+                xlim('auto')
             end
-            xlabel('$\rho$ [kg/m$^3$]')
-            ylabel('$P$ [GPa]')
             
             % Legend
-            gh = legend('show','location','nw');
+            legend(ah, 'off')
+            gh = legend(ah, 'show','location','nw');
             gh.FontSize = 11;
             
         end
