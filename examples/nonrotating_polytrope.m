@@ -126,5 +126,5 @@ th.Position = [lh.Position(1), lh.Position(2)-th.Position(4),...
     lh.Position(3), th.Position(4)];
 
 % Also plot converged and input barotrope
-cmp(end).plot_barotrope;
+cmp(end).plot_barotrope('showinput',true);
 title(s_tit);
