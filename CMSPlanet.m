@@ -260,6 +260,8 @@ classdef CMSPlanet < handle
                 @(x)isscalar(x) && islogical(x));
             p.addParameter('includecore', false,...
                 @(x)isscalar(x) && islogical(x));
+            p.addParameter('betanormalize', false,...
+                @(x)isscalar(x) && islogical(x));
             p.parse(varargin{:})
             pr = p.Results;
             
@@ -278,6 +280,9 @@ classdef CMSPlanet < handle
             % Prepare the data
             x_cms = double(obj.rhoi);
             y_cms = double(obj.P_mid);
+            if pr.betanormalize
+                x_cms = double(obj.beta*x_cms);
+            end
             if ~pr.includecore && ~isempty(obj.eos) && ...
                     isa(obj.eos(end), 'barotropes.ConstDensity')
                 x_cms(end) = [];
