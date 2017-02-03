@@ -282,6 +282,7 @@ classdef CMSPlanet < handle
             y_cms = double(obj.P_mid);
             if pr.betanormalize
                 x_cms = double(obj.beta*x_cms);
+                y_cms = double(obj.beta*y_cms);
             end
             if ~pr.includecore && ~isempty(obj.eos) && ...
                     isa(obj.eos(end), 'barotropes.ConstDensity')
