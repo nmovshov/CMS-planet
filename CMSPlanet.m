@@ -358,6 +358,7 @@ classdef CMSPlanet < handle
             vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'; 'J8'; 'J10'; 'NMoI'};
             CMP1 = [objM; obj.J2; obj.J4; obj.J6;...
                 obj.Js(5); obj.Js(6); obj.NMoI];
+            CMP1 = double(CMP1);
             T = table(CMP1, 'RowNames', vitals);
             if ~isempty(obj.name)
                 vname = matlab.lang.makeValidName(obj.name);
@@ -374,6 +375,7 @@ classdef CMSPlanet < handle
                 end
                 CMP2 = [obsM; obs.J2; obs.J4; obs.J6;...
                     obs.Js(5); obs.Js(6); obs.NMoI];
+                CMP2 = double(CMP2);
                 T = [T table(CMP2)];
                 if ~isempty(obs.name)
                     vname = matlab.lang.makeValidName(obs.name);
@@ -396,6 +398,7 @@ classdef CMSPlanet < handle
                 if ~isfield(obs, 'J10'), obs.J10 = NaN; end
                 OBS = [obs.M; obs.J2; obs.J4; obs.J6;...
                     obs.J8; obs.J10; obs.NMoI];
+                OBS = double(OBS);
                 T = [T table(OBS)];
                 if isfield(obs, 'name') && ~isempty(obs.name)
                     vname = matlab.lang.makeValidName(obs.name);
