@@ -68,7 +68,7 @@ eos.name = sprintf('$P\\propto\\rho^2$');
 
 %% Relax to desired barotrope
 for k=1:length(nbl)
-    cmp(k).opts.verbosity = 0;
+    cmp(k).opts.verbosity = 1;
     cmp(k).opts.dBtol = 1e-10; % default 1e-10
     cmp(k).opts.MaxIterBar = 40; % default 40
     cmp(k).relax_to_barotrope;
@@ -91,10 +91,14 @@ rho_exact(1) = rho_c;
 
 % plot
 ah = axes; hold(ah, 'on');
-l1 = plot(r/R, rho_exact/rho_c);
+l1 = plot(r/R, rho_exact/rho_c, 'k--');
 l1.DisplayName = '$\sin(ar)/(ar)$';
 for k=1:length(nbl)
-    l2(k) = stairs(cmp(k).ai/R, cmp(k).rhoi/rho_c, '-');
+    try
+        l2(k) = stairs(cmp(k).ai/R, cmp(k).rhoi/cmp(k).betanorm/rho_c, '-');
+    catch
+        l2(k) = stairs(cmp(k).ai/R, cmp(k).rhoi/rho_c, '-'); % back support
+    end
     l2(k).DisplayName = ['$\rho_i/\rho_c$ ',cmp(k).name];
 end
 
