@@ -38,12 +38,11 @@ classdef CMSPlanet < handle
         rho0    % reference density (uses equatorial radius)
         rho_s   % mean density (uses mean radius)
         M_calc  % mass from current state of cms
-        beta    % so called mass renormalization factor (M/M_calc)
         P_c     % central pressure
         P_mid   % layer internal pressure (avg. of surface pressures)
     end
-    properties (Access = private)
-        
+    properties (SetAccess = private)
+        betanorm % mass renormalization factor (M/M_calc)
     end
     
     %% The constructor
@@ -153,6 +152,10 @@ classdef CMSPlanet < handle
                 end
                 iter = iter + 1;
             end
+            
+            % Renormalize densities; save betanorm constant
+            obj.betanorm = obj.M/obj.M_calc;
+            obj.rhoi = obj.rhoi*obj.betanorm;
             
             % Update polar radii if we haven't already
             if ~isequal(obj.opts.equipotential_squeeze, 'polar')
@@ -437,6 +440,12 @@ classdef CMSPlanet < handle
                 end
             end
         end
+        
+        function beta = renormalize_density(obj)
+            beta = obj.M/obj.M_calc;
+            obj.betanorm = beta;
+            obj.rhoi = obj.rhoi*obj.betanorm;
+        end
     end % End of public methods block
     
     %% Private methods
@@ -720,10 +729,6 @@ classdef CMSPlanet < handle
             if isempty(obj.rhoi), val = []; return, end
             dvs = [(obj.cms.Vs(1:end-1) - obj.cms.Vs(2:end)); obj.cms.Vs(end)];
             val = (4*pi/3)*(obj.a0^3)*(dvs.*obj.rhoi);
-        end
-        
-        function val = get.beta(obj)
-            val = obj.M/obj.M_calc;
         end
         
         function val = get.bi(obj)
