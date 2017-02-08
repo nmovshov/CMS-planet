@@ -112,10 +112,9 @@ lh.FontSize = 12;
 % errors
 n = length(nbl);
 P_err = (cmp(n).P_c - cmp(n).eos.pressure(rho_c))/cmp(n).eos.pressure(rho_c);
-M_err = (cmp(n).M_calc - cmp(n).M)/cmp(n).M;
 s_tit = sprintf(['$N_\\mathrm{layers}=%g$; ',...
-    '$\\Delta M_\\mathrm{tot}=%g\\%%$; $\\Delta P_c=%g\\%%$'],...
-    cmp(n).nlayers, double(M_err)*100, double(P_err)*100);
+    '$\\beta=%g$; $\\Delta P_c=%g\\%%$'],...
+    cmp(n).nlayers, double(cmp(n).betanorm), double(P_err)*100);
 title(s_tit)
 
 % polytrope definitions
@@ -130,5 +129,5 @@ th.Position = [lh.Position(1), lh.Position(2)-th.Position(4),...
     lh.Position(3), th.Position(4)];
 
 % Also plot converged and input barotrope
-cmp(end).plot_barotrope('showinput',true);
+cmp(end).plot_barotrope('showinput',true,'showscaledinput',true);
 title(s_tit);

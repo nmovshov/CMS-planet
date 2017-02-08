@@ -87,7 +87,7 @@ disp(T)
 format
 try
     cmp.plot_equipotential_surfaces;
-    cmp.plot_barotrope('showinput',true);
+    cmp.plot_barotrope('showinput',true,'showscaledinput',true);
 catch
 end
 
