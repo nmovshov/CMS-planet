@@ -261,9 +261,9 @@ classdef CMSPlanet < handle
                 @(x)isscalar(x) && isgraphics(x,'axes') && isvalid(x));
             p.addParameter('showinput', false,...
                 @(x)isscalar(x) && islogical(x));
-            p.addParameter('includecore', false,...
+            p.addParameter('showscaledinput', false,...
                 @(x)isscalar(x) && islogical(x));
-            p.addParameter('betanormalize', false,...
+            p.addParameter('includecore', false,...
                 @(x)isscalar(x) && islogical(x));
             p.parse(varargin{:})
             pr = p.Results;
@@ -280,19 +280,16 @@ classdef CMSPlanet < handle
                 hold(ah, 'on')
             end
             
-            % Prepare the data
+            % Prepare the data: model
             x_cms = double(obj.rhoi);
             y_cms = double(obj.P_mid);
-            if pr.betanormalize
-                x_cms = double(obj.beta*x_cms);
-                y_cms = double(obj.beta*y_cms);
-            end
             if ~pr.includecore && ~isempty(obj.eos) && ...
                     isa(obj.eos(end), 'barotropes.ConstDensity')
                 x_cms(end) = [];
                 y_cms(end) = [];
             end
             
+            % Prepare the data: input
             if pr.showinput && ~isempty(obj.eos) && (range(x_cms) > 0)
                 x_bar = linspace(min(x_cms), max(x_cms));
                 if isscalar(obj.eos)
@@ -307,25 +304,47 @@ classdef CMSPlanet < handle
                 end
             end
             
-            % Plot the lines (pressure in GPa)
-            lh(1) = stairs(x_cms, y_cms/1e9);
-            if exist('y_bar','var') && any(isfinite(y_bar))
-                lh(2) = line(x_bar, y_bar/1e9);
+            % Prepare the data: scaled input
+            if pr.showscaledinput && ~isempty(obj.eos) && (range(x_cms) > 0)
+                x_bar = linspace(min(x_cms), max(x_cms));
+                bnorm = obj.betanorm;
+                if isscalar(obj.eos)
+                    y_bar_scl = double(bnorm*obj.eos.pressure(x_bar/bnorm));
+                else
+                    v = 1:length(unique(x_cms));
+                    ind = interp1(unique(x_cms), v, x_bar, 'nearest', 'extrap');
+                    y_bar_scl = nan(size(x_bar));
+                    for k=1:length(x_bar)
+                        y_bar_scl(k) = double(...
+                            bnorm*obj.eos(ind(k)).pressure(x_bar(k)/bnorm));
+                    end
+                end
             end
             
-            % Style and annotate lines
-            lh(1).LineWidth = 2;
+            % Plot the lines (pressure in GPa)
+            lh = stairs(x_cms, y_cms/1e9);
+            lh.LineWidth = 2;
             if isempty(pr.axes)
-                lh(1).Color = [0.31, 0.31, 0.31];
+                lh.Color = [0.31, 0.31, 0.31];
             end
             if isempty(obj.name)
-                lh(1).DisplayName = 'CMS model';
+                lh.DisplayName = 'CMS model';
             else
-                lh(1).DisplayName = obj.name;
+                lh.DisplayName = obj.name;
             end
-            if length(lh) == 2
-                lh(2).Color = 'r';
-                lh(2).DisplayName = 'input barotrope';
+            
+            if pr.showinput && any(isfinite(y_bar))
+                lh = line(x_bar, y_bar/1e9);
+                lh.Color = 'r';
+                lh.LineStyle = '--';
+                lh.DisplayName = 'input barotrope';
+            end
+            
+            if pr.showscaledinput && any(isfinite(y_bar_scl))
+                lh = line(x_bar, y_bar_scl/1e9);
+                lh.Color = [0, 0.5, 0];
+                lh.LineStyle = '--';
+                lh.DisplayName = 'input barotrope ($\beta$-scaled)';
             end
             
             % Style and annotate axes
