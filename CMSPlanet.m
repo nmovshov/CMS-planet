@@ -252,6 +252,88 @@ classdef CMSPlanet < handle
                     sprintf('1.0\\times{}%g km',double(obj.a0)/1e3);
             end
         end
+
+        function ah = plot_rho_of_r(obj, varargin)
+            % Plot rho(r) where r is either equatorial or mean radius.
+            
+            % Don't bother if uninitialized
+            if isempty(obj.rho0)
+                warning('Uninitialized object.')
+                return
+            end
+            
+            % Input parsing
+            p = inputParser;
+            p.FunctionName = mfilename;
+            p.addParameter('axes', [],...
+                @(x)(isscalar(x) && isgraphics(x, 'axes') && isvalid(x)) || ...
+                isempty(x));
+            p.addParameter('radius', 'equatorial',...
+                @(x)isvector(x) && ischar(x));
+            p.addParameter('plottype', 'stairs',...
+                @(x)isvector(x) && ischar(x));
+            p.parse(varargin{:})
+            pr = p.Results;
+            
+            % Prepare the canvas
+            if isempty(pr.axes)
+                fh = figure;
+                set(fh, 'defaultTextInterpreter', 'latex')
+                set(fh, 'defaultLegendInterpreter', 'latex')
+                ah = axes;
+                hold(ah, 'on')
+            else
+                ah = pr.axes;
+                hold(ah, 'on')
+            end
+            
+            % Prepare the data
+            if isequal(lower(pr.radius), 'equatorial')
+                x = [double(obj.ai/obj.a0); 0];
+            elseif isequal(lower(pr.radius), 'mean')
+                x = [double(obj.si/obj.s0); 0];
+            else
+                error('Unknown value of parameter radius.')
+            end
+            y = double([obj.rhoi; obj.rhoi(end)]);
+            
+            % Plot the lines (density in 1000 kg/m^3)
+            if isequal(lower(pr.plottype), 'stairs')
+                lh = stairs(x, y/1000);
+            elseif isequal(lower(pr.plottype), 'line')
+                lh = line(x, y/1000);
+            else
+                error('Unknown value of parameter plottype.')
+            end
+            lh.LineWidth = 2;
+            if isempty(pr.axes)
+                lh.Color = [0.31, 0.31, 0.31];
+            end
+            if isempty(obj.name)
+                lh.DisplayName = 'CMS model';
+            else
+                lh.DisplayName = obj.name;
+            end
+            
+            % Style and annotate axes
+            if isempty(pr.axes)
+                ah.Box = 'on';
+                if isequal(lower(pr.radius), 'mean')
+                    xlabel('Level surface radius, $a/a_0$', 'fontsize', 12)
+                else
+                    xlabel('Level surface radius, $s/s_0$', 'fontsize', 12)
+                end
+                ylabel('$\rho$ [1000 kg/m$^3$]', 'fontsize', 12)
+            else
+                xlim('auto')
+            end
+            
+            % Legend
+            legend(ah, 'off')
+            gh = legend(ah, 'show','location','ne');
+            gh.FontSize = 11;
+            
+        end
         
         function ah = plot_barotrope(obj, varargin)
             % Plot P(rho) of current model and optionally of input barotrope.
