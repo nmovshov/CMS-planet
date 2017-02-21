@@ -197,6 +197,14 @@ classdef CMSPlanet < handle
         end
         
         function dro = update_densities(obj)
+            % Set layer densities to match prescribed barotrope.
+            
+            if isempty(obj.rho0)
+                warning('Make sure mass (%s.M) and radius (%s.a0) are set',...
+                    inputname(1), inputname(1))
+                return
+            end
+            
             t_rho = tic;
             verb = obj.opts.verbosity;
             if (verb > 1)
@@ -441,7 +449,7 @@ classdef CMSPlanet < handle
                     obs.dJ8; obs.dJ10; obs.dNMoI];
                 WE = T.diff./dees;
                 T = [T table(WE, 'VariableNames', {'weighted_error'})];
-                match = ((T.weighted_error < 1) & (T.weighted_error > -1)) | ...
+                match = ((T.weighted_error <= 1) & (T.weighted_error >= -1)) | ...
                     isnan(T.weighted_error);
                 T = [T table(match)];
             catch ME
