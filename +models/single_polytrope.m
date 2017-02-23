@@ -1,6 +1,6 @@
-function cmp = single_polytrope_adv(N, x)
-%SINGLE_POLYTROPE_ADV The simplest toy model planet (advanced version).
-%    SINGLE_POLYTROPE_ADV(N, x) returns an N-layer CMSPlanet object with a
+function cmp = single_polytrope(N, x)
+%SINGLE_POLYTROPE The simplest toy model planet.
+%    SINGLE_POLYTROPE(N, x) returns an N-layer CMSPlanet object with a
 %    barotropes.Polytrope with constant x(1) and index x(2) assigned to layers
 %    2:N. Layer 1 is assigned a zero density barotropes.ConstDensity eos and is
 %    approximately half the width of the layers below. The layer spacing is
