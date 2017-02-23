@@ -1,6 +1,6 @@
-function cmp = single_polytrope_w_core_adv(N, x)
-%SINGLE_POLYTROPE_W_CORE_ADV Polytrope-and-core planet (advanced variation).
-%    SINGLE_POLYTROPE_W_CORE_ADV(N, x) returns an N-layer CMSPlanet object with
+function cmp = single_polytrope_w_core(N, x)
+%SINGLE_POLYTROPE_W_CORE Polytrope-and-core planet.
+%    SINGLE_POLYTROPE_W_CORE(N, x) returns an N-layer CMSPlanet object with
 %    a barotropes.Polytrope with constant x(1) and index x(2) assigned to layers
 %    2:N-1 and a barotropes.ConstDensity eos with rho0=x(3) assigned to layer N
 %    which has a normalized equatorial radius equal to x(4). Layer 1 is assigned

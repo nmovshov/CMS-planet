@@ -1,6 +1,6 @@
-function cmp = double_polytrope_adv(N, x)
-%DOUBLE_POLYTROPE_ADV Model planet approximated by two polytropes (advanced).
-%    DOUBLE_POLYTROPE_ADV(N, x) returns an N-layer CMSPlanet object with two
+function cmp = double_polytrope(N, x)
+%DOUBLE_POLYTROPE Model planet approximated by two polytropes.
+%    DOUBLE_POLYTROPE(N, x) returns an N-layer CMSPlanet object with two
 %    barotropes.Polytrope eos objects. First polytrope defined by constant x(1)
 %    and index x(2) is applied to layers 2:tind. Second polytrope defined by
 %    constant x(3) and index x(4) is applied to layers tind+1:N. Transition is

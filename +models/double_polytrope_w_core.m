@@ -1,6 +1,6 @@
-function cmp = double_polytrope_w_core_adv(N, x)
-%DOUBLE_POLYTROPE_W_CORE_ADV Two polytrope and core model planet (advanced).
-%    DOUBLE_POLYTROPE_W_CORE_ADV(N, x) returns an N-layer CMSPlanet object with
+function cmp = double_polytrope_w_core(N, x)
+%DOUBLE_POLYTROPE_W_CORE Two polytrope and core model planet.
+%    DOUBLE_POLYTROPE_W_CORE(N, x) returns an N-layer CMSPlanet object with
 %    two barotropes.Polytrope eos objects. First polytrope defined by constant
 %    x(1) and index x(2) is applied to layers 2:tind. Second polytrope defined
 %    by constant x(3) and index x(4) is applied to layers tind+1:N-1. Transition
