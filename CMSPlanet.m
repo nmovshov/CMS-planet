@@ -555,6 +555,25 @@ classdef CMSPlanet < handle
             obj.betanorm = beta;
             obj.rhoi = obj.rhoi*obj.betanorm;
         end
+        
+        function mcore = core_mass(obj)
+            % Return mass of innermost contiguous block of layers with same eos.
+            
+            if isempty(obj.eos) || isempty(obj.rho0) || isscalar(obj.eos)
+                mcore = [];
+                return
+            end
+            
+            ind = arrayfun(@isequal,...
+                obj.eos, repmat(obj.eos(end), obj.nlayers, 1));
+            cind = find(~ind, 1, 'last') + 1;
+            if isempty(cind)
+                mcore = [];
+            else
+                mcore = sum(obj.Mi(cind:end));
+            end
+        end
+        
     end % End of public methods block
     
     %% Private methods
