@@ -472,9 +472,10 @@ classdef CMSPlanet < handle
             else
                 objM = obj.M_calc;
             end
-            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'; 'J8'; 'J10'; 'NMoI'};
+            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'; 'J8'; 'J10'; 'NMoI'; ...
+                '"core" mass [kg]'};
             CMP1 = [objM; obj.J2; obj.J4; obj.J6;...
-                obj.Js(5); obj.Js(6); obj.NMoI];
+                obj.Js(5); obj.Js(6); obj.NMoI; obj.core_mass()];
             CMP1 = double(CMP1);
             T = table(CMP1, 'RowNames', vitals);
             if ~isempty(obj.name)
@@ -491,7 +492,7 @@ classdef CMSPlanet < handle
                     obsM = obs.M_calc;
                 end
                 CMP2 = [obsM; obs.J2; obs.J4; obs.J6;...
-                    obs.Js(5); obs.Js(6); obs.NMoI];
+                    obs.Js(5); obs.Js(6); obs.NMoI; obs.core_mass()];
                 CMP2 = double(CMP2);
                 T = [T table(CMP2)];
                 if ~isempty(obs.name)
@@ -513,8 +514,9 @@ classdef CMSPlanet < handle
                 if ~isfield(obs, 'NMoI'), obs.NMoI = NaN; end
                 if ~isfield(obs, 'J8'), obs.J8 = NaN; end
                 if ~isfield(obs, 'J10'), obs.J10 = NaN; end
+                if ~isfield(obs, 'M_core'), obs.mcore = NaN; end
                 OBS = [obs.M; obs.J2; obs.J4; obs.J6;...
-                    obs.J8; obs.J10; obs.NMoI];
+                    obs.J8; obs.J10; obs.NMoI; obs.mcore];
                 OBS = double(OBS);
                 T = [T table(OBS)];
                 if isfield(obs, 'name') && ~isempty(obs.name)
@@ -531,8 +533,9 @@ classdef CMSPlanet < handle
                 if ~isfield(obs, 'dNMoI'), obs.dNMoI = NaN; end
                 if ~isfield(obs, 'dJ8'), obs.dJ8 = NaN; end
                 if ~isfield(obs, 'dJ10'), obs.dJ10 = NaN; end
+                if ~isfield(obs, 'dM_core'), obs.dmcore = NaN; end
                 dees = [obs.dM; obs.dJ2; obs.dJ4; obs.dJ6;...
-                    obs.dJ8; obs.dJ10; obs.dNMoI];
+                    obs.dJ8; obs.dJ10; obs.dNMoI; obs.dmcore];
                 WE = T.diff./dees;
                 T = [T table(WE, 'VariableNames', {'weighted_error'})];
                 match = ((T.weighted_error <= 1) & (T.weighted_error >= -1)) | ...
