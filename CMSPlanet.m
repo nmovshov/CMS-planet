@@ -113,12 +113,16 @@ classdef CMSPlanet < handle
                     fprintf('Baropass %d (of max %d)...\n',...
                         iter, obj.opts.MaxIterBar)
                 end
-                obj.cms.update_zetas;
-                if isequal(obj.opts.equipotential_squeeze, 'polar')
-                    obj.cms.update_polar_radii;
+                if (obj.qrot > 0) || any(obj.cms.zetas(:) < 1)
+                    obj.cms.update_zetas;
+                    if isequal(obj.opts.equipotential_squeeze, 'polar')
+                        obj.cms.update_polar_radii;
+                    end
+                    dJ = obj.cms.update_Js;
+                    if (verb > 1), fprintf('  '), end
+                else
+                    dJ = 0;
                 end
-                dJ = obj.cms.update_Js;
-                if (verb > 1), fprintf('  '), end
                 dro = obj.update_densities;
                 
                 % The convergence tolerance is the max of dJs and drhos
