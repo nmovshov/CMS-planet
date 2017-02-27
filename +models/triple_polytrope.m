@@ -5,13 +5,13 @@ function cmp = triple_polytrope(N, x)
 %    and index x(2) is applied to layers 2:tind. Second polytrope defined by
 %    constant x(3) and index x(4) is applied to layers tind+1:cind. Third
 %    polytrope defined by constant x(5) and index x(6) is applied to layers
-%    cind+1:N. Transition from first to second polytrope is at layer
-%    tind=fix(N*(1-x(6))). Transition from second to third polytrope is at layer
-%    cind=fix(N*(1-x(7))). Layer 1 is assigned a zero density
-%    barotropes.ConstDensity eos and is approximately half the width of the layers
-%    below. The layer spacing is designed to minimize discretization error by
-%    concentrating 2/3 of the available layers in the top 0.5 of the planet (see
-%    Hubbard & Militzer, 2016).
+%    cind+1:N. Transition from first to second polytrope is at layer tind+1, the
+%    first layer with (ai/a0)<=x(7). Transition from second to third polytrope is
+%    at layer cind+1, the first layer with (ai/a0)<=x(8). Layer 1 is assigned a
+%    zero density barotropes.ConstDensity eos and is approximately half the width
+%    of the layers below. The layer spacing is designed to minimize discretization
+%    error by concentrating 2/3 of the available layers in the top 0.5 of the
+%    planet (see Hubbard & Militzer, 2016).
 
 cmp = CMSPlanet(N);
 
@@ -27,9 +27,12 @@ eos0 = barotropes.ConstDensity(0);
 eos1 = barotropes.Polytrope(x(1), x(2));
 eos2 = barotropes.Polytrope(x(3), x(4));
 eos3 = barotropes.Polytrope(x(5), x(6));
-tind = fix(N*(1 - x(7)));
+assert(x(7) <= 1 && x(7) >= x(8) && x(8) >= 0)
+tind = find(cmp.cms.lambdas <= x(7), 1) - 1;
+if isempty(tind), tind = N; end
 tind = min(max(tind, 1), N);
-cind = fix(N*(1 - x(8)));
+cind = find(cmp.cms.lambdas <= x(8), 1) - 1;
+if isempty(cind), cind = N; end
 cind = min(max(cind, 1), N);
 assert(cind > tind,...
     'Degenerate model: transition layers must be monotonic increasing.')
