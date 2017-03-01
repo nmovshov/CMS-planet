@@ -84,3 +84,59 @@ cmp
 % specified!
 
 %% Match the specified total mass by adjusting the layer densities
+% Because we fixed the layer densities and then changed their shapes to conform to
+% equipotential surfaces the mass of the planet as calculated by a volume integral
+% over all space is not the same as the value we specified initially. Usually we
+% want the total mass to match a known value. We can do this by multiplying all
+% densities by a constant factor. Doing this will adjust the total mass _without
+% changing the gravity coefficients_. The convenience method |renormalize_density|
+% will do this for us and remember the constant used in the public field
+% |betanorm| in case we need it later.
+cmp.renormalize_density;
+cmp.betanorm
+
+%% Specifying a density profile
+% So far we worked with a constant density planet which is not that interesting.
+% Let's now set a (slightly) more intersting density profile and see how it
+% affects the equipotential surface and gravity moments. We can use any density
+% profile we like. We just set the |rhoi| vector with |N| values. A physical
+% density profile should be monotonically increasing towards the center.
+cmp.rhoi = cmp.rho0*linspace(0, 3, cmp.nlayers);
+cmp.opts.verbosity = 0;
+cmp.relax_to_HE;
+cmp.renormalize_density;
+cmp.plot_barotrope;
+cmp.plot_rho_of_r;
+cmp
+
+%% Converging to a desired barotrope
+% We can ask |CMSPlanet| to find a density profile that will relax to a
+% hydrosytatic configuration closely matching a desired pressure-density relation.
+% Instead of specifying a density profile we specify a desired barotrope and save
+% it to the field |eos|. Then we run the method |relax_to_barotrope()|. (Note that
+% this process is more time consuming than simply relaxing to HE, because the
+% density profile is constantly changing while the CMS algorithm is trying to find
+% the equipotential surfaces!) We need an object derived from the abstract class
+% |barotropes.Barotrope|.
+
+help barotropes % It's easy to implement more barotropes
+cmp.rhoi = cmp.rho0*ones(cmp.nlayers,1); % start with a constant density
+cmp.eos = barotropes.Polytrope(2e5, 1);
+cmp.opts.verbosity = 2;
+cmp.opts.dBtol = 1e-7; % tolerance for density profile changes
+cmp.relax_to_barotrope;
+cmp.plot_barotrope('showinput', true, 'showscaledinput', true);
+cmp.plot_rho_of_r;
+
+%%
+% Notes:
+%
+% # Before |relax_to_barotrope()| finished it called |renormalize_densities| so
+% the mass of our planet matches the desired total mass already.
+% # The pressure-density relation in our planet is not exactly the one we asked
+% for but a closely related one. Since we had to scale the densities by a constant
+% factor $\beta$ the resulting pressure-density relation changed. If we requested
+% a barotrope of the form $P = f(\rho)$ we converge instead to the barotrope $P =
+% \beta f(\beta^{-1}\rho).$ It's not always true that $\beta\approx{1}$, that
+% depends on the match between the requested barotrope and the specified total
+% mass.
