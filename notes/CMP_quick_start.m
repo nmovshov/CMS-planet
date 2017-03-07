@@ -161,3 +161,17 @@ cmp.relax_to_barotrope;
 close all
 cmp.plot_rho_of_r;
 cmp.plot_barotrope('showin', true, 'showsc', true);
+
+%% |cmsset|
+% The constructor |CMSPlanet| can accept many optional arguments that control
+% various aspects of the class. These can be passed as name/value pairs or as a
+% sruct created by calling |cmsset|. Most of these parameters can be also be
+% modified in an existing |CMSPlanet|'s |opts| field. (We have already used the
+% |opts.verbosity| parameter.)
+
+help cmsset
+cmp.opts.MaxIterHE = 2;
+cmp.opts.dJtol = 1e-12;
+cmp.qrot = 0.1;
+cmp.opts.verbosity = 2;
+cmp.relax_to_HE;
