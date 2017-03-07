@@ -22,11 +22,7 @@ cmp = CMSPlanet(N)
 % |1| and |1/N|. This can be changed later.
 
 %% Customize the |CMSPlanet| object
-try
-    si = zetUnits;
-catch
-    si = setFUnits;
-end
+si = setFUnits;
 cmp.M = 318*si.earth_mass;
 cmp.a0 = 71490*si.km;
 P_rot = 9*si.hour + 55*si.minute + 29.7*si.second;
@@ -45,16 +41,10 @@ cmp
 % # You'll notice that many fields of |cmp| that were previously empty now have
 % values. Many of the fields are self explanatory and you can also type |doc
 % CMSPlanet| in the command window to see a list of fields and their definition.
-% # Wondering about that business with |si=setUnits| and |si=setFUnits|? If you
-% have the <http://github.com/nmovshov/physunits physunits toolbox> installed you
-% can use it to benefit from automatic dimensional correctness and display. If you
-% don't want to bother with it you can still use the function |setFUnits| to
-% quickly get a struct variable with lots of predefined constants. But of course
-% you don't have to use either.
 % # Since we didn't specify a density distribution our planet is set by default
-% with a constant density equal to the reference density $\rho_0 =
-% \frac{3M}{4\pi{}a_0^3}$. All the layer densities, |rhoi|, are equal to each other
-% and equal to |rho0|.
+% with a constant density equal to the reference density
+% $\rho_0=\frac{3M}{4\pi{}a_0^3}$. All the layer densities, |rhoi|, are equal to
+% each other and equal to |rho0|.
 % # At this point our planet is not yet in hydrostatic equalibrium. It is still
 % spherical, which is why the mean radius |s0| is equal to the equatorial radius
 % |a0|, and why the mean density $\rho_s=\frac{3M}{4\pi{}s_0^3}$ is equal to the
@@ -92,6 +82,7 @@ cmp
 % changing the gravity coefficients_. The convenience method |renormalize_density|
 % will do this for us and remember the constant used in the public field
 % |betanorm| in case we need it later.
+
 cmp.renormalize_density;
 cmp.betanorm
 
@@ -101,10 +92,12 @@ cmp.betanorm
 % affects the equipotential surface and gravity moments. We can use any density
 % profile we like. We just set the |rhoi| vector with |N| values. A physical
 % density profile should be monotonically increasing towards the center.
+
 cmp.rhoi = cmp.rho0*linspace(0, 3, cmp.nlayers);
 cmp.opts.verbosity = 0;
 cmp.relax_to_HE;
 cmp.renormalize_density;
+close all
 cmp.plot_barotrope;
 cmp.plot_rho_of_r;
 cmp
@@ -125,6 +118,7 @@ cmp.eos = barotropes.Polytrope(2e5, 1);
 cmp.opts.verbosity = 2;
 cmp.opts.dBtol = 1e-7; % tolerance for density profile changes
 cmp.relax_to_barotrope;
+close all
 cmp.plot_barotrope('showinput', true, 'showscaledinput', true);
 cmp.plot_rho_of_r;
 
@@ -140,3 +134,30 @@ cmp.plot_rho_of_r;
 % \beta f(\beta^{-1}\rho).$ It's not always true that $\beta\approx{1}$, that
 % depends on the match between the requested barotrope and the specified total
 % mass.
+% # In the |eos| field we can assign either a scalar object or an array of length
+% |cmp.nlayers|.
+
+%% Using premade models
+% Instead of "manually" assigning the |ai|, |rhoi|, and |eos| fields of a new
+% |CMSPlanet| object we can use one of the existing models in the |models|
+% package.
+
+help models
+
+%%
+% These template models all accept two required arguments. |N| is the number of
+% layers, and |x| is a vector of values for the model paramaters, of length and
+% meaning that depend on the particular model. For example, we can create an
+% object with an envelope that follows a polytropic pressure-density relation on
+% top of a constant-density core. We need to specify four model parameters.
+
+help models.single_polytrope_w_core
+cmp = models.single_polytrope_w_core(N, [2e5, 1, 8000, 0.15]);
+cmp.M = 318*si.earth_mass;
+cmp.a0 = 7.14e4*si.km;
+cmp.qrot = 0.08;
+cmp.opts.verbosity = 0;
+cmp.relax_to_barotrope;
+close all
+cmp.plot_rho_of_r;
+cmp.plot_barotrope('showin', true, 'showsc', true);
