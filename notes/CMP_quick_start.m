@@ -6,7 +6,7 @@
 
 %% Create a |CMSPlanet| object
 addpath(''); % path to your CMS-planet folder
-N = 8; % Number of constant-density layers
+N = 12; % Number of constant-density layers
 cmp = CMSPlanet(N)
 
 %%
@@ -22,12 +22,12 @@ cmp = CMSPlanet(N)
 % |1| and |1/N|. This can be changed later.
 
 %% Customize the |CMSPlanet| object
-si = setFUnits;
-cmp.M = 318*si.earth_mass;
-cmp.a0 = 71490*si.km;
-P_rot = 9*si.hour + 55*si.minute + 29.7*si.second;
+SI = setFUnits;
+cmp.M = 318*SI.earth_mass;
+cmp.a0 = 71490*SI.km;
+P_rot = 9*SI.hour + 55*SI.minute + 29.7*SI.second;
 w_rot = 2*pi/P_rot;
-G = si.gravity;
+G = SI.gravity;
 cmp.qrot = w_rot^2*cmp.a0^3/(G*cmp.M);
 cmp.name = 'dpl';
 cmp.desc = 'a dummy planet';
@@ -45,6 +45,14 @@ cmp
 % with a constant density equal to the reference density
 % $\rho_0=\frac{3M}{4\pi{}a_0^3}$. All the layer densities, |rhoi|, are equal to
 % each other and equal to |rho0|.
+% # We use SI units (meters, kilograms, seconds) in |CMSPlanet|. In fact the
+% underlying Concentric Maclaurin Spheroid computation is of course comepltely
+% dimensionless. But for convenience we choose to work with the planet's mass
+% instead of mass constant ($M$ instead of $GM$) and therefore we must choose a
+% units system. (The |SI| struct is a convenience measure holding many predfined
+% constants. It is the purely numeric counterpart to the |preal| sturct returned
+% by the <https://github.com/nmovshov/physunits physunits> toolbox, which we are
+% not using here.)
 % # At this point our planet is not yet in hydrostatic equalibrium. It is still
 % spherical, which is why the mean radius |s0| is equal to the equatorial radius
 % |a0|, and why the mean density $\rho_s=\frac{3M}{4\pi{}s_0^3}$ is equal to the
@@ -55,7 +63,7 @@ cmp
 cmp.opts.verbosity = 2; % Control the verbosity of output, 0--4.
 cmp.opts.dJtol = 1e-7; % For the demo we use a pretty lax tolerance.
 cmp.relax_to_HE;
-cmp.plot_equipotential_surfaces;
+cmp.plot_equipotential_surfaces(false);
 cmp
 
 %%
@@ -153,8 +161,8 @@ help models
 
 help models.single_polytrope_w_core
 cmp = models.single_polytrope_w_core(N, [2e5, 1, 8000, 0.15]);
-cmp.M = 318*si.earth_mass;
-cmp.a0 = 7.14e4*si.km;
+cmp.M = 318*SI.earth_mass;
+cmp.a0 = 7.14e4*SI.km;
 cmp.qrot = 0.08;
 cmp.opts.verbosity = 0;
 cmp.relax_to_barotrope;
@@ -175,3 +183,16 @@ cmp.opts.dJtol = 1e-12;
 cmp.qrot = 0.1;
 cmp.opts.verbosity = 2;
 cmp.relax_to_HE;
+
+%% More examples and doc
+% The best way to learn about the capabilities of the |CMSPlanet| class and how to
+% use its interface is to look at the example scripts in |./examples/|. The
+% |MATLAB| help system can also be useful for discovering properties and methods
+% of the class and what they do. And finally, if a |CMSPlanet| method prints a
+% warning (in orange) or an error (in red), pay attention to the message, which
+% often explains what went wrong and how to fix it.
+
+what ../examples
+help CMSPlanet
+methods CMSPlanet
+

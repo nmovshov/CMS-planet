@@ -389,13 +389,15 @@ classdef ConcentricMaclaurinSpheroids < handle
             xi = obj.lambdas(ilayer)*obj.zeta_j_of_mu(ilayer, mu);
         end
         
-        function ah = plot(obj)
+        function ah = plot(obj, bSC)
             % Visualize a CMS object, return axes handle.
             
             % Require R2016a to use the amazing polarplot features
             if verLessThan('matlab','9')
                 error('CMS plotting requires R2016a or later')
             end
+            
+            if nargin == 1, bSC = true; end
                         
             % Prepare colatitudes for polar plot
             mu = [1, fliplr(obj.mus), 0];
@@ -441,8 +443,10 @@ classdef ConcentricMaclaurinSpheroids < handle
             pax.Layer = 'top';
             
             % Fake a solid core color (xi and ci already set)
-            for scl=0:0.05:1
-                polarplot(pax, th, xi*scl, 'color', cmap(ci,:), 'tag', 'core');
+            if bSC
+                for scl=0:0.05:1
+                    polarplot(pax, th, xi*scl, 'color', cmap(ci,:));
+                end
             end
             
             % Return handle if requested
