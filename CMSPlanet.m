@@ -232,7 +232,7 @@ classdef CMSPlanet < handle
             obj.rhoi = newro;
         end
         
-        function ah = plot_equipotential_surfaces(obj)
+        function ah = plot_equipotential_surfaces(obj, bSC)
             % Visualize a CMSPlanet object by plotting equipotential contours.
             
             % Require R2016a to use the amazing polarplot features
@@ -241,7 +241,8 @@ classdef CMSPlanet < handle
                 return
             end
             
-            ah = obj.cms.plot();
+            if nargin == 1, bSC = true; end
+            ah = obj.cms.plot(bSC);
             
             % Add a colorbar
             if ~isempty(obj.rhoi)
