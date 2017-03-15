@@ -376,6 +376,30 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
         end
         
+        function ah = plot_contribution_function(obj,n)
+            % Plot J_{i,n} against lambda_i.
+            
+            if nargin == 1, n = 2:2:10; end
+            validateattributes(n, {'numeric'}, {'positive','<=',obj.opts.kmax})
+            
+            fh = figure;
+            set(fh, 'defaultTextInterpreter', 'latex')
+            set(fh, 'defaultLegendInterpreter', 'latex')
+            ah = axes;
+            ah.Box = 'on';
+            hold(ah, 'on')
+            for k=1:length(n)
+                Ji = (obj.lambdas.^n(k)).*obj.Js.tilde(:,n(k)+1);
+                Ji = Ji/obj.Jn(n(k));
+                lh = plot(ah, obj.lambdas, Ji);
+                lh.DisplayName = sprintf('$J_{%d}$', n(k));
+            end
+            xlabel('$\lambda$')
+            ylabel('$J_{i,n}/J_n$')
+            gh = legend(ah, 'show','location','nw');
+            gh.FontSize = 11;
+        end
+        
         function xi = xi_i_of_mu(obj,ilayer,mu)
             % Normalized (but not rescaled) layer shape function.
             
