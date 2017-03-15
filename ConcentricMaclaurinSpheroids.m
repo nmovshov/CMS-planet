@@ -400,8 +400,11 @@ classdef ConcentricMaclaurinSpheroids < handle
                 lh.LineWidth = 2;
             end
             
-            xlabel('$\lambda$')
-            ylabel('$J_{i,n}/J_n$')
+            xlabel('$\lambda$', 'fontsize', 12)
+            ylabel('$J_{i,n}/J_n$', 'fontsize', 12)
+            if cumul
+                ylabel('cumulative $J_{n}(a)/J_n$', 'fontsize', 12)
+            end
             gh = legend(ah, 'show','location','nw');
             gh.FontSize = 11;
         end
