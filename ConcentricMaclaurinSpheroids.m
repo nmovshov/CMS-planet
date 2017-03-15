@@ -376,11 +376,13 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
         end
         
-        function ah = plot_contribution_function(obj,n)
+        function ah = plot_contribution_function(obj,n,cumul)
             % Plot J_{i,n} against lambda_i.
             
-            if nargin == 1, n = 2:2:10; end
+            if nargin < 2, n = 2:2:10; end
+            if nargin < 3, cumul = true; end
             validateattributes(n, {'numeric'}, {'positive','<=',obj.opts.kmax})
+            validateattributes(cumul, {'logical'}, {'scalar'})
             
             fh = figure;
             set(fh, 'defaultTextInterpreter', 'latex')
@@ -389,11 +391,15 @@ classdef ConcentricMaclaurinSpheroids < handle
             ah.Box = 'on';
             hold(ah, 'on')
             for k=1:length(n)
-                Ji = (obj.lambdas.^n(k)).*obj.Js.tilde(:,n(k)+1);
-                Ji = Ji/obj.Jn(n(k));
+                Ji = abs((obj.lambdas.^n(k)).*obj.Js.tilde(:,n(k)+1));
+                if cumul, Ji = cumsum(Ji); end
+                Ji = Ji/max(Ji);
+                if Ji(1) == 0, Ji(1) = NaN; end
                 lh = plot(ah, obj.lambdas, Ji);
                 lh.DisplayName = sprintf('$J_{%d}$', n(k));
+                lh.LineWidth = 2;
             end
+            
             xlabel('$\lambda$')
             ylabel('$J_{i,n}/J_n$')
             gh = legend(ah, 'show','location','nw');
