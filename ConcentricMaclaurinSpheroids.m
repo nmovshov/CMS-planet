@@ -30,7 +30,6 @@ classdef ConcentricMaclaurinSpheroids < handle
         Pnone        % values of Legendre polynomials at pole
         gws          % weight factors for Gauss integration (correspond to mus)
         zeta1s       % normalized rescaled level-surface polar radii
-        lamratpow    % stores values of lamdas-ratios-powers for quick retrieval
         realVpu      % stores values of Vpu for quick retrieval
         realequiU    % stores values of equiUpu for quick access
         os           % optimset struct for use by fzero
@@ -38,6 +37,9 @@ classdef ConcentricMaclaurinSpheroids < handle
         fullyCooked  % flag indicating successful convergence
         realVpuMod   % flag triggering recalculation of realVpu
         realequiUMod % flag triggering recalculation of realequiU
+    end
+    properties (Transient)
+        lamratpow    % stores values of lamdas-ratios-powers for quick retrieval
     end
     properties (Dependent) % Convenience names
         nlayers % number of layers
