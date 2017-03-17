@@ -38,7 +38,7 @@ else
     n1 = fix(lamstrat(1)*(N - 1));
     n2 = N - n1 - 1;
     dl1 = lamstrat(2)/(n1 - 1);
-    dl2 = (1 - lamstrat(2) - x(7))/(n2);
+    dl2 = (1 - lamstrat(2) - x(7))/n2;
     lam1 = linspace(1 - dl1/2, (1 - lamstrat(2)), n1);
     lam2 = linspace((1 - lamstrat(2)) - dl2, x(7), n2);
     cmp.cms.lambdas = [1, lam1, lam2]';
