@@ -17,8 +17,8 @@ function cmp = single_polytrope_w_core(N, x, lamstrat)
 %    planet, leaving about N/4 layers to fill the bottom 80%. Passing [r, r] gives
 %    approximately equal spacing throughout the planet. (Approximately because a
 %    single half-width layer of zero density is always reserved for the surface.)
-%    However if x(7)>0.2 or if x(7)>(1-lamstrat(2)) then we revert to equally
-%    spaced layers again. Note that when x(7) is close to (1-lamstrat(2)) you
+%    However if x(4)>0.2 or if x(4)>(1-lamstrat(2)) then we revert to equally
+%    spaced layers again. Note that when x(4) is close to (1-lamstrat(2)) you
 %    might be better of using equal spacing!
 
 narginchk(2,3)
