@@ -38,7 +38,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         realVpuMod   % flag triggering recalculation of realVpu
         realequiUMod % flag triggering recalculation of realequiU
     end
-    properties (Transient)
+    properties (Access = private, Transient = false)
         lamratpow    % stores values of lamdas-ratios-powers for quick retrieval
     end
     properties (Dependent) % Convenience names
@@ -1064,6 +1064,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.realequiU = s.realequiU;
             obj.realVpuMod = s.realVpuMod;
             obj.realequiUMod = s.realequiUMod;
+            obj.lamratpow = s.lamratpow;
         end
         
     end % End of static methods block
