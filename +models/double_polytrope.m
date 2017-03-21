@@ -21,7 +21,7 @@ function cmp = double_polytrope(N, x, lamstrat)
 narginchk(2,3)
 if nargin == 2, lamstrat = [2/3, 1/2]; end
 validateattributes(lamstrat, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
-assert(x(5)>0 && x(5)<1, 'The transition must be 0 < R_trans < 1.')
+assert(x(5)>0 && x(5)<1, 'The transition must be 0<R<1.')
 
 cmp = CMSPlanet(N);
 
@@ -33,7 +33,7 @@ lam1 = linspace(1 - dl1/2, (1 - lamstrat(2)), n1);
 lam2 = linspace((1 - lamstrat(2)) - dl2, dl2, n2);
 mylambdas = [1, lam1, lam2]';
 
-% Replace lambda_tind as to match the transition
+% Replace lambda_tind to match the transition
 [~, tind] = min(abs(mylambdas-x(5)));
 assert(tind > 2, 'The transition is too close to the surface and the first polytrope has zero layers.')
 mylambdas(tind) = x(5);

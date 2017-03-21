@@ -24,6 +24,9 @@ function cmp = triple_polytrope(N, x, lamstrat)
 narginchk(2,3)
 if nargin == 2, lamstrat = [2/3, 1/2]; end
 validateattributes(lamstrat, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
+assert(x(7)>0 && x(7)<1, 'The first transition must be 0<R<1.')
+assert(x(8)>0 && x(8)<1, 'The second transition must be 0<R<1.')
+assert(x(8)<x(7), 'The second transition must be before the first transition.')
 
 cmp = CMSPlanet(N);
 
@@ -33,24 +36,27 @@ dl1 = lamstrat(2)/(n1 - 1);
 dl2 = (1 - lamstrat(2))/(n2 + 1);
 lam1 = linspace(1 - dl1/2, (1 - lamstrat(2)), n1);
 lam2 = linspace((1 - lamstrat(2)) - dl2, dl2, n2);
-cmp.cms.lambdas = [1, lam1, lam2]';
+mylambdas = [1, lam1, lam2]';
 
 eos0 = barotropes.ConstDensity(0);
 eos1 = barotropes.Polytrope(x(1), x(2));
 eos2 = barotropes.Polytrope(x(3), x(4));
 eos3 = barotropes.Polytrope(x(5), x(6));
-assert(x(7) <= 1 && x(7) >= x(8) && x(8) >= 0)
-tind = find(cmp.cms.lambdas <= x(7), 1) - 1;
-if isempty(tind), tind = N; end
-tind = min(max(tind, 1), N);
-cind = find(cmp.cms.lambdas <= x(8), 1) - 1;
-if isempty(cind), cind = N; end
-cind = min(max(cind, 1), N);
-assert(cind > tind,...
-    'Degenerate model: transition layers must be monotonic increasing.')
+
+% Replace lambda_tind to match the transition
+[~, tind] = min(abs(mylambdas-x(7)));
+assert(tind > 2, 'The first transition is too close to the surface and the polytrope has zero layers.')
+mylambdas(tind) = x(7);
+
+% Replace lambda_cind to match the transition
+[~, cind] = min(abs(mylambdas-x(8)));
+assert(cind > tind, 'The transitions are too close each other and the second polytrope has zero layers.')
+mylambdas(cind) = x(8);
+cmp.cms.lambdas = mylambdas;
+
 cmp.eos = [eos0;...
-    repmat(eos1, tind - 1, 1);...
+    repmat(eos1, tind - 2, 1);...
     repmat(eos2, cind - tind, 1);...
-    repmat(eos3, N - cind, 1)];
+    repmat(eos3, N - cind + 1, 1)];
 
 end

@@ -27,13 +27,15 @@ function cmp = double_polytrope_w_core(N, x, lamstrat)
 narginchk(2,3)
 if nargin == 2, lamstrat = [2/3, 1/2]; end
 validateattributes(lamstrat, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
-if x(7) <= 0, x(7) = eps; end
+assert(x(5)>0 && x(5)<1, 'The transition must be 0<R<1.')
+assert(x(7)>0 && x(7)<1, 'The core must have a radius 0<R<1.')
+assert(x(7)<x(5), 'The core radius must be smaller than the transition radius.')
 
 cmp = CMSPlanet(N);
 
 if (x(7) > 0.2) || (x(7) >= (1 - lamstrat(2)))
     dl = (1 - x(7))/N;
-    cmp.cms.lambdas = [1, linspace(1 - dl/2, x(7), N - 1)]';
+    mylambdas = [1, linspace(1 - dl/2, x(7), N - 1)]';
 else
     n1 = fix(lamstrat(1)*(N - 1));
     n2 = N - n1 - 1;
@@ -41,16 +43,21 @@ else
     dl2 = (1 - lamstrat(2) - x(7))/n2;
     lam1 = linspace(1 - dl1/2, (1 - lamstrat(2)), n1);
     lam2 = linspace((1 - lamstrat(2)) - dl2, x(7), n2);
-    cmp.cms.lambdas = [1, lam1, lam2]';
+    mylambdas = [1, lam1, lam2]';
 end
+
+% Replace lambda_tind to match the transition
+[~, tind] = min(abs(mylambdas-x(5)));
+assert(tind > 2, 'The transition is too close to the surface and the first polytrope has zero layers.')
+assert(tind < N, 'The transition is too close to the core and the second polytrope has zero layers.')
+mylambdas(tind) = x(5);
+cmp.cms.lambdas = mylambdas;
 
 eos0 = barotropes.ConstDensity(0);
 eos1 = barotropes.Polytrope(x(1), x(2));
 eos2 = barotropes.Polytrope(x(3), x(4));
 eos3 = barotropes.ConstDensity(x(6));
-assert(x(5) > x(7) && x(5)<=1)
-tind = find(cmp.cms.lambdas <= x(5), 1) - 1;
-tind = min(max(tind, 1), N - 1);
-cmp.eos = [eos0; repmat(eos1, tind - 1, 1); repmat(eos2, N - tind - 1, 1); eos3];
+
+cmp.eos = [eos0; repmat(eos1, tind - 2, 1); repmat(eos2, N - tind, 1); eos3];
 
 end

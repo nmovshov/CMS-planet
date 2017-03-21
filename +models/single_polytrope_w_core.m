@@ -24,7 +24,7 @@ function cmp = single_polytrope_w_core(N, x, lamstrat)
 narginchk(2,3)
 if nargin == 2, lamstrat = [2/3, 1/2]; end
 validateattributes(lamstrat, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
-assert(x(4) >0 && x(4)<1, 'The core must have a radius 0 < R_core < 1.')
+assert(x(4)>0 && x(4)<1, 'The core must have a radius 0<R<1.')
 
 cmp = CMSPlanet(N);
 
