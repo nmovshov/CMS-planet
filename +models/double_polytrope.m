@@ -21,6 +21,7 @@ function cmp = double_polytrope(N, x, lamstrat)
 narginchk(2,3)
 if nargin == 2, lamstrat = [2/3, 1/2]; end
 validateattributes(lamstrat, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
+assert(x(5)>0 && x(5)<1, 'The transition must be 0 < R_trans < 1.')
 
 cmp = CMSPlanet(N);
 
@@ -30,15 +31,18 @@ dl1 = lamstrat(2)/(n1 - 1);
 dl2 = (1 - lamstrat(2))/(n2 + 1);
 lam1 = linspace(1 - dl1/2, (1 - lamstrat(2)), n1);
 lam2 = linspace((1 - lamstrat(2)) - dl2, dl2, n2);
-cmp.cms.lambdas = [1, lam1, lam2]';
+mylambdas = [1, lam1, lam2]';
+
+% Replace lambda_tind as to match the transition
+[~, tind] = min(abs(mylambdas-x(5)));
+assert(tind > 2, 'The transition is too close to the surface and the first polytrope has zero layers.')
+mylambdas(tind) = x(5);
+cmp.cms.lambdas = mylambdas;
 
 eos0 = barotropes.ConstDensity(0);
 eos1 = barotropes.Polytrope(x(1), x(2));
 eos2 = barotropes.Polytrope(x(3), x(4));
-assert(x(5) >=0 && x(5)<=1)
-tind = find(cmp.cms.lambdas <= x(5), 1) - 1;
-if isempty(tind), tind = N; end
-tind = min(max(tind, 1), N);
-cmp.eos = [eos0; repmat(eos1, tind - 1, 1); repmat(eos2, N - tind, 1)];
+
+cmp.eos = [eos0; repmat(eos1, tind - 2, 1); repmat(eos2, N - tind + 1, 1)];
 
 end
