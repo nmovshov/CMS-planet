@@ -38,9 +38,6 @@ classdef ConcentricMaclaurinSpheroids < handle
         realVpuMod   % flag triggering recalculation of realVpu
         realequiUMod % flag triggering recalculation of realequiU
     end
-    properties (Access = private, Transient = false)
-        lamratpow    % stores values of lamdas-ratios-powers for quick retrieval
-    end
     properties (Dependent) % Convenience names
         nlayers % number of layers
         qrot    % dimensionless rotation parameter
@@ -211,12 +208,13 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Update level surfaces using current value of Js.
             
             % Precompute powers of ratios of lambdas
-            if isempty(obj.lamratpow)
-                obj.lamratpow = nan(obj.opts.kmax+2, obj.N, obj.N);
+            persistent lamratpow
+            if isempty(lamratpow)
+                lamratpow = nan(obj.opts.kmax+2, obj.N, obj.N);
                 for ii=1:obj.N
                     for jj=1:obj.N
                         for kk=1:obj.opts.kmax+2
-                            obj.lamratpow(kk,ii,jj) =...
+                            lamratpow(kk,ii,jj) =...
                                 (obj.lambdas(ii)/obj.lambdas(jj))^(kk-1);
                         end
                     end
@@ -236,7 +234,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             newzetas = NaN(size(obj.zetas));
             parfor ii=1:obj.nlayers
                 for alfa=1:nbLats
-                    newzetas(ii,alfa) = obj.zeta_j_of_alfa(ii,alfa); %#ok<PFBNS>
+                    newzetas(ii,alfa) = obj.zeta_j_of_alfa(ii,alfa,lamratpow); %#ok<PFBNS>
                 end
             end
             obj.zetas = newzetas;
@@ -379,6 +377,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function ah = plot_contribution_function(obj,n,cumul)
+            %FIXME: contribution by LAYERS NOT SPHEROIDS
             % Plot J_{i,n} against lambda_i.
             
             if nargin < 2, n = 2:2:10; end
@@ -679,14 +678,14 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
         end
         
-        function y = zeta_j_of_alfa(obj,jlayer,alfa)
+        function y = zeta_j_of_alfa(obj,jlayer,alfa,rats)
             % Find lvl surface of jth layer at colat mu(alfa).
             assert(jlayer > 0 && jlayer <= obj.nlayers)
             assert(alfa > 0 && alfa <= obj.opts.nangles)
             if jlayer == 1
-                fun = @(x)obj.eq50_alfa(x,alfa);
+                fun = @(x)obj.eq50_alfa(x,alfa,rats);
             else
-                fun = @(x)obj.eq51_alfa(x,jlayer,alfa);
+                fun = @(x)obj.eq51_alfa(x,jlayer,alfa,rats);
             end
             if strcmpi(obj.opts.rootfinder,'fzero')
                 %y = fzero(fun, [0.6, 1.02]);
@@ -697,7 +696,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
         end
         
-        function y = eq50_alfa(obj,zeta0,alfa)
+        function y = eq50_alfa(obj,zeta0,alfa,rats)
             % Equation 50 in Hubbard (2013) for fixed colatitudes.
             
             % Local variables
@@ -707,7 +706,6 @@ classdef ConcentricMaclaurinSpheroids < handle
             q = obj.opts.qrot;
             P0 = obj.Pnzero;
             Pmu = obj.Pnmu(:,alfa);
-            rats = obj.lamratpow;
             
             % Double sum in eq. (47)
             x1 = 0;
@@ -731,7 +729,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             y = U - U0;
         end
 
-        function y = eq51_alfa(obj,zeta_j,jj,alfa)
+        function y = eq51_alfa(obj,zeta_j,jj,alfa,rats)
             % Equation 51 in Hubbard (2013) for fixed colatitudes.
             
             % Local variables
@@ -744,7 +742,6 @@ classdef ConcentricMaclaurinSpheroids < handle
             q = obj.opts.qrot;
             P0 = obj.Pnzero;
             Pmu = obj.Pnmu(:,alfa);
-            rats = obj.lamratpow;
             
             % Double sum, row 1
             x1 = 0;
@@ -1064,7 +1061,6 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.realequiU = s.realequiU;
             obj.realVpuMod = s.realVpuMod;
             obj.realequiUMod = s.realequiUMod;
-            obj.lamratpow = s.lamratpow;
         end
         
     end % End of static methods block
