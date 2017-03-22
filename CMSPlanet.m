@@ -121,7 +121,7 @@ classdef CMSPlanet < handle
                     dJ = obj.cms.update_Js;
                     if (verb > 1), fprintf('  '), end
                 else
-                    dJ = 0;
+                    dJ = obj.cms.update_Js;
                 end
                 dro = obj.update_densities;
                 
