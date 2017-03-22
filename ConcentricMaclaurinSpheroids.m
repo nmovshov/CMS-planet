@@ -177,6 +177,30 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
         end
         
+        function set_Js_guess(obj,Js_0)
+            % Update initial guess of gravitational moments.
+            
+            % Fail on cooked objects
+            % Warning: Will not work for CMSPlanets cooked object
+            if (obj.cooked)
+                warning('Cooked object. Set Js initial guess only before %s.relax()',inputname(1))
+            end
+            
+            % Optional communication
+            verb = obj.opts.verbosity;
+            if (verb > 1)
+                fprintf('    Updating guess on Js....')
+            end
+            
+            obj.Js = Js_0;
+            obj.Js.Jn = obj.Jn();
+            
+            % Optional communication
+            if (verb > 1)
+                fprintf('done.\n')
+            end
+        end
+        
         function update_shape(obj)
             % Update zetas plus polar radii.
             
@@ -382,7 +406,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             if nargin < 2, n = 2:2:10; end
             if nargin < 3, cumul = true; end
-            validateattributes(n, {'numeric'}, {'positive','<=',obj.opts.kmax})
+            validateattributes(n, {'numeric'}, {'>=',0,'<=',obj.opts.kmax})
             validateattributes(cumul, {'logical'}, {'scalar'})
             
             fh = figure;
