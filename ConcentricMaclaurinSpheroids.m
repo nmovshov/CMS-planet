@@ -382,7 +382,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             
             if nargin < 2, n = 2:2:10; end
             if nargin < 3, cumul = true; end
-            validateattributes(n, {'numeric'}, {'positive','<=',obj.opts.kmax})
+            validateattributes(n, {'numeric'}, {'>=0', 0, '<=',obj.opts.kmax})
             validateattributes(cumul, {'logical'}, {'scalar'})
             
             fh = figure;
