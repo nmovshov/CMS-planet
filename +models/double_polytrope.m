@@ -25,8 +25,10 @@ function cmp = double_polytrope(N, x, lamstrat, forcematch)
 narginchk(2,4)
 if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
 if ((nargin < 4) || isempty(forcematch)), forcematch = false; end
+validateattributes(N, {'numeric'}, {'positive', 'integer'}, '', 'N', 1)
+validateattributes(x, {'numeric'}, {'vector', 'numel', 5, 'nonnegative'}, 2)
 validateattributes(lamstrat, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
-validateattributes(forcematch, {'logical'}, {'scalar'})
+validateattributes(forcematch, {'logical'}, {'scalar'}, '', 'forcematch', 4)
 assert(x(5)>0 && x(5)<1, 'Transition (normalized) radius must be in (0,1).')
 
 cmp = CMSPlanet(N);

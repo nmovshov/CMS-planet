@@ -15,7 +15,9 @@ function cmp = single_polytrope(N, x, lamstrat)
 %    single half-width layer of zero density is always reserved for the surface.)
 
 narginchk(2,3)
-if nargin == 2, lamstrat = [2/3, 1/2]; end
+if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
+validateattributes(N, {'numeric'}, {'positive', 'integer'}, '', 'N', 1)
+validateattributes(x, {'numeric'}, {'vector', 'numel', 2, 'nonnegative'}, 2)
 validateattributes(lamstrat, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
 
 cmp = CMSPlanet(N);

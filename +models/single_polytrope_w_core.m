@@ -21,7 +21,9 @@ function cmp = single_polytrope_w_core(N, x, lamstrat)
 %    might be better off using equal spacing!
 
 narginchk(2,3)
-if nargin == 2, lamstrat = [2/3, 1/2]; end
+if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
+validateattributes(N, {'numeric'}, {'positive', 'integer'}, '', 'N', 1)
+validateattributes(x, {'numeric'}, {'vector', 'numel', 4, 'nonnegative'}, 2)
 validateattributes(lamstrat, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
 assert(x(4) > 0 && x(4) < 1, 'The core must have a normalized radius in (0,1).')
 
