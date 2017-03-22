@@ -3,9 +3,8 @@ function cmp = single_polytrope(N, x, lamstrat)
 %    SINGLE_POLYTROPE(N, x) returns an N-layer CMSPlanet object with a
 %    barotropes.Polytrope with constant x(1) and index x(2) assigned to layers
 %    2:N. Layer 1 is assigned a zero density barotropes.ConstDensity eos and is
-%    approximately half the width of the layers below. The layer spacing is
-%    designed to minimize discretization error by concentrating 2/3 of the
-%    available layers in the top 0.5 of the planet.
+%    approximately half the width of the layers below. The default layer spacing
+%    concentrates 2/3 of the available layers in the top 0.5 of the planet.
 %
 %    SINGLE_POLYTROPE(N, x, lamstrat) uses the 2-element vector lamstrat to
 %    specify the layer spacing strategy. Approximately lamstrat(1) of available
@@ -16,7 +15,9 @@ function cmp = single_polytrope(N, x, lamstrat)
 %    single half-width layer of zero density is always reserved for the surface.)
 
 narginchk(2,3)
-if nargin == 2, lamstrat = [2/3, 1/2]; end
+if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
+validateattributes(N, {'numeric'}, {'positive', 'integer'}, '', 'N', 1)
+validateattributes(x, {'numeric'}, {'vector', 'numel', 2, 'nonnegative'}, 2)
 validateattributes(lamstrat, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
 
 cmp = CMSPlanet(N);
