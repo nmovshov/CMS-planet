@@ -487,6 +487,24 @@ classdef ConcentricMaclaurinSpheroids < handle
             if (nargout == 1), ah = pax; end            
         end
         
+        function set_Js_guess(obj, Js_0)
+            % Manually set Js struct with initial values.
+            
+            if (obj.cooked)
+                warning('Manual set of Js struct not allowed on cooked objects.')
+                return
+            end
+            assert(isstruct(Js_0) && isscalar(Js_0))
+            assert(isequal(fieldnames(Js_0),fieldnames(obj.Js)))
+            fn = fieldnames(Js_0);
+            for k=1:5
+                assert(isequal(size(Js_0.(fn{k})), size(obj.Js.(fn{k}))))
+            end
+            
+            obj.Js = Js_0;
+            obj.Js.Jn = obj.Jn();
+        end
+        
     end % End of public methods block
     
     %% Private methods
