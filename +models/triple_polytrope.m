@@ -1,4 +1,4 @@
-function cmp = triple_polytrope(N, x, lamstrat)
+function cmp = triple_polytrope(N, x, lamstrat, forcematch)
 %TRIPLE_POLYTROPE Model planet approximated by three polytropes.
 %    TRIPLE_POLYTROPE(N, x) returns an N-layer CMSPlanet object with three
 %    barotropes.Polytrope eos objects. First polytrope defined by constant x(1)
@@ -20,10 +20,16 @@ function cmp = triple_polytrope(N, x, lamstrat)
 %    planet, leaving about N/4 layers to fill the bottom 80%. Passing [r, r] gives
 %    approximately equal spacing throughout the planet. (Approximately because a
 %    single half-width layer of zero density is always reserved for the surface.)
+%
+%    DOUBLE_POLYTROPE(..., forcematch) if forcematch=true forces the normalized
+%    radius of the transition layers to exactly match x(7) and x(8). This is
+%    applied after the lambda spacing strategy.
 
 narginchk(2,3)
-if nargin == 2, lamstrat = [2/3, 1/2]; end
+if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
+if ((nargin < 4) || isempty(forcematch)), forcematch = false; end
 validateattributes(lamstrat, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
+validateattributes(forcematch, {'logical'}, {'scalar'})
 assert(x(7)>0 && x(7)<1, 'The first transition must be 0<R<1.')
 assert(x(8)>0 && x(8)<1, 'The second transition must be 0<R<1.')
 assert(x(8)<x(7), 'The second transition must be before the first transition.')
@@ -45,13 +51,15 @@ eos3 = barotropes.Polytrope(x(5), x(6));
 
 % Replace lambda_tind to match the transition
 [~, tind] = min(abs(mylambdas-x(7)));
-assert(tind > 2, 'The first transition is too close to the surface and the polytrope has zero layers.')
-mylambdas(tind) = x(7);
+assert(tind > 2,...
+    'The first transition is too close to the surface, the first polytrope has zero layers.')
+if forcematch, mylambdas(tind) = x(7); end
 
 % Replace lambda_cind to match the transition
 [~, cind] = min(abs(mylambdas-x(8)));
-assert(cind > tind, 'The transitions are too close each other and the second polytrope has zero layers.')
-mylambdas(cind) = x(8);
+assert(cind > tind,...
+    'The transitions are too close each other, the second polytrope has zero layers.')
+if forcematch, mylambdas(cind) = x(8); end
 cmp.cms.lambdas = mylambdas;
 
 cmp.eos = [eos0;...

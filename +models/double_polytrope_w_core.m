@@ -1,4 +1,4 @@
-function cmp = double_polytrope_w_core(N, x, lamstrat)
+function cmp = double_polytrope_w_core(N, x, lamstrat, forcematch)
 %DOUBLE_POLYTROPE_W_CORE Two polytrope and core model planet.
 %    DOUBLE_POLYTROPE_W_CORE(N, x) returns an N-layer CMSPlanet object with two
 %    barotropes.Polytrope eos objects. First polytrope defined by constant x(1)
@@ -23,10 +23,16 @@ function cmp = double_polytrope_w_core(N, x, lamstrat)
 %    However if x(7)>0.2 or if x(7)>(1-lamstrat(2)) then we revert to equally
 %    spaced layers again. Note that when x(7) is close to (1-lamstrat(2)) you
 %    might be better of using equal spacing!
+%
+%    DOUBLE_POLYTROPE(..., forcematch) if forcematch=true forces the normalized
+%    radius of the transition layer to exactly match x(5). This is applied after
+%    the lambda spacing strategy.
 
 narginchk(2,3)
-if nargin == 2, lamstrat = [2/3, 1/2]; end
+if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
+if ((nargin < 4) || isempty(forcematch)), forcematch = false; end
 validateattributes(lamstrat, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
+validateattributes(forcematch, {'logical'}, {'scalar'})
 assert(x(5)>0 && x(5)<1, 'The transition must be 0<R<1.')
 assert(x(7)>0 && x(7)<1, 'The core must have a radius 0<R<1.')
 assert(x(7)<x(5), 'The core radius must be smaller than the transition radius.')
@@ -48,9 +54,11 @@ end
 
 % Replace lambda_tind to match the transition
 [~, tind] = min(abs(mylambdas-x(5)));
-assert(tind > 2, 'The transition is too close to the surface and the first polytrope has zero layers.')
-assert(tind < N, 'The transition is too close to the core and the second polytrope has zero layers.')
-mylambdas(tind) = x(5);
+assert(tind > 2,...
+    'The transition is too close to the surface, the first polytrope has zero layers.')
+assert(tind < N,...
+    'The transition is too close to the core, the second polytrope has zero layers.')
+if forcematch, mylambdas(tind) = x(5); end
 cmp.cms.lambdas = mylambdas;
 
 eos0 = barotropes.ConstDensity(0);
