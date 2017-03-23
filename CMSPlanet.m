@@ -232,7 +232,7 @@ classdef CMSPlanet < handle
             obj.rhoi = newro;
         end
         
-        function ah = plot_equipotential_surfaces(obj, bSC)
+        function [ah, lh] = plot_equipotential_surfaces(obj, bSC)
             % Visualize a CMSPlanet object by plotting equipotential contours.
             
             % Require R2016a to use the amazing polarplot features
@@ -242,7 +242,7 @@ classdef CMSPlanet < handle
             end
             
             if nargin == 1, bSC = true; end
-            ah = obj.cms.plot(bSC);
+            [ah, lh] = obj.cms.plot(bSC);
             
             % Add a colorbar
             if ~isempty(obj.rhoi)
@@ -259,7 +259,7 @@ classdef CMSPlanet < handle
             end
         end
 
-        function ah = plot_rho_of_r(obj, varargin)
+        function [ah, lh, gh] = plot_rho_of_r(obj, varargin)
             % Plot rho(r) where r is either equatorial or mean radius.
             
             % Don't bother if uninitialized
@@ -341,7 +341,7 @@ classdef CMSPlanet < handle
             
         end
         
-        function ah = plot_barotrope(obj, varargin)
+        function [ah, lh, gh] = plot_barotrope(obj, varargin)
             % Plot P(rho) of current model and optionally of input barotrope.
             
             % Don't bother if there is no pressure
@@ -418,29 +418,29 @@ classdef CMSPlanet < handle
             end
             
             % Plot the lines (pressure in GPa)
-            lh = stairs(x_cms, y_cms/1e9);
-            lh.LineWidth = 2;
+            lh(1) = stairs(x_cms, y_cms/1e9);
+            lh(1).LineWidth = 2;
             if isempty(pr.axes)
-                lh.Color = [0.31, 0.31, 0.31];
+                lh(1).Color = [0.31, 0.31, 0.31];
             end
             if isempty(obj.name)
-                lh.DisplayName = 'CMS model';
+                lh(1).DisplayName = 'CMS model';
             else
-                lh.DisplayName = obj.name;
+                lh(1).DisplayName = obj.name;
             end
             
             if pr.showinput && any(isfinite(y_bar))
-                lh = line(x_bar, y_bar/1e9);
-                lh.Color = 'r';
-                lh.LineStyle = '--';
-                lh.DisplayName = 'input barotrope';
+                lh(end+1) = line(x_bar, y_bar/1e9);
+                lh(end).Color = 'r';
+                lh(end).LineStyle = '--';
+                lh(end).DisplayName = 'input barotrope';
             end
             
             if pr.showscaledinput && any(isfinite(y_bar_scl))
-                lh = line(x_bar, y_bar_scl/1e9);
-                lh.Color = [0, 0.5, 0];
-                lh.LineStyle = '--';
-                lh.DisplayName = 'input barotrope ($\beta$-scaled)';
+                lh(end+1) = line(x_bar, y_bar_scl/1e9);
+                lh(end).Color = [0, 0.5, 0];
+                lh(end).LineStyle = '--';
+                lh(end).DisplayName = 'input barotrope ($\beta$-scaled)';
             end
             
             % Style and annotate axes
@@ -462,7 +462,7 @@ classdef CMSPlanet < handle
             
         end
         
-        function ah = plot_contribution_function(obj,n,cumul)
+        function [ah, lh, gh] = plot_contribution_function(obj,n,cumul)
             % Plot J_{i,n} against lambda_i.
             
             if nargin < 2, n = 2:2:10; end
@@ -476,14 +476,15 @@ classdef CMSPlanet < handle
             ah = axes;
             ah.Box = 'on';
             hold(ah, 'on')
+            lh = gobjects(size(n));
             for k=1:length(n)
                 Ji = abs((obj.cms.lambdas.^n(k)).*obj.cms.Js.tilde(:,n(k)+1));
                 if cumul, Ji = cumsum(Ji); end
                 Ji = Ji/max(Ji);
                 if Ji(1) == 0, Ji(1) = NaN; end
-                lh = plot(ah, obj.cms.lambdas, Ji);
-                lh.DisplayName = sprintf('$J_{%d}$', n(k));
-                lh.LineWidth = 2;
+                lh(k) = plot(ah, obj.cms.lambdas, Ji);
+                lh(k).DisplayName = sprintf('$J_{%d}$', n(k));
+                lh(k).LineWidth = 2;
             end
             
             xlabel('$a/a_0$', 'fontsize', 12)
