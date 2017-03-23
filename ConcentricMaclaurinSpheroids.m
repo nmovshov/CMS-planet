@@ -376,13 +376,13 @@ classdef ConcentricMaclaurinSpheroids < handle
             end
         end
         
-        function ah = plot_contribution_function(obj,n,cumul)
+        function [ah, lh, gh] = plot_contribution_function(obj,n,cumul)
             %FIXME: contribution by LAYERS NOT SPHEROIDS
             % Plot J_{i,n} against lambda_i.
             
             if nargin < 2, n = 2:2:10; end
             if nargin < 3, cumul = true; end
-            validateattributes(n, {'numeric'}, {'>=0', 0, '<=',obj.opts.kmax})
+            validateattributes(n, {'numeric'}, {'>=', 0, '<=', obj.opts.kmax})
             validateattributes(cumul, {'logical'}, {'scalar'})
             
             fh = figure;
@@ -391,14 +391,15 @@ classdef ConcentricMaclaurinSpheroids < handle
             ah = axes;
             ah.Box = 'on';
             hold(ah, 'on')
+            lh = gobjects(size(n));
             for k=1:length(n)
                 Ji = abs((obj.lambdas.^n(k)).*obj.Js.tilde(:,n(k)+1));
                 if cumul, Ji = cumsum(Ji); end
                 Ji = Ji/max(Ji);
                 if Ji(1) == 0, Ji(1) = NaN; end
-                lh = plot(ah, obj.lambdas, Ji);
-                lh.DisplayName = sprintf('$J_{%d}$', n(k));
-                lh.LineWidth = 2;
+                lh(k) = plot(ah, obj.lambdas, Ji);
+                lh(k).DisplayName = sprintf('$J_{%d}$', n(k));
+                lh(k).LineWidth = 2;
             end
             
             xlabel('$\lambda$', 'fontsize', 12)
@@ -423,7 +424,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             xi = obj.lambdas(ilayer)*obj.zeta_j_of_mu(ilayer, mu);
         end
         
-        function ah = plot(obj, bSC)
+        function [pax, lh] = plot(obj, bSC)
             % Visualize a CMS object, return axes handle.
             
             % Require R2016a to use the amazing polarplot features
@@ -483,8 +484,6 @@ classdef ConcentricMaclaurinSpheroids < handle
                 end
             end
             
-            % Return handle if requested
-            if (nargout == 1), ah = pax; end            
         end
         
         function set_Js_guess(obj, Js_0)
