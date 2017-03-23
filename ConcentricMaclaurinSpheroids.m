@@ -494,11 +494,15 @@ classdef ConcentricMaclaurinSpheroids < handle
                 warning('Manual set of Js struct not allowed on cooked objects.')
                 return
             end
-            assert(isstruct(Js_0) && isscalar(Js_0))
-            assert(isequal(fieldnames(Js_0),fieldnames(obj.Js)))
+            
+            assert(isstruct(Js_0) && isscalar(Js_0),...
+                'One structure must be given in input!')
+            assert(isequal(fieldnames(Js_0),fieldnames(obj.Js)),...
+                'The structure is not correct!')
             fn = fieldnames(Js_0);
             for k=1:5
-                assert(isequal(size(Js_0.(fn{k})), size(obj.Js.(fn{k}))))
+                assert(isequal(size(Js_0.(fn{k})), size(obj.Js.(fn{k}))),...
+                    'The field ''%s'' has not the correct size!', fn{k})
             end
             
             obj.Js = Js_0;
@@ -833,7 +837,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.tilde_prime = zeros(nlay, (nmom+1));
             obj.Js.pprime = zeros(nlay, 1);
             obj.Js.tpprime = zeros(nlay, 1);
-            obj.Js.Jn = zeros(1, nmom+1);
+            obj.Js.Jn = zeros(1, nmom/2+1);
             den = sum(obj.deltas.*obj.lambdas.^3);
             obj.Js.tilde(:,1) = -(obj.deltas.*obj.lambdas.^3)/den;
             obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
