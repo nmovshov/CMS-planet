@@ -208,15 +208,12 @@ classdef ConcentricMaclaurinSpheroids < handle
             % Update level surfaces using current value of Js.
             
             % Precompute powers of ratios of lambdas
-            persistent lamratpow
-            if isempty(lamratpow)
-                lamratpow = nan(obj.opts.kmax+2, obj.N, obj.N);
-                for ii=1:obj.N
-                    for jj=1:obj.N
-                        for kk=1:obj.opts.kmax+2
-                            lamratpow(kk,ii,jj) =...
-                                (obj.lambdas(ii)/obj.lambdas(jj))^(kk-1);
-                        end
+            lamratpow = nan(obj.opts.kmax+2, obj.N, obj.N);
+            for ii=1:obj.N
+                for jj=1:obj.N
+                    for kk=1:obj.opts.kmax+2
+                        lamratpow(kk,ii,jj) =...
+                            (obj.lambdas(ii)/obj.lambdas(jj))^(kk-1);
                     end
                 end
             end
