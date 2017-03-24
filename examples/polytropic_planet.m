@@ -58,7 +58,7 @@ cmp.eos = [repmat(eos_env,N-1,1); eos_core];
 
 %% To speed up convergence try to start with an approximate density structure
 % We use the density profile of a non-rotating n=1 polytrope but we have to
-% guard against negative densities and mismatched dimensions. The benefit is a
+% guard against negative densities and mismatched dimensions. The benefit is
 % skipping a few iterations of relaxation loop. Comment out this section to
 % start from a uniform density structure.
 a = double(sqrt(2*pi*G/poly_K));
