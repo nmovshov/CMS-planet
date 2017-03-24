@@ -6,29 +6,49 @@ function cmp = single_polytrope(N, x, lamstrat)
 %    approximately half the width of the layers below. The default layer spacing
 %    concentrates 2/3 of the available layers in the top 0.5 of the planet.
 %
-%    SINGLE_POLYTROPE(N, x, lamstrat) uses the 2-element vector lamstrat to
-%    specify the layer spacing strategy. Approximately lamstrat(1) of available
-%    layers will be distributed in the top lamstrat(2) of the planet. For example,
-%    passing [3/4, 0.2] concentrates the layers heavily in the top 20% of the
-%    planet, leaving about N/4 layers to fill the bottom 80%. Passing [r, r] gives
-%    approximately equal spacing throughout the planet. (Approximately because a
-%    single half-width layer of zero density is always reserved for the surface.)
+%    SINGLE_POLYTROPE(N, x, lamstrat) where lamstrat is a 2-element vector lets
+%    you specify the layer spacing strategy. Approximately lamstrat(1) of
+%    available layers will be distributed in the top lamstrat(2) of the planet.
+%    For example, passing [3/4, 0.2] concentrates the layers heavily in the top
+%    20% of the planet, leaving about N/4 layers to fill the bottom 80%. A single
+%    half-width layer of zero density is still reserved for the surface. To use
+%    the default spacing pass lambda=[].
+%
+%    SINGLE_POLYTROPE(N, x, lamstrat) where lamstrat is a function handle lets you
+%    specify the lambda spacing completely. Pass a handle to a function that takes
+%    a single scalar integer (number of layers) and returns a vector of that
+%    length with values in the interval (0, 1], for normalized layer radii. For
+%    example, to set layers with equally spaced radii use
+%    lamstrat=@(n)linspace(1,1/n,n).
 
 narginchk(2,3)
 if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
 validateattributes(N, {'numeric'}, {'positive', 'integer'}, '', 'N', 1)
 validateattributes(x, {'numeric'}, {'vector', 'numel', 2, 'nonnegative'}, 2)
-validateattributes(lamstrat, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
+validateattributes(lamstrat, {'numeric','function_handle'}, {}, '', 'lamstrat', 3)
+if isnumeric(lamstrat)
+    validateattributes(lamstrat, {'numeric'},...
+        {'vector', 'numel', 2, '>', 0, '<', 1}, '', 'lamstrat', 3)
+end
 
 cmp = CMSPlanet(N);
 
-n1 = fix(lamstrat(1)*(N - 1));
-n2 = N - n1 - 1;
-dl1 = lamstrat(2)/(n1 - 1);
-dl2 = (1 - lamstrat(2))/(n2 + 1);
-lam1 = linspace(1 - dl1/2, (1 - lamstrat(2)), n1);
-lam2 = linspace((1 - lamstrat(2)) - dl2, dl2, n2);
-cmp.cms.lambdas = [1, lam1, lam2]';
+if (isa(lamstrat, 'function_handle'))
+    lambdas = lamstrat(N);
+    assert(isnumeric(lambdas) && isvector(lambdas) && (numel(lambdas) == N),...
+        '@lamstrat(N) must return a vector of length N with values in (0,1].')
+    assert(all(lambdas > 0) && all(lambdas <= 1),...
+        '@lamstrat(N) must return a vector of length N with values in (0,1].')
+    cmp.cms.lambdas = lambdas;
+else
+    n1 = fix(lamstrat(1)*(N - 1));
+    n2 = N - n1 - 1;
+    dl1 = lamstrat(2)/(n1 - 1);
+    dl2 = (1 - lamstrat(2))/(n2 + 1);
+    lam1 = linspace(1 - dl1/2, (1 - lamstrat(2)), n1);
+    lam2 = linspace((1 - lamstrat(2)) - dl2, dl2, n2);
+    cmp.cms.lambdas = [1, lam1, lam2]';
+end
 
 eos0 = barotropes.ConstDensity(0);
 eos1 = barotropes.Polytrope(x(1), x(2));
