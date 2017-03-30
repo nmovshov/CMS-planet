@@ -1,5 +1,5 @@
 function lambdas = topheavy(N, skew, halftop)
-%COSINE Return a lambda distribution with top-heavy spacing.
+%TOPHEAVY Return a lambda distribution with top-heavy spacing.
 %    lambdas = TOPHEAVY(N) returns a vector of normalized radii with two thirds of
 %    them equally distributed in the top half and the rest equally distributed in
 %    the bottom half of the interval (0,1].
