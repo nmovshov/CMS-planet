@@ -4,16 +4,17 @@ function lambdas = equal_dr(N, halftop)
 %
 %    lambdas = EQUAL_DR(N, halftop) where halftop==true modifies the 2nd element
 %    of lambdas to make the thickness of the first layer be exactly half that of
-%    the second layer. The default is halftop=false.
+%    the other layers. The default is halftop=false.
 
 narginchk(1,2)
 if nargin == 1, halftop = false; end
 validateattributes(halftop, {'logical'}, {'scalar'})
 
-lambdas = linspace(1, 1/N, N)';
-
+dl = 1/N;
 if halftop
-    lambdas(2) = 1 - (1 - lambdas(3))/3;
+    lambdas = [1, (1 - dl/2):-dl:1/N];
+else
+    lambdas = 1:-dl:1/N;
 end
 
 end
