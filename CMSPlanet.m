@@ -113,7 +113,7 @@ classdef CMSPlanet < handle
                     fprintf('Baropass %d (of max %d)...\n',...
                         iter, obj.opts.MaxIterBar)
                 end
-                if (obj.qrot > 0) || any(obj.cms.zetas(:) < 1)
+                if obj.qrot > 0 || any(obj.cms.zetas(:) < 1) || any(obj.Js(2:end))
                     obj.cms.update_zetas;
                     if isequal(obj.opts.equipotential_squeeze, 'polar')
                         obj.cms.update_polar_radii;
@@ -121,7 +121,7 @@ classdef CMSPlanet < handle
                     dJ = obj.cms.update_Js;
                     if (verb > 1), fprintf('  '), end
                 else
-                    dJ = obj.cms.update_Js;
+                    dJ = 0;
                 end
                 dro = obj.update_densities;
                 
@@ -162,9 +162,11 @@ classdef CMSPlanet < handle
             obj.rhoi = obj.rhoi*obj.betanorm;
             
             % Update polar radii if we haven't already
-            if ~isequal(obj.opts.equipotential_squeeze, 'polar')
-                obj.cms.update_polar_radii;
-                if (verb > 1), fprintf('\n'), end
+            if obj.qrot > 0 || any(obj.cms.zetas(:) < 1) || any(obj.Js(2:end))
+                if ~isequal(obj.opts.equipotential_squeeze, 'polar')
+                    obj.cms.update_polar_radii;
+                    if (verb > 1), fprintf('\n'), end
+                end
             end
             
             % Flags and maybe warnings
