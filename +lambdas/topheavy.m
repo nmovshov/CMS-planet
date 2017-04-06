@@ -8,9 +8,9 @@ function lambdas = topheavy(N, skew, halftop)
 %    of them equally distributed in the interval [1-skew(2), 1] and the rest
 %    equally distributed in the interval (0, 1-skew(2)].
 %
-%    lambdas = TOPHEAVY(..., halftop) where halftop==true modifies the 2nd element
-%    of lambdas to make the thickness of the first layer be exactly half that of
-%    the other layers in the upper zone. The default is halftop=false.
+%    lambdas = TOPHEAVY(..., halftop) where halftop==true makes the thickness of
+%    the first layer be exactly half that of the other layers in the upper zone.
+%    The default is halftop=false.
 
 narginchk(1,3)
 if (nargin < 2) || isempty(skew), skew = [2/3, 1/2]; end

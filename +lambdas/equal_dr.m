@@ -2,9 +2,9 @@ function lambdas = equal_dr(N, halftop)
 %EQUAL_DR Return a lambda distribution with equally spaced radii.
 %    lambdas = EQUAL_DR(N) returns an N-vector of equally spaced normalized radii.
 %
-%    lambdas = EQUAL_DR(N, halftop) where halftop==true modifies the 2nd element
-%    of lambdas to make the thickness of the first layer be exactly half that of
-%    the other layers. The default is halftop=false.
+%    lambdas = EQUAL_DR(N, halftop) where halftop==true makes the thickness of the
+%    first layer be exactly half that of the other layers. The default is
+%    halftop=false.
 
 narginchk(1,2)
 if nargin == 1, halftop = false; end

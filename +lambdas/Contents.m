@@ -6,9 +6,9 @@
 %    cmp.cms.lambdas = lambdas.topheavy(128);
 %
 % Files
-%   cosine        - Return a lambda distribution with cosine-like spacing.
-%   equal_dr      - Return a lambda distribution with equally spaced radii.
-%   equal_p1_mass - Return a lambda distribution with approximately equal mass layers.
-%   equal_volume  - Return a lambda distribution making layers of equal volume.
-%   exponential   - Return a lambda distribution with exponentially spaced radii.
-%   topheavy      - Return a lambda distribution with top-heavy spacing.
+%   cosine   - Return a lambda distribution with cosine-like spacing.
+%   equal_dr - Return a lambda distribution with equally spaced radii.
+%   topheavy - Return a lambda distribution with top-heavy spacing.
+%   best     - Return our current notion of the best lambda distribution.
+%   trizone  - Return a 3-zone lambda distribution.
+
