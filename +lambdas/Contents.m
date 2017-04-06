@@ -10,5 +10,3 @@
 %   equal_dr - Return a lambda distribution with equally spaced radii.
 %   topheavy - Return a lambda distribution with top-heavy spacing.
 %   best     - Return our current notion of the best lambda distribution.
-%   trizone  - Return a 3-zone lambda distribution.
-
