@@ -28,11 +28,11 @@ function cmp = double_polytrope_w_core(N, x, lamstrat, forcematch)
 %
 %    DOUBLE_POLYTROPE_W_CORE(..., forcematch) if forcematch=true forces the
 %    normalized radius of the transition layer to exactly match x(5). This is
-%    applied after the lambda spacing strategy.
+%    applied after the lambda spacing strategy. The default is forcematch=true.
 
 narginchk(2,4)
 if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
-if ((nargin < 4) || isempty(forcematch)), forcematch = false; end
+if ((nargin < 4) || isempty(forcematch)), forcematch = true; end
 validateattributes(N, {'numeric'}, {'positive', 'integer'}, '', 'N', 1)
 validateattributes(x, {'numeric'}, {'vector', 'numel', 7, 'nonnegative'}, 2)
 validateattributes(lamstrat, {'numeric','function_handle'}, {}, '', 'lamstrat', 3)

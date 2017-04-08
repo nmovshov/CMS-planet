@@ -30,11 +30,11 @@ function cmp = triple_polytrope(N, x, lamstrat, forcematch)
 %
 %    TRIPLE_POLYTROPE(..., forcematch) if forcematch=true forces the normalized
 %    radii of the transition layers to exactly match x(7) and x(8). This is
-%    applied after the initial lambda spacing.
+%    applied after the initial lambda spacing. The default is forcematch=true.
 
 narginchk(2,4)
 if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
-if ((nargin < 4) || isempty(forcematch)), forcematch = false; end
+if ((nargin < 4) || isempty(forcematch)), forcematch = true; end
 validateattributes(N, {'numeric'}, {'positive', 'integer'}, '', 'N', 1)
 validateattributes(x, {'numeric'}, {'vector', 'numel', 8, 'nonnegative'}, 2)
 validateattributes(lamstrat, {'numeric','function_handle'}, {}, '', 'lamstrat', 3)

@@ -1,7 +1,7 @@
 function lambdas = trizone(N, parts, halftop)
 %TRIZONE Return a 3-zone lambda distribution.
 %    lambdas = TRIZONE(N) returns a vector of normalized radii with two thirds of
-%    them equally distributed in the top third, two thirds of the reaminder
+%    them equally distributed in the top third, two thirds of the remainder
 %    equally distributed in the middle third, and the rest equally distributed in
 %    the bottom third of the interval (0,1].
 %
