@@ -781,14 +781,9 @@ classdef CMSPlanet < handle
         end
         
         function set.M(obj,val)
-            try
-                assert(isnumeric(val))
-                assert(isscalar(val))
-                assert(double(val) > 0)
-                obj.M = val;
-            catch
-                error('Mass must be a positive scalar.')
-            end
+            assert(isnumeric(val) && isscalar(val) && double(val) > 0,...
+                'Mass must be a positive scalar.')
+            obj.M = val;
         end
         
         function set.a0(obj,val)
