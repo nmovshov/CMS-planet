@@ -31,6 +31,8 @@ classdef CMSPlanet < handle
         J2      % convenience name for Js(2)
         J4      % convenience name for Js(3)
         J6      % convenience name for Js(4)
+        J8      % convenience name for Js(5)
+        J10     % convenience name for Js(6)
         NMoI    % normalized moment of inertia
         s0      % mean radius
         b0      % polar radius
@@ -778,6 +780,14 @@ classdef CMSPlanet < handle
         
         function val = get.J6(obj)
             val = obj.Js(4);
+        end
+        
+        function val = get.J8(obj)
+            val = obj.Js(5);
+        end
+        
+        function val = get.J10(obj)
+            val = obj.Js(6);
         end
         
         function set.M(obj,val)
