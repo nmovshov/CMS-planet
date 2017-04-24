@@ -622,6 +622,45 @@ classdef CMSPlanet < handle
             end
         end
         
+        function s = to_struct(obj, keepvecs)
+            % Convert object to static struct keeping only essential fields.
+            
+            s.name     = obj.name;
+            s.desc     = obj.desc;
+            s.a0       = obj.a0;
+            s.M        = obj.M;
+            s.qrot     = obj.qrot;
+            s.nlayers  = obj.nlayers;
+            s.J2       = obj.J2;
+            s.J4       = obj.J4;
+            s.J6       = obj.J6;
+            s.J8       = obj.J8;
+            s.J10      = obj.J10;
+            s.NMoI     = obj.NMoI;
+            s.s0       = obj.s0;
+            s.b0       = obj.b0;
+            s.f0       = obj.f0;
+            s.rho0     = obj.rho0;
+            s.rho_s    = obj.rho_s;
+            s.M_calc   = obj.M_calc;
+            s.P_c      = obj.P_c;
+            s.betanorm = obj.betanorm;
+            
+            if nargin == 1, keepvecs = 1; end
+            validateattributes(keepvecs,{'numeric'},{'integer','>=',0,'<',3})
+            if keepvecs > 0
+                s.ai    = obj.ai;
+                s.rhoi  = obj.rhoi;
+                s.Pi    = obj.Pi;
+            end
+            if keepvecs > 1
+                s.bi    = obj.bi;
+                s.si    = obj.si;
+                s.P_mid = obj.P_mid;
+                s.Mi    = obj.Mi;
+            end
+        end
+        
     end % End of public methods block
     
     %% Private methods
