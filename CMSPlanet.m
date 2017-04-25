@@ -637,12 +637,9 @@ classdef CMSPlanet < handle
             s.J8       = obj.J8;
             s.J10      = obj.J10;
             s.NMoI     = obj.NMoI;
-            s.s0       = obj.s0;
+            s.M_core   = obj.core_mass;
             s.b0       = obj.b0;
-            s.f0       = obj.f0;
             s.rho0     = obj.rho0;
-            s.rho_s    = obj.rho_s;
-            s.M_calc   = obj.M_calc;
             s.P_c      = obj.P_c;
             s.betanorm = obj.betanorm;
             
