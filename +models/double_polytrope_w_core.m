@@ -8,7 +8,7 @@ function cmp = double_polytrope_w_core(N, x, lamstrat, forcematch)
 %    barotropes.ConstDensity eos wirh rho0=x(6) and given a normalized equatorial
 %    radius equal to x(7). Layer 1 is assigned a zero density
 %    barotropes.ConstDensity eos and is approximately half the width of the layers
-%    below. The default layer spacing concentrates 2/3 of the available layers in
+%    below. The default layer spacing concentrates 3/4 of the available layers in
 %    the top 0.5 of the envelope.
 %
 %    DOUBLE_POLYTROPE_W_CORE(N, x, lamstrat) where lamstrat is a 2-element vector
@@ -31,7 +31,7 @@ function cmp = double_polytrope_w_core(N, x, lamstrat, forcematch)
 %    applied after the lambda spacing strategy. The default is forcematch=true.
 
 narginchk(2,4)
-if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
+if ((nargin == 2) || isempty(lamstrat)), lamstrat = [3/4, 1/2]; end
 if ((nargin < 4) || isempty(forcematch)), forcematch = true; end
 validateattributes(N, {'numeric'}, {'positive', 'integer'}, '', 'N', 1)
 validateattributes(x, {'numeric'}, {'vector', 'numel', 7, 'nonnegative'}, 2)
@@ -48,20 +48,20 @@ assert(x(7) < x(5), 'Core must be below transition radius.')
 cmp = CMSPlanet(N);
 
 if (isa(lamstrat, 'function_handle'))
-    lambdas = lamstrat(N);
-    assert(isnumeric(lambdas) && isvector(lambdas) && (numel(lambdas) == N),...
+    lams = lamstrat(N);
+    assert(isnumeric(lams) && isvector(lams) && (numel(lams) == N),...
         '@lamstrat(N) must return a vector of length N with values in (0,1].')
-    assert(all(lambdas > 0) && all(lambdas <= 1),...
+    assert(all(lams > 0) && all(lams <= 1),...
         '@lamstrat(N) must return a vector of length N with values in (0,1].')
-    lambdas = sort(lambdas, 'descend');
-    assert(lambdas(end-1) > x(7),...
+    lams = sort(lams, 'descend');
+    assert(lams(end-1) > x(7),...
         'Chosen layer spacing would put one or more layers below the core.')
-    if abs(lambdas(end) - x(7)) > (2/N)
+    if abs(lams(end) - x(7)) > (2/N)
         beep
         warning('Check lambda distribution: is the core where you wanted it?')
     end
-    lambdas(end) = x(7);
-    cmp.cms.lambdas = lambdas;
+    lams(end) = x(7);
+    cmp.cms.lambdas = lams;
 else
     n1 = fix(lamstrat(1)*(N - 1));
     n2 = N - n1 - 1;
@@ -69,17 +69,17 @@ else
     dl2 = (1 - lamstrat(2))*(1 - x(7))/n2;
     lam1 = linspace(1 - dl1/2, 1 - lamstrat(2)*(1 - x(7)), n1);
     lam2 = linspace(1 - lamstrat(2)*(1 - x(7)) - dl2, x(7), n2);
-    lambdas = [1, lam1, lam2]';
+    lams = [1, lam1, lam2]';
 end
 
-[~, tind] = min(abs(lambdas-x(5)));
+[~, tind] = min(abs(lams-x(5)));
 assert(tind > 2,...
     'Transition too close to surface; first polytrope has zero layers.')
 assert(tind < N,...
     'Transition too close to core; second polytrope has zero layers.')
-if forcematch, lambdas(tind) = x(5); end
+if forcematch, lams(tind) = x(5); end
 
-cmp.cms.lambdas = lambdas;
+cmp.cms.lambdas = lams;
 
 eos0 = barotropes.ConstDensity(0);
 eos1 = barotropes.Polytrope(x(1), x(2));

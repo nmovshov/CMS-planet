@@ -5,7 +5,7 @@ function cmp = single_polytrope_w_core(N, x, lamstrat)
 %    2:N-1 and a barotropes.ConstDensity eos with rho0=x(3) assigned to layer N
 %    which has a normalized equatorial radius equal to x(4). Layer 1 is assigned a
 %    zero density barotropes.ConstDensity eos and is approximately half the width
-%    of the layers below. The default layer spacing concentrates 2/3 of the
+%    of the layers below. The default layer spacing concentrates 3/4 of the
 %    available layers in the top 0.5 of the envelope.
 %
 %    SINGLE_POLYTROPE_W_CORE(N, x, lamstrat) where lamstrat is a 2-element vector
@@ -24,7 +24,7 @@ function cmp = single_polytrope_w_core(N, x, lamstrat)
 %    use lamstrat=@(n)linspace(1,x(4),n).
 
 narginchk(2,3)
-if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
+if ((nargin == 2) || isempty(lamstrat)), lamstrat = [3/4, 1/2]; end
 validateattributes(N, {'numeric'}, {'positive', 'integer'}, '', 'N', 1)
 validateattributes(x, {'numeric'}, {'vector', 'numel', 4, 'nonnegative'}, 2)
 validateattributes(lamstrat, {'numeric','function_handle'}, {}, '', 'lamstrat', 3)
@@ -37,20 +37,20 @@ assert(x(4) > 0 && x(4) < 1, 'The core must have a normalized radius in (0,1).')
 cmp = CMSPlanet(N);
 
 if (isa(lamstrat, 'function_handle'))
-    lambdas = lamstrat(N);
-    assert(isnumeric(lambdas) && isvector(lambdas) && (numel(lambdas) == N),...
+    lams = lamstrat(N);
+    assert(isnumeric(lams) && isvector(lams) && (numel(lams) == N),...
         '@lamstrat(N) must return a vector of length N with values in (0,1].')
-    assert(all(lambdas > 0) && all(lambdas <= 1),...
+    assert(all(lams > 0) && all(lams <= 1),...
         '@lamstrat(N) must return a vector of length N with values in (0,1].')
-    lambdas = sort(lambdas, 'descend');
-    assert(lambdas(end-1) > x(4),...
+    lams = sort(lams, 'descend');
+    assert(lams(end-1) > x(4),...
         'Chosen layer spacing would put one or more layers below the core.')
-    if abs(lambdas(end) - x(4)) > (2/N)
+    if abs(lams(end) - x(4)) > (2/N)
         beep
         warning('Check lambda distribution: is the core where you wanted it?')
     end
-    lambdas(end) = x(4);
-    cmp.cms.lambdas = lambdas;
+    lams(end) = x(4);
+    cmp.cms.lambdas = lams;
 else
     n1 = fix(lamstrat(1)*(N - 1));
     n2 = N - n1 - 1;

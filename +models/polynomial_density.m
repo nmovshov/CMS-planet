@@ -32,7 +32,7 @@ function cmp = polynomial_density(N, x, lamstrat, forcezero)
 %    have zero density.
 
 narginchk(2,4)
-if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
+if ((nargin == 2) || isempty(lamstrat)), lamstrat = [3/4, 1/2]; end
 if ((nargin < 4) || isempty(forcezero)), forcezero = false; end
 validateattributes(N, {'numeric'}, {'positive', 'integer'}, '', 'N', 1)
 validateattributes(x, {'numeric'}, {'vector',}, '', 'x', 2)
@@ -47,12 +47,12 @@ validateattributes(forcezero, {'logical'}, {'scalar'}, '', 'forcematch', 4)
 cmp = CMSPlanet(N);
 
 if (isa(lamstrat, 'function_handle'))
-    lambdas = lamstrat(N);
-    assert(isnumeric(lambdas) && isvector(lambdas) && (numel(lambdas) == N),...
+    lams = lamstrat(N);
+    assert(isnumeric(lams) && isvector(lams) && (numel(lams) == N),...
         '@lamstrat(N) must return a vector of length N with values in (0,1].')
-    assert(all(lambdas > 0) && all(lambdas <= 1),...
+    assert(all(lams > 0) && all(lams <= 1),...
         '@lamstrat(N) must return a vector of length N with values in (0,1].')
-    cmp.cms.lambdas = lambdas;
+    cmp.cms.lambdas = lams;
 else
     n1 = fix(lamstrat(1)*(N - 1));
     n2 = N - n1 - 1;

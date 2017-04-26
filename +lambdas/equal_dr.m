@@ -4,10 +4,10 @@ function lambdas = equal_dr(N, halftop)
 %
 %    lambdas = EQUAL_DR(N, halftop) where halftop==true makes the thickness of the
 %    first layer be exactly half that of the other layers. The default is
-%    halftop=false.
+%    halftop=true.
 
 narginchk(1,2)
-if nargin == 1, halftop = false; end
+if nargin == 1, halftop = true; end
 validateattributes(halftop, {'logical'}, {'scalar'})
 
 dl = 1/N;

@@ -14,11 +14,11 @@ function lambdas = toptopheavy(N, skew, halftop)
 %
 %    lambdas = TOPTOPHEAVY(..., halftop) where halftop==true makes the thickness
 %    of the first layer be exactly half that of the other layers in the upper
-%    zone. The default is halftop=false.
+%    zone. The default is halftop=true.
 
 narginchk(1,3)
 if (nargin < 2) || isempty(skew), skew = [2/3, 1/2]; end
-if nargin < 3, halftop = false; end
+if nargin < 3, halftop = true; end
 validateattributes(skew, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
 validateattributes(halftop, {'logical'}, {'scalar'})
 

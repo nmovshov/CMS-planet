@@ -4,7 +4,7 @@ function cmp = single_polytrope(N, x, lamstrat)
 %    barotropes.Polytrope with constant x(1) and index x(2) assigned to layers
 %    2:N. Layer 1 is assigned a zero density barotropes.ConstDensity eos and is
 %    approximately half the width of the layers below. The default layer spacing
-%    concentrates 2/3 of the available layers in the top 0.5 of the planet.
+%    is the one referenced in lambdas.best.m.
 %
 %    SINGLE_POLYTROPE(N, x, lamstrat) where lamstrat is a 2-element vector lets
 %    you specify the layer spacing strategy. Approximately lamstrat(1) of
@@ -19,10 +19,12 @@ function cmp = single_polytrope(N, x, lamstrat)
 %    a single scalar integer (number of layers) and returns a vector of that
 %    length with values in the interval (0, 1], for normalized layer radii. For
 %    example, to set layers with equally spaced radii use
-%    lamstrat=@(n)linspace(1,1/n,n).
+%    lamstrat=@(n)linspace(1,1/n,n). Note that the final layer radii might be
+%    slightly different due to placement of the transition radius. A collection of
+%    pre-made distributions is available in package +lambdas.
 
 narginchk(2,3)
-if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
+if ((nargin == 2) || isempty(lamstrat)), lamstrat = @lambdas.best; end
 validateattributes(N, {'numeric'}, {'positive', 'integer'}, '', 'N', 1)
 validateattributes(x, {'numeric'}, {'vector', 'numel', 2, 'nonnegative'}, 2)
 validateattributes(lamstrat, {'numeric','function_handle'}, {}, '', 'lamstrat', 3)
@@ -34,12 +36,12 @@ end
 cmp = CMSPlanet(N);
 
 if (isa(lamstrat, 'function_handle'))
-    lambdas = lamstrat(N);
-    assert(isnumeric(lambdas) && isvector(lambdas) && (numel(lambdas) == N),...
+    lams = lamstrat(N);
+    assert(isnumeric(lams) && isvector(lams) && (numel(lams) == N),...
         '@lamstrat(N) must return a vector of length N with values in (0,1].')
-    assert(all(lambdas > 0) && all(lambdas <= 1),...
+    assert(all(lams > 0) && all(lams <= 1),...
         '@lamstrat(N) must return a vector of length N with values in (0,1].')
-    cmp.cms.lambdas = lambdas;
+    cmp.cms.lambdas = lams;
 else
     n1 = fix(lamstrat(1)*(N - 1));
     n2 = N - n1 - 1;

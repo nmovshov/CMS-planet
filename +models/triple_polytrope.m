@@ -9,8 +9,8 @@ function cmp = triple_polytrope(N, x, lamstrat, forcematch)
 %    with (ai/a0) nearest x(7). Transition from second to third polytrope is at
 %    layer cind, the layer with (ai/a0) nearest x(8). Layer 1 is assigned a zero
 %    density barotropes.ConstDensity eos and is approximately half the width of
-%    the layers below. The default layer spacing concentrates 2/3 of the available
-%    layers in the top 0.5 of the planet.
+%    the layers below. The default layer spacing is the one referenced in
+%    lambdas.best.m.
 %
 %    TRIPLE_POLYTROPE(N, x, lamstrat) where lamstrat is a 2-element vector lets
 %    you specify the layer spacing strategy. Approximately lamstrat(1) of
@@ -26,14 +26,15 @@ function cmp = triple_polytrope(N, x, lamstrat, forcematch)
 %    length with values in the interval (0, 1], for normalized layer radii. For
 %    example, to set layers with equally spaced radii use
 %    lamstrat=@(n)linspace(1,1/n,n). Note that the final layer radii might be
-%    slightly different due to placement of transition radii.
+%    slightly different due to placement of transition radii. A collection of
+%    pre-made distributions is available in package +lambdas.
 %
 %    TRIPLE_POLYTROPE(..., forcematch) if forcematch=true forces the normalized
 %    radii of the transition layers to exactly match x(7) and x(8). This is
 %    applied after the initial lambda spacing. The default is forcematch=true.
 
 narginchk(2,4)
-if ((nargin == 2) || isempty(lamstrat)), lamstrat = [2/3, 1/2]; end
+if ((nargin == 2) || isempty(lamstrat)), lamstrat = @lambdas.best; end
 if ((nargin < 4) || isempty(forcematch)), forcematch = true; end
 validateattributes(N, {'numeric'}, {'positive', 'integer'}, '', 'N', 1)
 validateattributes(x, {'numeric'}, {'vector', 'numel', 8, 'nonnegative'}, 2)
@@ -50,10 +51,10 @@ assert(x(8) < x(7), 'Second transition must come before first transition.')
 cmp = CMSPlanet(N);
 
 if (isa(lamstrat, 'function_handle'))
-    lambdas = lamstrat(N);
-    assert(isnumeric(lambdas) && isvector(lambdas) && (numel(lambdas) == N),...
+    lams = lamstrat(N);
+    assert(isnumeric(lams) && isvector(lams) && (numel(lams) == N),...
         '@lamstrat(N) must return a vector of length N with values in (0,1].')
-    assert(all(lambdas > 0) && all(lambdas <= 1),...
+    assert(all(lams > 0) && all(lams <= 1),...
         '@lamstrat(N) must return a vector of length N with values in (0,1].')
 else
     n1 = fix(lamstrat(1)*(N - 1));
@@ -62,19 +63,19 @@ else
     dl2 = (1 - lamstrat(2))/(n2 + 1);
     lam1 = linspace(1 - dl1/2, (1 - lamstrat(2)), n1);
     lam2 = linspace((1 - lamstrat(2)) - dl2, dl2, n2);
-    lambdas = [1, lam1, lam2]';
+    lams = [1, lam1, lam2]';
 end
 
-[~, tind] = min(abs(lambdas-x(7)));
+[~, tind] = min(abs(lams-x(7)));
 assert(tind > 2,...
     'First transition too close to surface; first polytrope has zero layers.')
-[~, cind] = min(abs(lambdas-x(8)));
+[~, cind] = min(abs(lams-x(8)));
 assert(cind > tind,...
     'Transitions are too close together; second polytrope has zero layers.')
 
-if forcematch, lambdas(tind) = x(7); end
-if forcematch, lambdas(cind) = x(8); end
-cmp.cms.lambdas = lambdas;
+if forcematch, lams(tind) = x(7); end
+if forcematch, lams(cind) = x(8); end
+cmp.cms.lambdas = lams;
 
 eos0 = barotropes.ConstDensity(0);
 eos1 = barotropes.Polytrope(x(1), x(2));

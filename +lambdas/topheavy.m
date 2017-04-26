@@ -1,8 +1,8 @@
 function lambdas = topheavy(N, skew, halftop)
 %TOPHEAVY Return a lambda distribution with top-heavy spacing.
-%    lambdas = TOPHEAVY(N) returns a vector of normalized radii with two thirds of
-%    them equally distributed in the top half and the rest equally distributed in
-%    the bottom half of the interval (0,1].
+%    lambdas = TOPHEAVY(N) returns a vector of normalized radii with three
+%    quarters of them equally distributed in the top half and the rest equally
+%    distributed in the bottom half of the interval (0,1].
 %
 %    lambdas = TOPHEAVY(N, skew) returns a vector of normalized radii with skew(1)
 %    of them equally distributed in the interval [1-skew(2), 1] and the rest
@@ -10,11 +10,11 @@ function lambdas = topheavy(N, skew, halftop)
 %
 %    lambdas = TOPHEAVY(..., halftop) where halftop==true makes the thickness of
 %    the first layer be exactly half that of the other layers in the upper zone.
-%    The default is halftop=false.
+%    The default is halftop=true.
 
 narginchk(1,3)
-if (nargin < 2) || isempty(skew), skew = [2/3, 1/2]; end
-if nargin < 3, halftop = false; end
+if (nargin < 2) || isempty(skew), skew = [3/4, 1/2]; end
+if nargin < 3, halftop = true; end
 validateattributes(skew, {'numeric'}, {'vector', 'numel', 2, '>', 0, '<', 1})
 validateattributes(halftop, {'logical'}, {'scalar'})
 

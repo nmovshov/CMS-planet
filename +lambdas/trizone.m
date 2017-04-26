@@ -13,11 +13,11 @@ function lambdas = trizone(N, parts, halftop)
 %
 %    lambdas = TRIZONE(..., halftop) where halftop==true makes the thickness of
 %    the first layer be exactly half that of the other layers in the upper zone.
-%    The default is halftop=false.
+%    The default is halftop=true.
 
 narginchk(1,3)
 if (nargin < 2) || isempty(parts), parts = [2/3, 2/3]; end
-if nargin < 3, halftop = false; end
+if nargin < 3, halftop = true; end
 validateattributes(parts, {'numeric'}, {'vector', 'numel', 2, '>=', 0, '<', 1})
 validateattributes(halftop, {'logical'}, {'scalar'})
 

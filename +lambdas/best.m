@@ -2,11 +2,9 @@ function lams = best(N, varargin)
 %BEST Return our current notion of the best lambda distribution.
 %    lams = BEST(N) returns a vector of normalized radii representing our current
 %    idea of the "best" distribution for minimizing discretization error in an
-%    with N-layer CMS model. The actual lambda distribution will likely keep
-%    changing for a while as we continue to experiment and we may never be able to
-%    find a single best distribution. The right distribution may depend on
-%    planetary conditions and/or on whether we seek to converge to a prescribed
-%    barotrope or to a prescribed density profile.
+%    N-layer CMS model. The actual best distribution may depend on planetary
+%    conditions and/or on whether we seek to converge to a prescribed barotrope or
+%    to a prescribed density profile.
 %
 %    lams = BEST(N, Name, Value) specifies non-default values for various
 %    parameters. This is mostly used during development and experimentation, after
