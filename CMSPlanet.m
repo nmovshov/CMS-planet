@@ -608,7 +608,7 @@ classdef CMSPlanet < handle
             % Return mass of innermost contiguous block of layers with same eos.
             
             if isempty(obj.eos) || isempty(obj.rho0) || isscalar(obj.eos)
-                mcore = [];
+                mcore = NaN;
                 return
             end
             
@@ -616,7 +616,7 @@ classdef CMSPlanet < handle
                 obj.eos, repmat(obj.eos(end), obj.nlayers, 1));
             cind = find(~ind, 1, 'last') + 1;
             if isempty(cind)
-                mcore = [];
+                mcore = NaN;
             else
                 mcore = sum(obj.Mi(cind:end));
             end
