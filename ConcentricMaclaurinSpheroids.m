@@ -505,6 +505,40 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.Js.Jn = obj.Jn();
         end
         
+        function dJ = update_spherical_Js(obj)
+            % Single-pass update of gravitational moments for nonrotating body.
+            
+            % Optional communication
+            verb = obj.opts.verbosity;
+            if (verb > 1)
+                t_J_pass = tic;
+                fprintf('    Updating Js....')
+            end
+            
+            % Calculate Js for nonrotating body
+            old_tilde = obj.Js.tilde;
+            old_tprime = obj.Js.tilde_prime;
+            old_pprime = obj.Js.pprime;
+            obj.allocate_spherical_Js(obj.nlayers, obj.opts.kmax);
+            
+            % Optional communication
+            if (verb > 2)
+                t_J_pass = toc(t_J_pass);
+                fprintf('done. (%g sec)\n', t_J_pass)
+            elseif (verb > 1)
+                fprintf('done.\n')
+            end
+            
+            % Flag Vpu and equiUpu re-calc
+            obj.realVpuMod = true;
+            obj.realequiUMod = true;
+            
+            % Return max change in Js and update Js in obj.
+            dJ = max(abs(old_tilde(:) - obj.Js.tilde(:)));
+            dJ = max(dJ, max(abs(old_tprime(:) - obj.Js.tilde_prime(:))));
+            dJ = max(dJ, max(abs(old_pprime(:) - obj.Js.pprime(:))));
+        end
+        
     end % End of public methods block
     
     %% Private methods
@@ -837,7 +871,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             den = sum(obj.deltas.*obj.lambdas.^3);
             obj.Js.tilde(:,1) = -(obj.deltas.*obj.lambdas.^3)/den;
             obj.Js.tilde_prime(:,1) = -1.5*(obj.deltas.*obj.lambdas.^3)/den;
-            obj.Js.pprime(:) = 0.5*obj.deltas/sum(obj.deltas);
+            obj.Js.pprime(:) = 0.5*obj.deltas/sum(obj.deltas.*obj.lambdas.^3);
             obj.Js.tpprime = obj.Js.pprime.*(obj.lambdas.^3);
             obj.Js.Jn(1) = sum(obj.Js.tilde(:,1));
         end
