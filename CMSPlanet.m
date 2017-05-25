@@ -328,7 +328,7 @@ classdef CMSPlanet < handle
             % Style and annotate axes
             if isempty(pr.axes)
                 ah.Box = 'on';
-                if isequal(lower(pr.radius), 'mean')
+                if isequal(lower(pr.radius), 'equatorial')
                     xlabel('Level surface radius, $a/a_0$', 'fontsize', 12)
                 else
                     xlabel('Level surface radius, $s/s_0$', 'fontsize', 12)
