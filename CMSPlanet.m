@@ -276,13 +276,9 @@ classdef CMSPlanet < handle
             % Input parsing
             p = inputParser;
             p.FunctionName = mfilename;
-            p.addParameter('axes', [],...
-                @(x)(isscalar(x) && isgraphics(x, 'axes') && isvalid(x)) || ...
-                isempty(x));
-            p.addParameter('radius', 'equatorial',...
-                @(x)isvector(x) && ischar(x));
-            p.addParameter('plottype', 'stairs',...
-                @(x)isvector(x) && ischar(x));
+            p.addParameter('axes', [], @(x)isscalar(x) && isgraphics(x, 'axes'));
+            p.addParameter('radius', 'equatorial', @(x)isrow(x) && ischar(x));
+            p.addParameter('plottype', 'stairs', @(x)isrow(x) && ischar(x));
             p.parse(varargin{:})
             pr = p.Results;
             
@@ -335,6 +331,91 @@ classdef CMSPlanet < handle
                     xlabel('Level surface radius, $s/s_0$', 'fontsize', 12)
                 end
                 ylabel('$\rho$ [1000 kg/m$^3$]', 'fontsize', 12)
+            else
+                xlim('auto')
+            end
+            
+            % Legend
+            legend(ah, 'off')
+            gh = legend(ah, 'show','location','ne');
+            gh.FontSize = 11;
+            
+        end
+        
+        function [ah, lh, gh] = plot_P_of_r(obj, varargin)
+            % Plot P(r) where r is either equatorial or mean radius.
+            
+            % Don't bother if uninitialized
+            if isempty(obj.rho0)
+                warning('Uninitialized object.')
+                return
+            end
+            
+            % Input parsing
+            p = inputParser;
+            p.FunctionName = mfilename;
+            p.addParameter('axes', [], @(x)isscalar(x) && isgraphics(x, 'axes'));
+            p.addParameter('radius', 'equatorial', @(x)isrow(x) && ischar(x));
+            p.addParameter('pressurepoint', 'top', @(x)isrow(x) && ischar(x));
+            p.addParameter('plottype', 'stairs', @(x)isrow(x) && ischar(x));
+            p.parse(varargin{:})
+            pr = p.Results;
+            
+            % Prepare the canvas
+            if isempty(pr.axes)
+                fh = figure;
+                set(fh, 'defaultTextInterpreter', 'latex')
+                set(fh, 'defaultLegendInterpreter', 'latex')
+                ah = axes;
+                hold(ah, 'on')
+            else
+                ah = pr.axes;
+                hold(ah, 'on')
+            end
+            
+            % Prepare the data
+            if isequal(lower(pr.radius), 'equatorial')
+                x = [double(obj.ai/obj.a0); 0];
+            elseif isequal(lower(pr.radius), 'mean')
+                x = [double(obj.si/obj.s0); 0];
+            else
+                error('Unknown value of parameter radius.')
+            end
+            if isequal(lower(pr.pressurepoint), 'top')
+                y = double([obj.Pi; obj.P_c]);
+            elseif isequal(lower(pr.pressurepoint), 'mid')
+                y = double([obj.P_mid; obj.P_c]);
+            else
+                error('Unknown value of parameter pressurepoint.')
+            end
+            
+            % Plot the lines (pressure in GPa)
+            if isequal(lower(pr.plottype), 'stairs')
+                lh = stairs(x, y/1e9);
+            elseif isequal(lower(pr.plottype), 'line')
+                lh = line(x, y/1e9);
+            else
+                error('Unknown value of parameter plottype.')
+            end
+            lh.LineWidth = 2;
+            if isempty(pr.axes)
+                lh.Color = [0.31, 0.31, 0.31];
+            end
+            if isempty(obj.name)
+                lh.DisplayName = 'CMS model';
+            else
+                lh.DisplayName = obj.name;
+            end
+            
+            % Style and annotate axes
+            if isempty(pr.axes)
+                ah.Box = 'on';
+                if isequal(lower(pr.radius), 'equatorial')
+                    xlabel('Level surface radius, $a/a_0$', 'fontsize', 12)
+                else
+                    xlabel('Level surface radius, $s/s_0$', 'fontsize', 12)
+                end
+                ylabel('$P$ [GPa]', 'fontsize', 12)
             else
                 xlim('auto')
             end
