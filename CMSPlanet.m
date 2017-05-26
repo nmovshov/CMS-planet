@@ -40,6 +40,7 @@ classdef CMSPlanet < handle
         rho0    % reference density (uses equatorial radius)
         rho_s   % mean density (uses mean radius)
         M_calc  % mass from current state of cms
+        M_core  % mass of core region (if one can be identified)
         P_c     % central pressure
         P_mid   % layer internal pressure (avg. of surface pressures)
     end
@@ -612,12 +613,18 @@ classdef CMSPlanet < handle
                 return
             end
             
-            ind = arrayfun(@isequal,...
-                obj.eos, repmat(obj.eos(end), obj.nlayers, 1));
+            alleos = obj.eos;
+            if isequal(alleos(1), barotropes.ConstDensity(0))
+                zlay = true;
+                alleos(1) = [];
+            end
+            ind = arrayfun(@isequal, alleos,...
+                repmat(alleos(end), numel(alleos), 1));
             cind = find(~ind, 1, 'last') + 1;
             if isempty(cind)
-                mcore = NaN;
+                mcore = 0;
             else
+                if zlay, cind = cind + 1; end
                 mcore = sum(obj.Mi(cind:end));
             end
         end
@@ -938,6 +945,11 @@ classdef CMSPlanet < handle
             if isempty(obj.rhoi), val = []; return, end
             drho = [obj.rhoi(1); diff(obj.rhoi)];
             val = (4*pi/3)*(obj.a0^3)*sum(drho.*obj.cms.Vs);
+        end
+        
+        function val = get.M_core(obj)
+            if isempty(obj.rhoi), val = []; return, end
+            val = obj.core_mass;
         end
         
         function val = get.Mi(obj)
