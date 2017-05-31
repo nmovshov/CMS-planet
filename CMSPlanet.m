@@ -484,6 +484,8 @@ classdef CMSPlanet < handle
                         y_bar(k) = double(obj.eos(ind(k)).pressure(x_bar(k)));
                     end
                 end
+            else
+                y_bar = NaN;
             end
             
             % Prepare the data: scaled input
@@ -501,6 +503,8 @@ classdef CMSPlanet < handle
                             bnorm*obj.eos(ind(k)).pressure(x_bar(k)/bnorm));
                     end
                 end
+            else
+                y_bar_scl = NaN;
             end
             
             % Plot the lines (pressure in GPa)
