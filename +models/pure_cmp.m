@@ -8,8 +8,21 @@ function cmp = pure_cmp(avec, rhovec)
 %   Obviously this can be easily done in any script or in the Command Window but
 %   some driver scripts require a handle to a parametrized model-building
 %   function, so we supply one.
+%
+%   PURE_CMP(arho) is a single input variant using the n-by-2 array instead of
+%   two vectors. This simplifies calls to some function-functions, like fminsearch
+%   and mhsample. The first column is avec and the second column is rhovec.
 
-narginchk(2,2)
+narginchk(1,2)
+if nargin == 1
+    validateattributes(avec,{'numeric'},{'2d','ncols',2},1)
+    rhovec = avec(:,2);
+    avec = avec(:,1);
+else
+    validateattributes(avec,{'numeric'},{'vector'},1)
+    validateattributes(rhovec,{'numeric'},{'vector'},2)
+    assert(length(avec) == length(rhovec), 'length(avec) ~= length(rhovec)')
+end
 
 cmp = CMSPlanet(length(avec));
 cmp.ai = avec;
