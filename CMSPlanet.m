@@ -690,11 +690,13 @@ classdef CMSPlanet < handle
             obj.rhoi = obj.rhoi*obj.betanorm;
         end
         
-        function mcore = core_mass(obj)
+        function mcore = core_mass(obj, bypeaks)
             % Return mass of innermost contiguous block of layers with same eos.
             
-            if isempty(obj.eos) || isempty(obj.rho0) || isscalar(obj.eos)
-                mcore = NaN;
+            if nargin < 2, bypeaks = false; end
+            if isempty(obj.eos) || isscalar(obj.eos) || bypeaks
+                cind = peakfinder(obj.cms.deltas);
+                mcore = sum(obj.Mi(cind(end):end));
                 return
             end
             
@@ -702,6 +704,8 @@ classdef CMSPlanet < handle
             if isequal(alleos(1), barotropes.ConstDensity(0))
                 zlay = true;
                 alleos(1) = [];
+            else
+                zlay = false;
             end
             ind = arrayfun(@isequal, alleos,...
                 repmat(alleos(end), numel(alleos), 1));
@@ -1034,6 +1038,7 @@ classdef CMSPlanet < handle
         
         function val = get.M_core(obj)
             if isempty(obj.rhoi), val = []; return, end
+            if length(unique(obj.rhoi)) == 1, val = []; return, end
             val = obj.core_mass;
         end
         
