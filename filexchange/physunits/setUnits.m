@@ -1,22 +1,29 @@
-function y = setFUnits
-%SETFUNITS Create a "fake units" structure.
-% y = SETFUNITS returns a structure containing predefined SI units, as
+function y = setUnits
+%SETUNITS Create an interface structure to the PREAL data type.
+% y = SETUNITS returns a structure containing predefined SI units, as
 % well as non-SI units, derived units, physical constants etc., all scalars
-% of type DOUBLE. The field names use conventional notation as much as
-% possible. Use this structure to quickly switch applications developed with
-% the physunits toolbox to pure built-in double precision type, for performance
-% and deployment.
+% of type PREAL. The field names use conventional notation as much as
+% possible. Use this structure to define PREAL variables instead of
+% specifying dimensions explicitly, through the PREAL constructor or SET
+% function.
+% 
+% Based on:
+% Fortran 90 Module 'SI_UNITS'
+% Copyright (C) 2002  Grant W. Petty
+% Written by Grant W. Petty and Michael A. Walters with suggestions by
+% Howard W. Ludwig
 
-%% Define base "fake" units
-y.meter    = 1;
-y.kilogram = 1;
-y.second   = 1;
-y.kelvin   = 1;
-y.ampere   = 1;
-y.mole     = 1;
-y.candela  = 1;
+
+%% Define base units
+y.meter    = preal(1,[1 0 0 0 0 0 0]);
+y.kilogram = preal(1,[0 1 0 0 0 0 0]);
+y.second   = preal(1,[0 0 1 0 0 0 0]);
+y.kelvin   = preal(1,[0 0 0 1 0 0 0]);
+y.ampere   = preal(1,[0 0 0 0 1 0 0]);
+y.mole     = preal(1,[0 0 0 0 0 1 0]);
+y.candela  = preal(1,[0 0 0 0 0 0 1]);
 % And the radian as the base measure of angle (dimensionless).
-y.radian   = 1;
+y.radian   = preal(1,[0 0 0 0 0 0 0]);
 
 %% Abbreviations
 y.m   = y.meter;
