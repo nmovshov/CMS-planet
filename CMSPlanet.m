@@ -754,6 +754,11 @@ classdef CMSPlanet < handle
             end
         end
         
+        function oldq = setqrot(obj, val)
+            oldq = obj.qrot;
+            obj.qrot = val;
+        end
+        
     end % End of public methods block
     
     %% Private methods
