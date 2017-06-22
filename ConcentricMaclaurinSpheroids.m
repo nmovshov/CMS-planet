@@ -10,6 +10,7 @@ classdef ConcentricMaclaurinSpheroids < handle
         opts    % holds CMS user configurable options
         lambdas % normalized layer equatorial radii
         deltas  % normalized density steps
+        qrot    % dimensionless rotation parameter
     end
     properties (SetAccess = private)
         mus     % colatitude cosines
@@ -40,7 +41,6 @@ classdef ConcentricMaclaurinSpheroids < handle
     end
     properties (Dependent) % Convenience names
         nlayers % number of layers
-        qrot    % dimensionless rotation parameter
         as      % normalized equatorial radii (another name for lambdas)
         bs      % normalized polar radii
         fs      % layer flattening, a.k.a, oblateness: (a - b)/a
@@ -556,6 +556,9 @@ classdef ConcentricMaclaurinSpheroids < handle
             obj.deltas = zeros(nlay, 1);
             obj.deltas(1) = 1;
             
+            % Default qrot is zero
+            obj.qrot = 0;
+            
             % Default mu setup is almost never used!
             obj.mus = linspace(0,1,op.nangles); % will be modified by gauss
             
@@ -718,9 +721,9 @@ classdef ConcentricMaclaurinSpheroids < handle
             assert(jlayer > 0 && jlayer <= obj.nlayers)
             assert(mu >= 0 && mu <=1)
             if jlayer == 1
-                fun = @(x)eq50(x,mu,obj.Js.tilde,obj.lambdas,obj.opts.qrot);
+                fun = @(x)eq50(x,mu,obj.Js.tilde,obj.lambdas,obj.qrot);
             else
-                fun = @(x)eq51(x,jlayer,mu,obj.Js.tilde,obj.Js.tilde_prime,obj.Js.pprime,obj.lambdas,obj.opts.qrot);
+                fun = @(x)eq51(x,jlayer,mu,obj.Js.tilde,obj.Js.tilde_prime,obj.Js.pprime,obj.lambdas,obj.qrot);
             end
             if strcmpi(obj.opts.rootfinder,'fzero')
                 %y = fzero(fun, [0.6, 1.02]);
@@ -755,7 +758,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             nbLayers = obj.N;
             nbMoments = obj.opts.kmax;
             Jt = obj.Js.tilde;
-            q = obj.opts.qrot;
+            q = obj.qrot;
             P0 = obj.Pnzero;
             Pmu = obj.Pnmu(:,alfa);
             
@@ -791,7 +794,7 @@ classdef ConcentricMaclaurinSpheroids < handle
             Jtp = obj.Js.tilde_prime;
             Jpp = obj.Js.pprime;
             lambda = obj.lambdas;
-            q = obj.opts.qrot;
+            q = obj.qrot;
             P0 = obj.Pnzero;
             Pmu = obj.Pnmu(:,alfa);
             
@@ -853,9 +856,9 @@ classdef ConcentricMaclaurinSpheroids < handle
             y = nan(size(mus));
             for alfa=1:numel(mus)
                 if jlayer == 1
-                    fun = @(x)eq50(x,mus(alfa),obj.Js.tilde,obj.lambdas,obj.opts.qrot);
+                    fun = @(x)eq50(x,mus(alfa),obj.Js.tilde,obj.lambdas,obj.qrot);
                 else
-                    fun = @(x)eq51(x,jlayer,mus(alfa),obj.Js.tilde,obj.Js.tilde_prime,obj.Js.pprime,obj.lambdas,obj.opts.qrot);
+                    fun = @(x)eq51(x,jlayer,mus(alfa),obj.Js.tilde,obj.Js.tilde_prime,obj.Js.pprime,obj.lambdas,obj.qrot);
                 end
                 %y = fzero(fun, [0.6, 1.02]);
                 y(alfa) = fzero(fun, 1);
@@ -944,11 +947,12 @@ classdef ConcentricMaclaurinSpheroids < handle
         end
         
         function val = get.qrot(obj)
-            val = obj.opts.qrot;
+            val = obj.qrot;
         end
         
         function set.qrot(obj,val)
-            obj.opts.qrot = val;
+            validateattributes(val,{'double', 'single'},{'nonnegative','scalar'})
+            obj.qrot = val;
         end
         
         function val = get.bs(obj)
@@ -1095,9 +1099,16 @@ classdef ConcentricMaclaurinSpheroids < handle
         function obj = loadobj(s)
             obj = ConcentricMaclaurinSpheroids(1);
             obj.N = s.N;
-            obj.opts = s.opts;
+            try
+                obj.opts = s.opts;
+            catch
+            end
             obj.lambdas = s.lambdas;
             obj.deltas = s.deltas;
+            try
+                obj.qrot = s.qrot;
+            catch
+            end
             obj.mus = s.mus;
             obj.zetas = s.zetas;
             obj.zeta1s = s.zeta1s;

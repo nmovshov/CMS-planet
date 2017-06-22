@@ -49,12 +49,12 @@ end
 
 %% Now set up a CMS object to mimic constant density case
 q = m/s3; % CMS method uses q=w^2a^3/GM as rotation parameter
-opts = cmsset('qrot', q,...
-              'verbosity', 2);
+opts = cmsset('verbosity', 2);
 nlayers = 2; % can be any number though!
 cms = ConcentricMaclaurinSpheroids(nlayers, opts);
 cms.lambdas = [1, rand(1,nlayers-1)];
 cms.deltas = [1, 0*(2:nlayers)];
+cms.qrot = q;
 
 %% Converge cms
 cms.relax; % (this may take a minute if using many layers)
