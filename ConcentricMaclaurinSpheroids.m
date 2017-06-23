@@ -1,4 +1,4 @@
-classdef ConcentricMaclaurinSpheroids < handle
+classdef ConcentricMaclaurinSpheroids < matlab.mixin.Copyable
     %CONCENTRICMACLAURINSPHEROIDS Implementation of CMS shape model.
     %   This class implements the iterative relaxation of concentric Maclaurin
     %   spheroids from starting (dimensionless) radii and densities to a

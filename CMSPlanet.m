@@ -1,4 +1,4 @@
-classdef CMSPlanet < handle
+classdef CMSPlanet < matlab.mixin.Copyable
     %CMSPLANET Interior model of rotating fluid planet.
     %   This class implements a model of a rotating fluid planet using the
     %   Concentric Maclaurin Spheroids technique. A CMSPlanet object is defined
@@ -860,6 +860,16 @@ classdef CMSPlanet < handle
             end
         end
     end % End of private methods block
+    
+    %% Protected methods
+    methods (Access = protected)
+        function cpObj = copyElement(obj)
+            % Override copyElement method to make deep copies of eos and cms.
+            cpObj = copyElement@matlab.mixin.Copyable(obj);
+            cpObj.cms = copy(obj.cms);
+            cpObj.eos = copy(obj.eos);
+        end
+    end
     
     %% Access methods
     methods
