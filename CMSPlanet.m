@@ -754,6 +754,82 @@ classdef CMSPlanet < matlab.mixin.Copyable
             end
         end
         
+        function to_ascii(obj, fname)
+            % Export the state of the model as ascii file.
+            
+            % File name
+            if nargin == 1, fname = obj.name; end
+            if isempty(fname), fname = 'model1.txt'; end
+            validateattributes(fname, {'char'}, {'row'}, '', 'fname', 1)
+            
+            % Open file
+            fid = fopen(fname,'wt');
+            cleanup = onCleanup(@()fclose(fid));
+            
+            % Write the header
+            fprintf(fid,'# Rotating fluid planet modeled as concentric Maclaurin spheroids.\n');
+            fprintf(fid,'#\n');
+            fprintf(fid,'# Model name: %s\n', obj.name);
+            fprintf(fid,'# Model description: %s\n', obj.desc);
+            fprintf(fid,'#\n');
+            fprintf(fid,'# Scalar quantities:\n');
+            fprintf(fid,'# N layers = %d (input)\n',obj.nlayers);
+            fprintf(fid,'# Mass M = %g kg (input)\n', double(obj.M));
+            fprintf(fid,'# Equatorial radius a0 = %0.6e m (input)\n', double(obj.a0));
+            fprintf(fid,'# Polar radius      b0 = %0.6e m (calculated)\n', double(obj.b0));
+            fprintf(fid,'# Mean radius       s0 = %0.6e m (calculated)\n', double(obj.s0));
+            fprintf(fid,'# Rotation parameter q = %0.6f (input)\n', double(obj.qrot));
+            fprintf(fid,'# Central pressure P_c = %g Pa (calculated)\n', double(obj.P_c));
+            fprintf(fid,'# Core mass fraction M_core/M = %g (calculated)\n', ...
+                double(obj.M_core)/double(obj.M));
+            fprintf(fid,'#\n');
+            fprintf(fid,'# Calculated gravity zonal harmonics (x 10^6):\n');
+            fprintf(fid,'# J2  = %12.6f\n', obj.J2*1e6);
+            fprintf(fid,'# J4  = %12.6f\n', obj.J4*1e6);
+            fprintf(fid,'# J6  = %12.6f\n', obj.J6*1e6);
+            fprintf(fid,'# J8  = %12.6f\n', obj.J8*1e6);
+            fprintf(fid,'# J10 = %12.6f\n', obj.J10*1e6);
+            fprintf(fid,'#\n');
+            fprintf(fid,'# Column data description (MKS):\n');
+            fprintf(fid,'# i     - level surface index (increasing with depth)\n');
+            fprintf(fid,'# a_i   - equatorial radius of level surface i\n');
+            fprintf(fid,'# b_i   - polar radius of level surface i\n');
+            fprintf(fid,'# s_i   - mean radius of level surface i\n');
+            fprintf(fid,'# rho_i - density between level surfaces i and i+1\n');
+            fprintf(fid,'# P_i   - pressure on level surface i\n');
+            fprintf(fid,'# dM_i  - mass between level surfaces i and i+1\n');
+            fprintf(fid,'#\n');
+            
+            % Write the data
+            fprintf(fid,'# Column data:\n');
+            fprintf(fid,'# %-4s  ','i');
+            fprintf(fid,'%-10s  ','a_i','b_i','s_i');
+            fprintf(fid,'%-7s  ','rho_i');
+            fprintf(fid,'%-10s  ','P_i','dM_i');
+            fprintf(fid,'\n');
+            for k=1:obj.nlayers
+                fprintf(fid,'  %-4d  ',k);
+                fprintf(fid,'%10.4e  ',...
+                    double(obj.ai(k)),double(obj.bi(k)),double(obj.si(k)));
+                fprintf(fid,'%7.1f  ', double(obj.rhoi(k)));
+                fprintf(fid,'%10.4e  ',...
+                    double(obj.Pi(k)),double(obj.Mi(k)));
+                fprintf(fid,'\n');
+            end
+        end
+        
+        function T = to_table(obj)
+            % Create a table from the layer vector quantities.
+            
+            T = table;
+            T.a_i   = double(obj.ai);
+            T.b_i   = double(obj.bi);
+            T.s_i   = double(obj.si);
+            T.rho_i = double(obj.rhoi);
+            T.P_i   = double(obj.Pi);
+            T.M_i   = double(obj.Mi);
+        end
+        
     end % End of public methods block
     
     %% Private methods
@@ -1048,7 +1124,7 @@ classdef CMSPlanet < matlab.mixin.Copyable
         
         function val = get.M_core(obj)
             if isempty(obj.rhoi), val = []; return, end
-            if length(unique(obj.rhoi)) == 1, val = []; return, end
+            if length(unique(double(obj.rhoi))) == 1, val = []; return, end
             val = obj.core_mass;
         end
         
