@@ -686,6 +686,7 @@ classdef CMSPlanet < matlab.mixin.Copyable
         
         function beta = renormalize_density(obj)
             beta = obj.M/obj.M_calc;
+            if abs(beta - 1) < 2*eps, return, end % don't renormalize a normal
             obj.betanorm = beta;
             obj.rhoi = obj.rhoi*obj.betanorm;
         end
