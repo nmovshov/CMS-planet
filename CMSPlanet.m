@@ -1079,6 +1079,10 @@ classdef CMSPlanet < matlab.mixin.Copyable
         end
         
         function set.eos(obj,val)
+            if isempty(val)
+                obj.eos = [];
+                return
+            end
             if ~isa(val,'barotropes.Barotrope')
                 error('eos must be a valid instance of class Barotrope')
             end
@@ -1222,6 +1226,69 @@ classdef CMSPlanet < matlab.mixin.Copyable
     
     %% Static methods
     methods (Static)
-        
+        function outcmp = updownsample(incmp, N)
+            % Return a new N-layer cmp up- or down-sampled from input cmp.
+            
+            % The inputs
+            narginchk(2,2)
+            validateattributes(incmp,{'CMSPlanet','struct'},{},'','incmp',1)
+            validateattributes(N,{'numeric'},{'positive','integer'},'','N',2)
+            try
+                incmp.ai;
+                incmp.Mi;
+                incmp.rhoi;
+            catch ME
+                error('%s\nInput must have layer radius, density, and mass.',...
+                    ME.message)
+            end
+            if length(incmp.ai) == N
+                warning(['Requested number of layers same as input cmp.',...
+                    ' To make a copy of an existing object use the copy ',...
+                    'method: outcmp = copy(incmp);'])
+                return
+            end
+            
+            % Up-sample
+            if N > length(incmp.ai)
+                warning('Upsampling not yet implemented.')
+                return
+            end
+            
+            % Down-sample
+            skip = fix(incmp.nlayers/N);
+            inds = 1:skip:incmp.nlayers;
+            a(1:N) = incmp.ai(inds(1:N));
+            cM = cumsum(incmp.Mi);
+            cV = cumsum(incmp.Mi./incmp.rhoi);
+            M = zeros(1,N)*cM(1);
+            V = zeros(1,N)*cV(1);
+            for k=1:N-1
+                M(k) = cM(inds(k+1)-1) - sum(M);
+                V(k) = cV(inds(k+1)-1) - sum(V);
+            end
+            M(N) = cM(end) - sum(M);
+            V(N) = cV(end) - sum(V);
+            rho = M./V;
+            
+            % Construct and return the up- or down-sampled cmp
+            outcmp = CMSPlanet(N);
+            outcmp.M = incmp.M;
+            outcmp.ai = a;
+            outcmp.rhoi = rho;
+            outcmp.qrot = incmp.qrot;
+            if N < incmp.nlayers
+                outcmp.name = [incmp.name, ' (downsampled)'];
+            else
+                outcmp.name = [incmp.name, ' (upsampled)'];
+            end
+            if isa(incmp, 'CMSPlanet')
+                if isvector(incmp.eos)
+                    outcmp.eos = incmp.eos(inds(1:N));
+                else
+                    outcmp.eos = incmp.eos;
+                end
+            end
+            
+        end
     end % End of static methods block
 end % End of classdef
