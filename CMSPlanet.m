@@ -1241,16 +1241,11 @@ classdef CMSPlanet < matlab.mixin.Copyable
                 error('%s\nInput must have layer radius, density, and mass.',...
                     ME.message)
             end
-            if length(incmp.ai) == N
-                warning(['Requested number of layers same as input cmp.',...
-                    ' To make a copy of an existing object use the copy ',...
-                    'method: outcmp = copy(incmp);'])
-                return
-            end
             
             % Up-sample
             if N > length(incmp.ai)
                 warning('Upsampling not yet implemented.')
+                outcmp = [];
                 return
             end
             
