@@ -1242,28 +1242,46 @@ classdef CMSPlanet < matlab.mixin.Copyable
                     ME.message)
             end
             
-            % Up-sample
-            if N > length(incmp.ai)
-                warning('Upsampling not yet implemented.')
-                outcmp = [];
-                return
+            if N >= length(incmp.ai)
+                % Up-sample
+                a = lambdas.best(N)*incmp.a0;
+                rho = interp1(incmp.ai,incmp.rhoi,a,'linear','extrap');
+                if isa(incmp, 'CMSPlanet')
+                    if isvector(incmp.eos)
+                        inds = ones(size(a));
+                        for k=1:N
+                            inds(k) = find([incmp.ai; 0] <= a(k), 1);
+                        end
+                        inds(inds > length(incmp.ai)) = length(incmp.ai);
+                        eos(1:N) = incmp.eos(inds);
+                    else
+                        eos = incmp.eos;
+                    end
+                end
+            else
+                % Down-sample
+                skip = fix(incmp.nlayers/N);
+                inds = 1:skip:incmp.nlayers;
+                a(1:N) = incmp.ai(inds(1:N));
+                cM = cumsum(incmp.Mi);
+                cV = cumsum(incmp.Mi./incmp.rhoi);
+                M = zeros(1,N)*cM(1);
+                V = zeros(1,N)*cV(1);
+                for k=1:N-1
+                    M(k) = cM(inds(k+1)-1) - sum(M);
+                    V(k) = cV(inds(k+1)-1) - sum(V);
+                end
+                M(N) = cM(end) - sum(M);
+                V(N) = cV(end) - sum(V);
+                rho = M./V;
+                if isa(incmp, 'CMSPlanet')
+                    if isvector(incmp.eos)
+                        eos = incmp.eos(inds(1:N));
+                    else
+                        eos = incmp.eos;
+                    end
+                end
             end
-            
-            % Down-sample
-            skip = fix(incmp.nlayers/N);
-            inds = 1:skip:incmp.nlayers;
-            a(1:N) = incmp.ai(inds(1:N));
-            cM = cumsum(incmp.Mi);
-            cV = cumsum(incmp.Mi./incmp.rhoi);
-            M = zeros(1,N)*cM(1);
-            V = zeros(1,N)*cV(1);
-            for k=1:N-1
-                M(k) = cM(inds(k+1)-1) - sum(M);
-                V(k) = cV(inds(k+1)-1) - sum(V);
-            end
-            M(N) = cM(end) - sum(M);
-            V(N) = cV(end) - sum(V);
-            rho = M./V;
             
             % Construct and return the up- or down-sampled cmp
             outcmp = CMSPlanet(N);
@@ -1271,17 +1289,11 @@ classdef CMSPlanet < matlab.mixin.Copyable
             outcmp.ai = a;
             outcmp.rhoi = rho;
             outcmp.qrot = incmp.qrot;
+            outcmp.eos = eos;
             if N < incmp.nlayers
                 outcmp.name = [incmp.name, ' (downsampled)'];
             else
                 outcmp.name = [incmp.name, ' (upsampled)'];
-            end
-            if isa(incmp, 'CMSPlanet')
-                if isvector(incmp.eos)
-                    outcmp.eos = incmp.eos(inds(1:N));
-                else
-                    outcmp.eos = incmp.eos;
-                end
             end
             
         end
