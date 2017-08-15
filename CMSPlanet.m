@@ -1257,6 +1257,8 @@ classdef CMSPlanet < matlab.mixin.Copyable
                     else
                         eos = incmp.eos;
                     end
+                else
+                    eos = [];
                 end
             else
                 % Down-sample
@@ -1280,6 +1282,8 @@ classdef CMSPlanet < matlab.mixin.Copyable
                     else
                         eos = incmp.eos;
                     end
+                else
+                    eos = [];
                 end
             end
             
