@@ -1226,24 +1226,29 @@ classdef CMSPlanet < matlab.mixin.Copyable
     
     %% Static methods
     methods (Static)
-        function outcmp = updownsample(incmp, N)
+        function outcmp = updownsample(incmp, N, dsmethod)
             % Return a new N-layer cmp up- or down-sampled from input cmp.
             
             % The inputs
-            narginchk(2,2)
+            narginchk(2,3)
+            if nargin == 2
+                dsmethod = 'interp';
+            end
             validateattributes(incmp,{'CMSPlanet','struct'},{},'','incmp',1)
             validateattributes(N,{'numeric'},{'positive','integer'},'','N',2)
+            validateattributes(dsmethod,{'char'},{'row'},'','dsmethod',3)
+            assert(ismember(dsmethod, {'interp','skip'}),...
+                'Unknown dsmethod: %s',dsmethod)
             try
                 incmp.ai;
-                incmp.Mi;
                 incmp.rhoi;
             catch ME
-                error('%s\nInput must have layer radius, density, and mass.',...
+                error('%s\nInput missing layer information.',...
                     ME.message)
             end
             
-            if N >= length(incmp.ai)
-                % Up-sample
+            if (N>incmp.nlayers)||(N<incmp.nlayers && isequal(dsmethod,'interp'))
+                % Up-sample and interp-ed down-sample
                 a = lambdas.best(N)*incmp.a0;
                 rho = interp1(incmp.ai,incmp.rhoi,a,'linear','extrap');
                 if isa(incmp, 'CMSPlanet')
@@ -1260,13 +1265,13 @@ classdef CMSPlanet < matlab.mixin.Copyable
                 else
                     eos = [];
                 end
-            else
-                % Down-sample
+            elseif N < length(incmp.ai)
+                % Skipped down-sample
                 skip = fix(incmp.nlayers/N);
                 inds = 1:skip:incmp.nlayers;
                 a(1:N) = incmp.ai(inds(1:N));
                 cM = cumsum(incmp.Mi);
-                cV = cumsum(incmp.Mi./incmp.rhoi);
+                cV = nancumsum(incmp.Mi./incmp.rhoi);
                 M = zeros(1,N)*cM(1);
                 V = zeros(1,N)*cV(1);
                 for k=1:N-1
@@ -1285,6 +1290,15 @@ classdef CMSPlanet < matlab.mixin.Copyable
                 else
                     eos = [];
                 end
+            else
+                % Same-sample
+                a = incmp.ai;
+                rho = incmp.rhoi;
+                if isa(incmp, 'CMSPlanet')
+                    eos = incmp.eos;
+                else
+                    eos = [];
+                end
             end
             
             % Construct and return the up- or down-sampled cmp
@@ -1296,8 +1310,10 @@ classdef CMSPlanet < matlab.mixin.Copyable
             outcmp.eos = eos;
             if N < incmp.nlayers
                 outcmp.name = [incmp.name, ' (downsampled)'];
-            else
+            elseif N > incmp.nlayers
                 outcmp.name = [incmp.name, ' (upsampled)'];
+            else
+                outcmp.name = [incmp.name, ' (redux)'];
             end
             
         end
