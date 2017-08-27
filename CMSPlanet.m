@@ -1232,7 +1232,7 @@ classdef CMSPlanet < matlab.mixin.Copyable
             % The inputs
             narginchk(2,3)
             if nargin == 2
-                dsmethod = 'interp';
+                dsmethod = 'skip';
             end
             validateattributes(incmp,{'CMSPlanet','struct'},{},'','incmp',1)
             validateattributes(N,{'numeric'},{'positive','integer'},'','N',2)
