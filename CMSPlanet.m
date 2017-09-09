@@ -41,6 +41,7 @@ classdef CMSPlanet < matlab.mixin.Copyable
         rho_s   % mean density (uses mean radius)
         M_calc  % mass from current state of cms
         M_core  % mass of core region (if one can be identified)
+        R_core  % radius of core region (if one can be identified)
         P_c     % central pressure
         P_mid   % layer internal pressure (avg. of surface pressures)
     end
@@ -719,6 +720,34 @@ classdef CMSPlanet < matlab.mixin.Copyable
             end
         end
         
+        function rcore = core_radius(obj, bypeaks)
+            % Return radius of innermost contiguous block of layers with same eos.
+            
+            if nargin < 2, bypeaks = false; end
+            if isempty(obj.eos) || isscalar(obj.eos) || bypeaks
+                cind = peakfinder(obj.cms.deltas);
+                rcore = obj.ai(cind(end));
+                return
+            end
+            
+            alleos = obj.eos;
+            if isequal(alleos(1), barotropes.ConstDensity(0))
+                zlay = true;
+                alleos(1) = [];
+            else
+                zlay = false;
+            end
+            ind = arrayfun(@isequal, alleos,...
+                repmat(alleos(end), numel(alleos), 1));
+            cind = find(~ind, 1, 'last') + 1;
+            if isempty(cind)
+                rcore = 0;
+            else
+                if zlay, cind = cind + 1; end
+                rcore = obj.ai(cind);
+            end
+        end
+        
         function s = to_struct(obj, keepvecs)
             % Convert object to static struct keeping only essential fields.
             
@@ -1131,6 +1160,12 @@ classdef CMSPlanet < matlab.mixin.Copyable
             if isempty(obj.rhoi), val = []; return, end
             if length(unique(double(obj.rhoi))) == 1, val = []; return, end
             val = obj.core_mass;
+        end
+        
+        function val = get.R_core(obj)
+            if isempty(obj.rhoi), val = []; return, end
+            if length(unique(double(obj.rhoi))) == 1, val = []; return, end
+            val = obj.core_radius;
         end
         
         function val = get.Mi(obj)
