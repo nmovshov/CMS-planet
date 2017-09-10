@@ -764,6 +764,7 @@ classdef CMSPlanet < matlab.mixin.Copyable
             s.J10      = obj.J10;
             s.NMoI     = obj.NMoI;
             s.M_core   = obj.core_mass;
+            s.R_core   = obj.core_radius;
             s.b0       = obj.b0;
             s.rho0     = obj.rho0;
             s.P_c      = obj.P_c;
