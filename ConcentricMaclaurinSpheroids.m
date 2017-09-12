@@ -539,6 +539,20 @@ classdef ConcentricMaclaurinSpheroids < matlab.mixin.Copyable
             dJ = max(dJ, max(abs(old_pprime(:) - obj.Js.pprime(:))));
         end
         
+        function s = to_struct(obj)
+            % Convert object to static struct keeping only essential fields.
+            
+            s.lambdas = obj.lambdas;
+            s.deltas  = obj.deltas;
+            s.qrot    = obj.qrot;
+            s.equiUpu = obj.equiUpu;
+            s.NMoI    = obj.NMoI;
+            s.bs      = obj.bs;
+            s.ss      = obj.ss;
+            s.Js      = obj.Js;
+            
+        end
+        
     end % End of public methods block
     
     %% Private methods

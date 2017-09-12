@@ -748,8 +748,11 @@ classdef CMSPlanet < matlab.mixin.Copyable
             end
         end
         
-        function s = to_struct(obj, keepvecs)
+        function s = to_struct(obj, keepcms)
             % Convert object to static struct keeping only essential fields.
+            
+            if nargin < 2, keepcms = true; end
+            validateattributes(keepcms, {'logical'}, {'scalar'},'','keepcms',1)
             
             s.name     = obj.name;
             s.desc     = obj.desc;
@@ -770,18 +773,13 @@ classdef CMSPlanet < matlab.mixin.Copyable
             s.P_c      = obj.P_c;
             s.betanorm = obj.betanorm;
             
-            if nargin == 1, keepvecs = 1; end
-            validateattributes(keepvecs,{'numeric'},{'integer','>=',0,'<',3})
-            if keepvecs > 0
-                s.ai    = obj.ai;
-                s.rhoi  = obj.rhoi;
-                s.Pi    = obj.Pi;
-            end
-            if keepvecs > 1
-                s.bi    = obj.bi;
-                s.si    = obj.si;
-                s.P_mid = obj.P_mid;
-                s.Mi    = obj.Mi;
+            s.ai    = obj.ai;
+            s.rhoi  = obj.rhoi;
+            s.Pi    = obj.Pi;
+            s.Mi    = obj.Mi;
+            
+            if keepcms
+                s.cms = obj.cms.to_struct();
             end
         end
         
