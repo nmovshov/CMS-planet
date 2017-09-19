@@ -112,7 +112,7 @@ where $M$ is the planet's mass and $a$ is the \emph{equatorial radius}.
 
 \subsection{Decomposition of potential into spherical harmonics}
 \label{sec:spherical_harmonics}
-The expression for the gravitational potential, eq.~(\ref{eq:gravpot}) can be
+The expression for the gravitational potential, eq.~(\ref{eq:gravpot}), can be
 written as a sum of powers of $r$ using the decomposition of $1/\abs{\arr-\arp}$
 in Legendre polynomials (see \textsc{legendre.pdf}):
 \begin{equation}\label{eq:lege_exp}
@@ -174,9 +174,9 @@ with the associated Legendre functions
 \begin{equation}\label{eq:assoc_lege}
 P_n^m(x) = (-1)^m(1 - x^2)^{m/2}\frac{d^m}{dx^m}P_n(x).
 \end{equation}
-Unfortunately there is not a universal consensus on the exact form of the $P_n^m$
+(Unfortunately there is not a universal consensus on the exact form of the $P_n^m$
 functions. If a different normalization is used then the following expressions
-will all be somewhat different. With the aid of the addition theorem we can
+will all be somewhat different.) With the aid of the addition theorem we can
 decompose the potential as\WarningsOff\footnote{Note typo in Z\&T.}\WarningsOn
 \begin{equation}\label{eq:spherical_gravity}
 \begin{split}
@@ -195,14 +195,13 @@ V(\arr) = \frac{G}{r}&\Biggl(
 with $\alpha$ as before.
 
 The above expansion is general, not requiring hydrostatic equilibrium or principal
-axis rotation. If the planet is fluid then at equilibrium the rotation will
-always be about a principal axis. If we take the polar axis (call it the $z$ axis)
-to coincide with the rotation axis then symmetry requires that $\rho(\arr)$ and
-therefor $V(\arr)$ cannot
-depend on longitude $\varphi$ and must include only even
-powers of $\cos\theta$ (for symmetry about the equator). In this case we write
-a simpler expansion involving only ordinary Legendre polynomials of only even
-degree:
+axis rotation. If the planet is fluid then at equilibrium the rotation will always
+be about a principal axis. If we take the polar axis (call it the $z$ axis) to
+coincide with the rotation axis then symmetry requires that $\rho(\arr)$ and
+therefore $V(\arr)$ cannot depend on the longitude $\varphi$ and that
+$\rho(r,\theta)$ must include only even powers of $\cos\theta$ (for symmetry about
+the equator). In this case we can write a simpler expansion involving only
+ordinary Legendre polynomials of only even degree:
 \begin{subequations}\label{eq:simp_sphe_gravity}
 \begin{equation}
 V(r,\theta)=\frac{G}{r}\sum_{n=0}^{\infty}\left(r^{-2n}D_{2n} + r^{2n +
@@ -243,17 +242,19 @@ Ma^nS_{nm} &= \frac{2(n - m)!}{(n + m)!}\int\rho(\arp)(r')^nP_n^m(\cos\theta')
 \sin(m\varphi')\,d\tau'.
 \end{align}
 \end{subequations}
-(Remember $M=\int\rho\,d\tau'$ is the planet's mass and $a$ is the equatorial
-radius.) Different normalizations of the associated Legendre functions are
-sometimes used leading to expansions with the same form but different meaning of
-the $J_n$, $C_{nm}$, and $S_{nm}$ coefficients. There is no easy way to guard
-against errors or guess which normalization was used if it is not explicitly
-given. The decomposition can also be carried out with the complex form of the
-Legendre functions leading to even more confusion.
+Remember, $M=\int\rho\,d\tau'$ is the planet's mass and $a$ is the equatorial
+radius.
 
-A natural choice of reference frame can eliminate many of the coefficients in the
+(Different normalizations of the associated Legendre functions are often used
+leading to expansions with the same form but different meaning of the $J_n$,
+$C_{nm}$, and $S_{nm}$ coefficients. There is no easy way to guard against errors
+or guess which normalization was used if it is not explicitly given. The
+decomposition can also be carried out with the complex form of the Legendre
+functions leading to even more confusion.)
+
+A natural choice of reference frame can eliminate some of the coefficients in the
 expansion~(\ref{eq:external_potential}). First, if the origin of coordinates is
-chosen at the center of mass of the planet, $\V{R}=(X,Y,Z)$ then
+chosen at the center of mass of the planet, $\V{R}=(X,Y,Z)$, then
 \begin{align*}
 -MaJ_1 &= \int{z'\,dm'} = MZ = 0,\\
 MaC_{11} &= \int{x'\,dm'} = MX = 0,\text{ and}\\
@@ -295,7 +296,7 @@ and
 S_{21} = C_{21} = S_{22} = 0.
 \end{equation}
 And of course it is still true that for a fluid planet at equilibrium the density
-must be independent of longitude and symmetrical about the equator and therefore
+must be independent of longitude and symmetric about the equator and therefore
 \begin{equation}
 D_{2n+1} = J_{2n+1} = 0,\quad\forall{n}.
 \end{equation}
