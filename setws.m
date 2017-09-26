@@ -4,8 +4,8 @@ function setws(dbg)
 if nargin == 0, dbg = false; end
 
 addpath(pwd)
-addpath(fullfile(pwd, 'filexchange'))
-addpath(fullfile(pwd, 'filexchange', 'physunits'))
+addpath(fullfile(pwd, 'extern'))
+addpath(fullfile(pwd, 'extern', 'physunits'))
 
 if dbg % use dimensionally aware preal class to help formula debugging
     evalin('base', 'si = setUnits;')
