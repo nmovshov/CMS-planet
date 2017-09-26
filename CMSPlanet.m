@@ -1351,5 +1351,47 @@ classdef CMSPlanet < matlab.mixin.Copyable
             end
             
         end
+        
+        function cmp = tof2cmp(svec, rhovec, q)
+            %TOF2CMP Construct a CMSPlanet object from mean radii grid data.
+            %   cmp = TOF2CMP(svec, rhovec, q)
+            %
+            %   cmp = TOF2CMP(svec, rhovec, q) returns a converged cmp object
+            %   iterated so that the computed cmp.si match the input mean radii
+            %   in svec. svec is a vector of length N and must be monotonically 
+            %   decreasing. rhovec is a vector of the same length as svec. Since
+            %   svec and rhovec are assumed to come from a grid-based model they
+            %   will be converted to layer-based arrays by averaging the input
+            %   densities. The planet's total mass and equatorial radius will be
+            %   computed using the input.
+            
+            %% Inputs
+            try
+                narginchk(3,3)
+            catch ME
+                help('CMSPlanet.tof2cmp')
+                rethrow(ME)
+            end
+            
+            %% Let the corrsponding cms method do the hard work.
+            fprintf('Building CMS from ToF data.\n')
+            cms = ConcentricMaclaurinSpheroids.tof2cms(svec, rhovec, q);
+            cmp = CMSPlanet(cms.nlayers);
+            cmp.cms = cms;
+            
+            %% Compute mass and equatorial radius
+            svec = svec(:);
+            rhovec = rhovec(:);
+            rhovec = [(rhovec(1:end-1) + rhovec(2:end))/2; rhovec(end)];
+            if double(svec(end)) == 0
+                svec(end) = [];
+                rhovec(end) = [];
+            end
+            cmp.M = 4*pi/3*(sum(rhovec.*svec.^3) - ...
+                        sum(rhovec(1:end-1).*svec(2:end).^3));
+            cmp.a0 = svec(1)/cmp.cms.ss(1);
+            cmp.rhoi = rhovec;
+            
+        end
     end % End of static methods block
 end % End of classdef

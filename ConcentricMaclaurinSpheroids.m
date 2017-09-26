@@ -1139,6 +1139,83 @@ classdef ConcentricMaclaurinSpheroids < matlab.mixin.Copyable
             obj.realVpuMod = s.realVpuMod;
             obj.realequiUMod = s.realequiUMod;
         end
+
+        function cms = tof2cms(svec, rhovec, q, verb, tol)
+            %TOF2CMS Construct a CMS object from mean radii grid data.
+            %   cms = TOF2CMS(svec, rhovec, q)
+            %   cms = TOF2CMS(svec, thovec, q, verb, tol)
+            %
+            %   cms = TOF2CMS(svec, rhovec, q) returns a converged cms object
+            %   iterated so that the computed cms.ss match the input mean radii
+            %   in svec/svec(1). svec is a vector of length N and must be
+            %   monotonically decreasing. The units of svec are unimportant as it
+            %   will be normalized to svec(1). rhovec is a vector of the same
+            %   length as svec. The units of rhovec are unimportant as it will
+            %   be converted to a deltas vector. Since svec and rhovec are
+            %   assumed to come from a grid-based model they will be converted to
+            %   layer-based arrays by averaging the input densities.
+            
+            %% Inputs
+            try
+                narginchk(3,5)
+            catch ME
+                help('ConcentricMaclaurinSpheroids.tof2cms')
+                rethrow(ME)
+            end
+            if nargin < 4, verb = true; end
+            if nargin < 5, tol = 1e-8; end
+            validateattributes(svec,{'numeric'},{'vector'},'','svec',1)
+            validateattributes(rhovec,{'numeric'},{'vector'},'','rhovec',2)
+            validateattributes(q,{'numeric'},{'scalar'},'','q',3)
+            validateattributes(verb,{'logical'},{'scalar'},'','verb',4)
+            validateattributes(tol,{'numeric'},{'positive','scalar'},'','tol',5)
+            
+            %% Convert s-rho-grid to normalized-s-rho-layers
+            svec = double(svec(:)./svec(1));
+            rhovec = double(rhovec(:)./rhovec(end));
+            rhovec = [(rhovec(1:end-1) + rhovec(2:end))/2; rhovec(end)];
+            if svec(end) == 0
+                svec(end) = [];
+                rhovec(end) = [];
+            end
+            
+            %% Construct a CMS object with lambdas initialized to svec
+            N = length(svec);
+            cms = ConcentricMaclaurinSpheroids(N);
+            cms.lambdas = svec;
+            cms.deltas = [rhovec(1); diff(rhovec)];
+            cms.qrot = double(q);
+            
+            %% Relax to HE
+            if verb
+                fprintf('Initial relaxation on lambda(i)=s(i)...')
+            end
+            cms.relax;
+            if verb
+                fprintf('done.\n')
+            end
+            
+            %% Iterate HE relaxation and radius adjustment until converged
+            x = cms.ss/cms.ss(1) - svec;
+            iter = 1;
+            while (max(abs(x)) > tol) && iter < 16
+                cms.lambdas = cms.lambdas - x;
+                if verb
+                    fprintf('Max mean radius offset = %g.\n',max(abs(x)))
+                    fprintf('s-lambda search, iteration %i...',iter)
+                end
+                cms.relax;
+                if verb
+                    fprintf('done.\n')
+                end
+                x = cms.ss/cms.ss(1) - svec;
+                iter = iter + 1;
+            end
+            if verb
+                fprintf('s-lambda search done, max radius offset = %g.\n',...
+                    max(abs(x)))
+            end
+        end
         
     end % End of static methods block
     
