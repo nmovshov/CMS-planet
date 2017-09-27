@@ -16,6 +16,8 @@ classdef ConcentricMaclaurinSpheroids < matlab.mixin.Copyable
         mus     % colatitude cosines
         zetas   % normalized and scaled level-surface radii
         Js      % rescaled, dimensionless, layer gravity moments
+        cooked       % flag indicating obj.relax() was run
+        fullyCooked  % flag indicating successful convergence
     end
     properties (Dependent)
         Vpu     % gravitational potential on fixed angles in planetary units
@@ -34,8 +36,6 @@ classdef ConcentricMaclaurinSpheroids < matlab.mixin.Copyable
         realVpu      % stores values of Vpu for quick retrieval
         realequiU    % stores values of equiUpu for quick access
         os           % optimset struct for use by fzero
-        cooked       % flag indicating obj.relax() was run
-        fullyCooked  % flag indicating successful convergence
         realVpuMod   % flag triggering recalculation of realVpu
         realequiUMod % flag triggering recalculation of realequiU
     end
@@ -965,8 +965,10 @@ classdef ConcentricMaclaurinSpheroids < matlab.mixin.Copyable
         end
         
         function set.qrot(obj,val)
-            validateattributes(val,{'double', 'single'},{'nonnegative','scalar'})
+            validateattributes(val,{'double','single'},{'nonnegative','scalar'})
             obj.qrot = val;
+            obj.cooked = false; %#ok<MCSUP>
+            obj.fullyCooked = false; %#ok<MCSUP>
         end
         
         function val = get.bs(obj)
