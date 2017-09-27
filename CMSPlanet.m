@@ -44,6 +44,7 @@ classdef CMSPlanet < matlab.mixin.Copyable
         R_core  % radius of core region (if one can be identified)
         P_c     % central pressure
         P_mid   % layer internal pressure (avg. of surface pressures)
+        cooked  % flag indicating obj.cms.relax() was run
     end
     properties (SetAccess = private)
         betanorm % mass renormalization factor (M/M_calc)
@@ -994,6 +995,10 @@ classdef CMSPlanet < matlab.mixin.Copyable
             msg = ['Changing number of layers in an existing CMSPlanet ',...
                 'makes no sense; create a new object instead.'];
             error(msg)
+        end
+        
+        function val = get.cooked(obj)
+            val = obj.cms.cooked;
         end
         
         function val = get.qrot(obj)
