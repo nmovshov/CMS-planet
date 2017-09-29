@@ -25,7 +25,8 @@ classdef CMSPlanet < matlab.mixin.Copyable
     end
     properties (Dependent)
         opts    % struct with opts, both CMS and CMSPlanet
-        qrot    % rotation parameter 
+        qrot    % rotation parameter
+        mrot    % another rotation parameter (read only)
         nlayers % layers of constant density 
         Js      % external gravity moments (even, 0:2:kmax degree)
         J2      % convenience name for Js(2)
@@ -1016,6 +1017,10 @@ classdef CMSPlanet < matlab.mixin.Copyable
                     rethrow(ME)
                 end
             end
+        end
+        
+        function val = get.mrot(obj)
+            val = obj.cms.mrot;
         end
         
         function val = get.Js(obj)

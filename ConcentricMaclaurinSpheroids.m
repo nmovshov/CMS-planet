@@ -25,6 +25,7 @@ classdef ConcentricMaclaurinSpheroids < matlab.mixin.Copyable
         Upu     % total potential on fixed angles in planetary units
         equiUpu % total potential at pole of (assumed) equipotential surfaces
         NMoI    % normalized moment of inertia
+        mrot    % another dimensionless rotation parameter
     end
     properties (Access = private)
         N            % real nlayers
@@ -969,6 +970,10 @@ classdef ConcentricMaclaurinSpheroids < matlab.mixin.Copyable
             obj.qrot = val;
             obj.cooked = false; %#ok<MCSUP>
             obj.fullyCooked = false; %#ok<MCSUP>
+        end
+        
+        function val = get.mrot(obj)
+            val = obj.qrot*obj.ss(1)^3;
         end
         
         function val = get.bs(obj)
