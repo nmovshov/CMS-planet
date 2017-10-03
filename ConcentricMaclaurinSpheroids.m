@@ -1176,6 +1176,8 @@ classdef ConcentricMaclaurinSpheroids < matlab.mixin.Copyable
             validateattributes(q,{'numeric'},{'scalar'},'','q',3)
             validateattributes(verb,{'logical'},{'scalar'},'','verb',4)
             validateattributes(tol,{'numeric'},{'positive','scalar'},'','tol',5)
+            assert(all(diff(svec) <= 0),...
+                   'Input svec must be monotonically non increasing.');
             
             %% Convert s-rho-grid to normalized-s-rho-layers
             svec = double(svec(:)./svec(1));
