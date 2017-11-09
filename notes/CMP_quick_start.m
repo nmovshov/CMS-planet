@@ -147,10 +147,10 @@ cmp.plot_rho_of_r;
 
 %% Using premade models
 % Instead of "manually" assigning the |ai|, |rhoi|, and |eos| fields of a new
-% |CMSPlanet| object we can use one of the existing models in the |models|
+% |CMSPlanet| object we can use one of the existing models in the |cmsmodels|
 % package.
 
-help models
+help cmsmodels
 
 %%
 % These template models all accept two required arguments. |N| is the number of
@@ -159,8 +159,8 @@ help models
 % object with an envelope that follows a polytropic pressure-density relation on
 % top of a constant-density core. We need to specify four model parameters.
 
-help models.single_polytrope_w_core
-cmp = models.single_polytrope_w_core(N, [2e5, 1, 8000, 0.15]);
+help cmsmodels.single_polytrope_w_core
+cmp = cmsmodels.single_polytrope_w_core(N, [2e5, 1, 8000, 0.15]);
 cmp.M = 318*SI.earth_mass;
 cmp.a0 = 7.14e4*SI.km;
 cmp.qrot = 0.08;

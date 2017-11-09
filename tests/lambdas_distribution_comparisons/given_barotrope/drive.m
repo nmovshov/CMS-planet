@@ -7,7 +7,7 @@ name = 'top heavy [3/4, 1/2]';
 
 x = 2.^[7:10];
 for k=1:length(x)
-    cmp = models.triple_polytrope(x(k), [1.14e5, 1, 4.6e4, 0.9, 30, 0.67, 0.85, 0.1], f, true);
+    cmp = cmsmodels.triple_polytrope(x(k), [1.14e5, 1, 4.6e4, 0.9, 30, 0.67, 0.85, 0.1], f, true);
     cmp.M = 2e27;
     cmp.a0 = 7e7;
     cmp.qrot = 0.1;

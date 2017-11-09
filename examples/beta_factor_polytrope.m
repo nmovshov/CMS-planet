@@ -50,7 +50,7 @@ for ic = 1:2;
     fprintf('Polytrope K = %.4f\n', poly_K)
     
     % Create the initial CMSPlanet object
-    cmp = models.single_polytrope(N, [poly_K, poly_n] );
+    cmp = cmsmodels.single_polytrope(N, [poly_K, poly_n] );
     cmp.name = name;
     cmp.desc = desc;
     cmp.M = M;
