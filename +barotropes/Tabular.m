@@ -48,11 +48,11 @@ classdef Tabular < barotropes.Barotrope
         end
         
         function P = pressure(obj,rho)
-            P = interp1(obj.mrho, obj.mP, rho);
+            P = interp1(obj.rho_vals, obj.P_vals, rho);
         end
         
         function rho = density(obj,P)
-            rho = interp1(obj.mP, obj.mrho, P);
+            rho = interp1(obj.P_vals, obj.rho_vals, P);
         end
     end
 end

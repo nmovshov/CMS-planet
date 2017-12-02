@@ -33,8 +33,8 @@ classdef eos_table < barotropes.Tabular
             raw = dlmread(filename,'',1,0);
             
             % Some post processing
-            P = 10.^raw(:,1)*0.1; % 1st col is log(P) in dyne/cm^2
-            rho = 10.^raw(:,2)*1000; % 2nd col is log(rho) in g/cm^3
+            rho = 10.^raw(:,1)*1000; % 1st col is log(rho) in g/cm^3
+            P = 10.^raw(:,2)*0.1; % 2nd col is log(P) in dyne/cm^2
             
             % Assign to base class properties
             obj.P_vals = P;
