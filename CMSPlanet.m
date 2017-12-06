@@ -759,8 +759,10 @@ classdef CMSPlanet < matlab.mixin.Copyable
             s.name     = obj.name;
             s.desc     = obj.desc;
             s.a0       = obj.a0;
+            s.s0       = obj.s0;
             s.M        = obj.M;
             s.qrot     = obj.qrot;
+            s.mrot     = obj.mrot;
             s.nlayers  = obj.nlayers;
             s.J2       = obj.J2;
             s.J4       = obj.J4;
@@ -776,6 +778,7 @@ classdef CMSPlanet < matlab.mixin.Copyable
             s.betanorm = obj.betanorm;
             
             s.ai    = obj.ai;
+            s.si    = obj.si;
             s.rhoi  = obj.rhoi;
             s.Pi    = obj.Pi;
             s.Mi    = obj.Mi;
