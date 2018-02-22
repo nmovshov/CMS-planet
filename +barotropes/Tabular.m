@@ -23,7 +23,7 @@ classdef Tabular < barotropes.Barotrope
             end
             try
                 narginchk(2,4)
-                if nargin < 4, extm = NaN; end
+                if nargin < 4, extm = 'extrap'; end
                 if nargin < 3, intm = 'linear'; end
                 assert(isnumeric(P) && isvector(P) && all(double(P) >= 0))
                 assert(isnumeric(rho) && isvector(rho) && all(double(rho) >= 0))
