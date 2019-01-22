@@ -12,17 +12,18 @@ function lams = best(N, varargin)
 
 narginchk(1,inf)
 validateattributes(N, {'numeric'}, {'positive', 'integer', 'scalar'}, '', 'N', 1)
-opts = parse_others(varargin{:});
+opts = parse_others(N,varargin{:});
 
-lams = lambdas.topheavy(N, opts.skew, opts.halftop);
+lams = lambdas.topheavy(N, opts.skew, opts.I, opts.halftop);
 
 end
 
-function options = parse_others(varargin)
+function options = parse_others(N,varargin)
 p = inputParser;
 p.addParameter('H', 0.01, @(x)isscalar(x) && x >=0 && x <= 0.1)
 p.addParameter('n_per_H', 30)
 p.addParameter('skew', [3/4, 1/2])
+p.addParameter('I', [1/N,1])
 p.addParameter('halftop', true, @(x)islogical(x)&&isscalar(x))
 
 p.parse(varargin{:})

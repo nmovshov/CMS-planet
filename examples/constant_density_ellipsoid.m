@@ -24,10 +24,8 @@
 % $s$. For an oblate ellipsoid the radii are related by $s^3=ba^2$.
 
 %% Prepare workspace
-clear
 clc
 close all
-%addpath(fullfile(pwd,'..'))
 
 %% Construct an exact normalized (a=1) Maclaurin ellipsoid
 m = 0.1; % small rotation parameter
@@ -41,41 +39,39 @@ xi_exact = @(mu)1./sqrt((1 + (el^2).*(mu.^2)));
 try % requires R2016a or later
     theta = linspace(0,2*pi);
     polax = polarplot(theta, xi_exact(cos(theta)));
+    polax.DisplayName = 'Exact ellipsoid';
     polax.Parent.ThetaZeroLocation = 'top';
     polax.Parent.ThetaDir = 'clockwise';
     polax.Parent.ThetaAxisUnits = 'rad';
+    hold(polax.Parent, 'on')
 catch
 end
 
-%% Now set up a CMS object to mimic constant density case
+%% Call cms.m to compute the Js; the shape structure zetas is also returned in out
 q = m/s3; % CMS method uses q=w^2a^3/GM as rotation parameter
-opts = cmsset('verbosity', 2);
-nlayers = 2; % can be any number though!
-cms = ConcentricMaclaurinSpheroids(nlayers, opts);
-cms.lambdas = [1, rand(1,nlayers-1)];
-cms.deltas = [1, 0*(2:nlayers)];
-cms.qrot = q;
+nlayers = 2; % can be any number really, all but the outer layers have zero density
+zvec = linspace(1, 1/nlayers, nlayers); % can be anything really...
+dvec = ones(nlayers,1);
 
-%% Converge cms
-cms.relax; % (this may take a minute if using many layers)
-cms.validate;
+[Js, cmsout] = cms(zvec, dvec, q, 1e-8);
 
-%% Get surface layer shape
-b_cms = cms.bs(1);
-mu = [0, cms.mus, 1];
-xi_cms = [1, cms.zetas(1,:), b_cms];
+%% Get surface layer shape using the zetas array returned by cms
+mu = [0, cmsout.mus];
+xi_cms = [1, cmsout.zetas(1,:)];
 
 % Take a quick look for sanity check
 try % requires R2016a or later
     polax = polarplot(acos(mu), xi_cms);
+    polax.DisplayName = 'CMS solution';
     polax.Parent.ThetaZeroLocation = 'top';
     polax.Parent.ThetaDir = 'clockwise';
     polax.Parent.ThetaAxisUnits = 'rad';
+    legend('show')
 catch
 end
 
 %% Compare numerical and analytic solutions
-
+figure
 % Compare the level surface radii
 dxi = xi_cms - xi_exact(mu);
 lh = semilogy(mu, abs(dxi));
@@ -87,13 +83,13 @@ ah.XLabel.String = '$\mu = \cos(\theta)$';
 ah.YLabel.String = '$d\xi$';
 ah.Title.String = '$d\xi = \xi(\mu) - 1/\sqrt{1 + l^2\mu^2}$';
 xi_err = max(abs(dxi));
-b_err = b_cms - b_exact %#ok<NOPTS>
 
 % Compare the J values
-n = 0:2:opts.kmax;
+k=0:5;
+n = 2*k;
 J_exact = (-1).^(1 + n/2).*(3./((n + 1).*(n + 3))).*(el^2/(1 + el^2)).^(n/2);
-J_cms = cms.Jn(n);
-dJ = J_cms - J_exact;
+J_cms = Js(k+1);
+dJ = (J_cms - J_exact)./J_exact;
 subplot(2,1,1,ah);
 subplot(2,1,2);
 lh = stem(n, abs(dJ));

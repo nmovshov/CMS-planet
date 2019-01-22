@@ -1,4 +1,10 @@
+# Editors
 *~
-*.asv
 *.swp
-notes/html/
+*.asv
+*.log.*
+.vscode
+__pycache__
+
+# python
+*.pyc

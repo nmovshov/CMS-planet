@@ -6,8 +6,7 @@
 %
 % with a polytropic constant $K$. This script demonstrates how to set up a
 % CMSPlanet object with a specified barotrope and converge to a density
-% structure in hydrostatic equilibrium with the given barotrope. The default
-% starting density profile is that of a homogeneous sphere.
+% structure in hydrostatic equilibrium with the given barotrope.
 %
 % The comparison model is the 3rd-order Zharkov and Trubitsyn theory. I take the
 % numbers from Table 5 of Hubbard (2013).
@@ -16,12 +15,7 @@
 clear
 clc
 close all
-%addpath(fullfile(pwd,'..'))
-try
-    si = setUnits; % if you have physunits
-catch
-    si = setFUnits; % if you don't have physunits
-end
+si = setFUnits;
 G = si.gravity;
 
 %% Set up a CMS Planet with arbitrary mass and radius
@@ -29,11 +23,15 @@ G = si.gravity;
 M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
-cmp = CMSPlanet(512);
-cmp.name = [int2str(cmp.nlayers),'-layer CMS'];
-cmp.desc = 'An index-1 polytropic planet';
-cmp.M = M;
-cmp.a0 = R;
+N = 64;
+sskip = 0;
+cmp = CMSPlanet;
+cmp.ai = linspace(1, 1/N, N);
+cmp.rhoi = linspace(1/N, 1, N);
+cmp.name = [int2str(cmp.N),'-layer CMS'];
+cmp.mass = M;
+cmp.radius = R;
+cmp.renormalize();
 cmp.qrot = 0.089195487; % Hubbard (2013) Table 5
 
 %% Construct a polytrope of index 1 to represent the planet's eos
@@ -53,10 +51,9 @@ x(end+1) = cmp.ai(end)/2;
 cmp.rhoi = rho_c*sin(a*x)./(a*x);
 
 %% Relax to desired barotrope
-cmp.opts.verbosity = 3;
 cmp.opts.MaxIterBar = 40;
-cmp.opts.dBtol = 1e-12;
-cmp.opts.email = '';
+cmp.opts.splineskip = sskip;
+cmp.opts.dJtol = 1e-6;
 cmp.relax_to_barotrope;
 
 %% Compare computed and analytic density structure
@@ -86,16 +83,6 @@ format compact
 disp(T)
 format
 try
-    cmp.plot_equipotential_surfaces;
     cmp.plot_barotrope('showinput',true,'showscaledinput',true);
 catch
 end
-
-%% Save and deliver
-% save('index1polytrope', 'cmp', 'T')
-% try
-% sendmail('address','n=1 polytrope','','index1polytrope.mat')
-% catch
-% end
-% !shutdown /s /t 30
-% exit force
