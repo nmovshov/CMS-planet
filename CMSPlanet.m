@@ -266,6 +266,83 @@ classdef CMSPlanet < handle
             ab = [a, b];
         end
         
+        function T = report_card(obj, obs)
+            % REPORT_CARD Table summary of model's vital statistics.
+            
+            % Minimal checks
+            narginchk(1,2);
+            try
+                obj.J2;
+            catch
+                warning('Uncooked object.')
+                return
+            end
+            
+            % Basic table
+            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'; 'J8'; 'NMoI'};
+            CMP1 = [obj.M; obj.J2; obj.J4; obj.J6; obj.J8; obj.NMoI];
+            T = table(CMP1, 'RowNames', vitals);
+            if ~isempty(obj.name)
+                vname = matlab.lang.makeValidName(obj.name);
+                T.Properties.VariableNames{'CMP1'} = vname;
+            end
+            if nargin == 1, return, end
+            
+            % Optionally compare with something
+            try
+                oM = obs.M;
+            catch
+                oM = NaN;
+            end
+            try
+                oJ2 = obs.J2;
+            catch
+                oJ2 = NaN;
+            end
+            try
+                oJ4 = obs.J4;
+            catch
+                oJ4 = NaN;
+            end
+            try
+                oJ6 = obs.J6;
+            catch
+                oJ6 = NaN;
+            end
+            try
+                oJ8 = obs.J8;
+            catch
+                oJ8 = NaN;
+            end
+            try
+                oNMoI = obs.NMoI;
+            catch
+                oNMoI = NaN;
+            end
+            try
+                oname = obs.name;
+            catch
+                oname = [];
+            end
+            OBS1 = [oM; oJ2; oJ4; oJ6; oJ8; oNMoI];
+            OBS1 = double(OBS1); % in case it has preals
+            T = [T table(OBS1)];
+            if ~isempty(oname)
+                vname = matlab.lang.makeValidName(obs.name);
+                try
+                    T.Properties.VariableNames{'OBS1'} = vname;
+                catch
+                    T.Properties.VariableNames{'OBS1'} = ['x_',vname];
+                end
+            end
+            DIFF = (CMP1 - OBS1)./CMP1;
+            T = [T table(DIFF, 'VariableNames', {'frac_diff'})];
+        end
+    
+    end % End of public methods block
+    
+    %% Visualizers
+    methods (Access = public)
         function [ah, lh] = plot_rho_of_r(obj, varargin)
             % Plot rho(r) where r is equatorial radius.
             
@@ -447,80 +524,76 @@ classdef CMSPlanet < handle
             gh.FontSize = 11;
         end
         
-        function T = report_card(obj, obs)
-            % REPORT_CARD Table summary of model's vital statistics.
+        function [ah, lh] = plot_spheroid_J_contributions(obj, n, varargin)
+            % Plot relative weights of *spheroids* contribution to Js.
             
-            % Minimal checks
-            narginchk(1,2);
-            try
-                obj.J2;
-            catch
-                warning('Uncooked object.')
+            % Input parsing
+            if nargin < 2
+                fprintf('Usage:\n\tCMP.plot_spheroid_J_contributions([2,4,...]).\n')
                 return
             end
+            validateattributes(n,{'numeric'},{'row','positive','integer','even'})
+            p = inputParser;
+            p.addParameter('axes',[],@(x)isscalar(x)&&isgraphics(x, 'axes'))
+            p.addParameter('cumulative',false,@(x)isscalar(x)&&islogical(x))
+            p.parse(varargin{:})
+            pr = p.Results;
             
-            % Basic table
-            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'; 'J8'; 'NMoI'};
-            CMP1 = [obj.M; obj.J2; obj.J4; obj.J6; obj.J8; obj.NMoI];
-            T = table(CMP1, 'RowNames', vitals);
-            if ~isempty(obj.name)
-                vname = matlab.lang.makeValidName(obj.name);
-                T.Properties.VariableNames{'CMP1'} = vname;
-            end
-            if nargin == 1, return, end
-            
-            % Optionally compare with something
-            try
-                oM = obs.M;
-            catch
-                oM = NaN;
-            end
-            try
-                oJ2 = obs.J2;
-            catch
-                oJ2 = NaN;
-            end
-            try
-                oJ4 = obs.J4;
-            catch
-                oJ4 = NaN;
-            end
-            try
-                oJ6 = obs.J6;
-            catch
-                oJ6 = NaN;
-            end
-            try
-                oJ8 = obs.J8;
-            catch
-                oJ8 = NaN;
-            end
-            try
-                oNMoI = obs.NMoI;
-            catch
-                oNMoI = NaN;
-            end
-            try
-                oname = obs.name;
-            catch
-                oname = [];
-            end
-            OBS1 = [oM; oJ2; oJ4; oJ6; oJ8; oNMoI];
-            OBS1 = double(OBS1); % in case it has preals
-            T = [T table(OBS1)];
-            if ~isempty(oname)
-                vname = matlab.lang.makeValidName(obs.name);
-                try
-                    T.Properties.VariableNames{'OBS1'} = vname;
-                catch
-                    T.Properties.VariableNames{'OBS1'} = ['x_',vname];
+            % Prepare the data
+            y = nan(obj.N, length(n));
+            for k=1:length(n)
+                cJi = cumsum(obj.CMS.JLike.tilde(:,n(k)+1).*obj.CMS.lambdas.^n(k));
+                dJi = sdderiv(obj.CMS.lambdas, cJi);
+                if pr.cumulative
+                    y(:,k) = cJi/cJi(end);
+                else
+                    y(:,k) = abs(dJi)/max(abs(dJi));
                 end
             end
-            DIFF = (CMP1 - OBS1)./CMP1;
-            T = [T table(DIFF, 'VariableNames', {'frac_diff'})];
+            
+            % Prepare the canvas
+            if isempty(pr.axes)
+                fh = figure;
+                set(fh, 'defaultTextInterpreter', 'latex')
+                set(fh, 'defaultLegendInterpreter', 'latex')
+                ah = axes;
+            else
+                fh = gcf;
+                ah = pr.axes;
+                axes(ah)
+            end
+            hold(ah, 'on')
+            
+            % Plot the lines
+            lh = gobjects(1,length(n));
+            for k=1:length(n)
+                lh(k) = plot(obj.CMS.lambdas, y(:,k), 'LineWidth',2);
+                lh(k).DisplayName = sprintf('$J_{%i}$',n(k));
+            end
+            
+            % Style and annotate axes
+            if isempty(pr.axes)
+                ah.Box = 'on';
+                xlabel('Spheroid normalized equatorial radius, $\lambda$', 'fontsize', 12)
+                if pr.cumulative
+                    ylabel('$|J_n(\lambda>\lambda_i)|$ [normalized]', 'fontsize', 12)
+                else
+                    ylabel('$|J_n(\lambda_i)|$ [normalized]', 'fontsize', 12)
+                end
+            end
+            
+            % Legend
+            legend(ah, 'off')
+            gh = legend(ah, flipud(lh));
+            if pr.cumulative
+                gh.Location = 'southwest';
+            else
+                gh.Location = 'northwest';
+            end
+            gh.FontSize = 11;
         end
-    
-    end % End of public methods block
+        
+    end % End of visulaizers block
     
     %% Private methods
     methods (Access = private)
