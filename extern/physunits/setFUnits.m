@@ -84,7 +84,7 @@ y.electron_charge     = 1.602176565e-19*y.coulomb;
 y.stefan_boltzmann    = 5.670373e-8*y.watt*y.m^-2*y.kelvin^-4;
 y.electron_rest_mass  = 9.10938291e-31*y.kilogram;
 y.proton_rest_mass    = 1.672621777e-27*y.kilogram;
-y.gravity             = 6.67384e-11*y.meter^3/(y.kilogram*y.second^2);
+y.gravity             = 6.67408e-11*y.meter^3/(y.kilogram*y.second^2);
 y.gravity_accel       = 9.80665*y.meter/y.second^2;
 y.g_force             = y.gravity_accel;
 
