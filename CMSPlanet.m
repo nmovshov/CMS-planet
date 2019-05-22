@@ -558,7 +558,6 @@ classdef CMSPlanet < handle
                 set(fh, 'defaultLegendInterpreter', 'latex')
                 ah = axes;
             else
-                fh = gcf;
                 ah = pr.axes;
                 axes(ah)
             end
