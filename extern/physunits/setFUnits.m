@@ -73,20 +73,18 @@ y.C   = y.coulomb;
 y.V   = y.volt;
 
 %% Definitions of common physical constants
-% (from NIST - http://physics.nist.gov/cuu/index.html)
+% 2018 NIST reference <http://physics.nist.gov/cuu/index.html>
 y.speed_of_light      = 299792458*y.meter/y.second;
-y.planck              = 6.62606957e-34*y.joule*y.second;
-y.h_bar               = 1.054571726e-34*y.joule*y.second;
-y.avogadro            = 6.02214129e+23/y.mole;
-y.universal_gas       = 8.3144621*y.joule/(y.mole*y.kelvin);
-y.boltzmann           = 1.3806488e-23*y.joule/y.kelvin;
-y.electron_charge     = 1.602176565e-19*y.coulomb;
-y.stefan_boltzmann    = 5.670373e-8*y.watt*y.m^-2*y.kelvin^-4;
-y.electron_rest_mass  = 9.10938291e-31*y.kilogram;
-y.proton_rest_mass    = 1.672621777e-27*y.kilogram;
-y.gravity             = 6.67408e-11*y.meter^3/(y.kilogram*y.second^2);
-y.gravity_accel       = 9.80665*y.meter/y.second^2;
-y.g_force             = y.gravity_accel;
+y.planck              = 6.62607015e-34*y.joule*y.second;
+y.h_bar               = 1.054571817e-34*y.joule*y.second;
+y.avogadro            = 6.02214076e+23/y.mole;
+y.universal_gas       = 8.314462618*y.joule/(y.mole*y.kelvin);
+y.boltzmann           = 1.380649e-23*y.joule/y.kelvin;
+y.electron_charge     = 1.602176634e-19*y.coulomb;
+y.electron_rest_mass  = 9.1093837015e-31*y.kilogram;
+y.proton_rest_mass    = 1.67262192369e-27*y.kilogram;
+y.stefan_boltzmann    = 5.670374419e-8*y.watt*y.m^-2*y.kelvin^-4;
+y.gravity             = 6.67430e-11*y.meter^3/(y.kilogram*y.second^2);
 
 %% Selected units of time
 y.minute        = 60.0*y.second;
