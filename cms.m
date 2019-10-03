@@ -128,16 +128,17 @@ for iter=1:maxiter
     new_Jlike = update_Js(lambdas, deltas, new_zetas, Ps, gws);
     new_Js = new_Jlike.Jn;
     
-    % Check for convergence of J0-J8 to terminate
+    % Check for convergence of J0-J8 to terminate...
     dJs = abs(Js - new_Js)./abs(Js+eps);
-    if all(dJs(1:5) < tol)
-        break
-    elseif iter < maxiter
-        Jlike = new_Jlike;
-        Js = new_Js;
-        zetas = new_zetas;
-    end
+    if all(dJs(1:5) < tol), break, end
+    
+    % ... or update to new values and continue
+    Jlike = new_Jlike;
+    Js = new_Js;
+    zetas = new_zetas;
 end
+
+% It's not always a disaster if maxiter is reached, but we'd like to know
 if iter == maxiter
     warning('CMS:maxiter','Shape may not be fully converged.')
 end
@@ -303,7 +304,7 @@ end
 end
 
 function newzetas = skipnspline_zetas(Js, Ps, lamrats, qrot, oldzetas, zvec, sskip)
-% Update level surfaces using current value of Js.
+% Update layer shapes using current value of Js.
 
 nlay = size(lamrats,2);
 ind = 1:sskip:nlay;
