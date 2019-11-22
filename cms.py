@@ -7,6 +7,7 @@ from __future__ import division
 import sys
 import numpy as np
 import warnings
+from numba import jit
 
 def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
     """Return gravity coefficients of density profile in hydrostatic equilibrium.
@@ -274,8 +275,13 @@ def _Pn(n, x):
 def _zeta_j_of_alfa(j, alfa, Js, Ps, lamrats, qrot, oldzeta):
     """Call fzero on _eq52 to find equilibrium zeta."""
     from scipy.optimize import root_scalar
+    Jt = Js.tilde
+    Jtp = Js.tildeprime
+    Jtpp = Js.tildeprimeprime
+    P0 = Ps.Pnzero
+    Pmu = Ps.Pnmu[:,alfa]
     def fun(x):
-        return _eq52(x,j,alfa,Js,Ps,lamrats,qrot)
+        return _eq52(x,j,Jt,Jtp,Jtpp,P0,Pmu,lamrats,qrot)
     if oldzeta == 1.0:
         x1 = oldzeta*0.99
     else:
@@ -283,17 +289,13 @@ def _zeta_j_of_alfa(j, alfa, Js, Ps, lamrats, qrot, oldzeta):
     sol = root_scalar(fun, x0=oldzeta, x1=x1)
     return sol.root
 
-def _eq52(zja, jl, alfa, Js, Ps, lamrats, qrot):
+@jit(nopython=True)
+def _eq52(zja, jl, Jt, Jtp, Jtpp, P0, Pmu, lamrats, qrot):
     # locals
     nlay = lamrats.shape[1]
-    kmax = len(Ps.Pnzero)-1
-    Jt = Js.tilde
-    Jtp = Js.tildeprime
-    Jtpp = Js.tildeprimeprime
+    kmax = len(P0)-1
     lamj3 = lamrats[3,jl,0]
     q = qrot
-    P0 = Ps.Pnzero
-    Pmu = Ps.Pnmu[:,alfa]
     pows = np.arange(kmax+2)
     zetpow = zja**pows
     zetipow = zja**-pows
@@ -423,12 +425,16 @@ def _update_Js(lambdas, deltas, zetas, Ps, gws):
     return newJs
 
 def _test():
+    import time
     N = 12
     zvec = np.linspace(1, 1.0/N, N)
     dvec = np.linspace(1/N,2,N)
     qrot = 0.1
+    tic = time.time()
     Js, out = cms(zvec,dvec,qrot,xlayers=12)
+    toc = time.time()
     print(Js[0:3])
+    print("Elapsed time {} seconds".format(toc-tic))
 
 if __name__ == '__main__':
     _test()
