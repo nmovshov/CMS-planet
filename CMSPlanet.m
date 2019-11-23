@@ -236,7 +236,7 @@ classdef CMSPlanet < handle
             end
         end
         
-        function set_observables(obj, obs)
+        function obj = set_observables(obj, obs)
             % Copy physical properties from an +observables struct.
             obj.mass = obs.M;
             obj.radius = obs.a0;
@@ -249,7 +249,7 @@ classdef CMSPlanet < handle
             end
         end
 
-        function set_J_guess(obj, jlike)
+        function obj = set_J_guess(obj, jlike)
             % Use with caution
             obj.CMS.JLike = jlike;
         end
@@ -270,80 +270,6 @@ classdef CMSPlanet < handle
             end
             ab = [a, b];
         end
-        
-        function T = report_card(obj, obs)
-            % REPORT_CARD Table summary of model's vital statistics.
-            
-            % Minimal checks
-            narginchk(1,2);
-            try
-                obj.J2;
-            catch
-                warning('Uncooked object.')
-                return
-            end
-            
-            % Basic table
-            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'; 'J8'; 'NMoI'};
-            CMP1 = [obj.M; obj.J2; obj.J4; obj.J6; obj.J8; obj.NMoI];
-            T = table(CMP1, 'RowNames', vitals);
-            if ~isempty(obj.name)
-                vname = matlab.lang.makeValidName(obj.name);
-                T.Properties.VariableNames{'CMP1'} = vname;
-            end
-            if nargin == 1, return, end
-            
-            % Optionally compare with something
-            try
-                oM = obs.M;
-            catch
-                oM = NaN;
-            end
-            try
-                oJ2 = obs.J2;
-            catch
-                oJ2 = NaN;
-            end
-            try
-                oJ4 = obs.J4;
-            catch
-                oJ4 = NaN;
-            end
-            try
-                oJ6 = obs.J6;
-            catch
-                oJ6 = NaN;
-            end
-            try
-                oJ8 = obs.J8;
-            catch
-                oJ8 = NaN;
-            end
-            try
-                oNMoI = obs.NMoI;
-            catch
-                oNMoI = NaN;
-            end
-            try
-                oname = obs.name;
-            catch
-                oname = [];
-            end
-            OBS1 = [oM; oJ2; oJ4; oJ6; oJ8; oNMoI];
-            OBS1 = double(OBS1); % in case it has preals
-            T = [T table(OBS1)];
-            if ~isempty(oname)
-                vname = matlab.lang.makeValidName(obs.name);
-                try
-                    T.Properties.VariableNames{'OBS1'} = vname;
-                catch
-                    T.Properties.VariableNames{'OBS1'} = ['x_',vname];
-                end
-            end
-            DIFF = (CMP1 - OBS1)./CMP1;
-            T = [T table(DIFF, 'VariableNames', {'frac_diff'})];
-        end
-    
     end % End of public methods block
     
     %% Visualizers
@@ -596,9 +522,213 @@ classdef CMSPlanet < handle
             end
             gh.FontSize = 11;
         end
-        
     end % End of visulaizers block
     
+    %% Reporters/exporters
+    methods (Access = public)
+        function T = report_card(obj, obs)
+            % REPORT_CARD Table summary of model's vital statistics.
+            
+            % Minimal checks
+            narginchk(1,2);
+            try
+                obj.J2;
+            catch
+                warning('Uncooked object.')
+                return
+            end
+            
+            % Basic table
+            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'; 'J8'; 'NMoI'};
+            CMP1 = [obj.M; obj.J2; obj.J4; obj.J6; obj.J8; obj.NMoI];
+            CMP1 = double(CMP1);
+            T = table(CMP1, 'RowNames', vitals);
+            if ~isempty(obj.name)
+                vname = matlab.lang.makeValidName(obj.name);
+                T.Properties.VariableNames{'CMP1'} = vname;
+            end
+            if nargin == 1, return, end
+            
+            % Optionally compare with something
+            try
+                oM = obs.M;
+            catch
+                oM = NaN;
+            end
+            try
+                oJ2 = obs.J2;
+                oJ4 = obs.J4;
+                oJ6 = obs.J6;
+                oJ8 = obs.J8;
+            catch
+                oJ2 = NaN;
+                oJ4 = NaN;
+                oJ6 = NaN;
+                oJ8 = NaN;
+            end
+            try
+                oNMoI = obs.NMoI;
+            catch
+                oNMoI = NaN;
+            end
+            try
+                oname = obs.name;
+            catch
+                oname = [];
+            end
+            OBS1 = [oM; oJ2; oJ4; oJ6; oJ8; oNMoI];
+            OBS1 = double(OBS1);
+            T = [T table(OBS1)];
+            if ~isempty(oname)
+                vname = matlab.lang.makeValidName(obs.name);
+                try
+                    T.Properties.VariableNames{'OBS1'} = vname;
+                catch
+                    T.Properties.VariableNames{'OBS1'} = ['x_',vname];
+                end
+            end
+            DIFF = (CMP1 - OBS1)./CMP1;
+            T = [T table(DIFF, 'VariableNames', {'frac_diff'})];
+        end
+        
+        function s = to_struct(obj, rdc, keepjlike)
+            % Convert object to static struct keeping only essential fields.
+            
+            if nargin < 2, rdc = 1; end % 0=none, 1=to double, 2=to single, 3=to scalars
+            if nargin < 3, keepjlike = false; end % keep JLike e.g. to help re-relaxing
+            
+            s.name   = obj.name;
+            s.M      = obj.M;
+            s.s0     = obj.s0;
+            s.a0     = obj.a0;
+            s.M_Z    = obj.M_Z;
+            s.rhobar = obj.rhobar;
+            s.mrot   = obj.mrot;
+            s.qrot   = obj.qrot;
+            s.J2     = obj.J2;
+            s.J4     = obj.J4;
+            s.J6     = obj.J6;
+            s.J8     = obj.J8;
+            s.NMoI   = obj.NMoI;
+            s.si     = obj.si;
+            s.ai     = obj.ai;
+            s.rhoi   = obj.rhoi;
+            s.Pi     = obj.Pi;
+            s.mi     = obj.mi;
+            s.zi     = obj.zi;
+            
+            if rdc > 0
+                s = structfun(@double, s, 'UniformOutput', false);
+                s.name = obj.name;
+            end
+            if rdc > 1
+                s = structfun(@single, s, 'UniformOutput', false);
+                s.name = obj.name;
+            end
+            if rdc > 2
+                s.si     = [];
+                s.ai     = [];
+                s.rhoi   = [];
+                s.Pi     = [];
+                s.mi     = [];
+                s.zi     = [];
+            end
+            
+            try
+                s.eos = obj.eos.name;
+            catch
+                s.eos = '';
+            end
+            try
+                s.bgeos = obj.bgeos.name;
+            catch
+                s.bgeos = '';
+            end
+            try
+                s.fgeos = obj.fgeos.name;
+            catch
+                s.fgeos = '';
+            end
+            
+            if keepjlike
+                s.JLike = obj.CMS.JLike;
+            end
+        end
+        
+        function T = to_table(obj)
+            % Return a table of critical quantities.
+            
+            T = table;
+            T.ai = double(obj.ai);
+            T.si = double(obj.si);
+            T.rhoi = double(obj.rhoi);
+            T.Pi = double(obj.Pi);
+            T.mi = double(obj.mi);
+            if ~isempty(obj.zi)
+                T.zi = double(obj.zi);
+            end
+        end
+        
+        function to_ascii(obj, fname)
+            % Export the state of the model as ascii file.
+            
+            % File name
+            if nargin < 2
+                fprintf('Usage:\n\tcmp.to_ascii(filename)\n')
+                return
+            end
+            validateattributes(fname, {'char'}, {'row'}, '', 'fname', 1)
+            
+            % Open file
+            fid = fopen(fname,'wt');
+            cleanup = onCleanup(@()fclose(fid));
+            
+            % Write the header
+            fprintf(fid,'# Rotating fluid planet modeled by Concentric Maclaurin Spheroids.\n');
+            fprintf(fid,'#\n');
+            fprintf(fid,'# Model name: %s\n', obj.name);
+            fprintf(fid,'#\n');
+            fprintf(fid,'# Scalar quantities:\n');
+            fprintf(fid,'# N layers = %d\n',obj.N);
+            fprintf(fid,'# Mass M = %g kg\n', double(obj.M));
+            fprintf(fid,'# Mean radius       s0 = %0.6e m\n', double(obj.s0));
+            fprintf(fid,'# Equatorial radius a0 = %0.6e m\n', double(obj.a0));
+            fprintf(fid,'# Rotation parameter m = %0.6f\n', double(obj.mrot));
+            fprintf(fid,'# Rotation parameter q = %0.6f\n', double(obj.qrot));
+            fprintf(fid,'#\n');
+            fprintf(fid,'# Calculated gravity zonal harmonics (x 10^6):\n');
+            fprintf(fid,'# J2  = %12.6f\n', obj.J2*1e6);
+            fprintf(fid,'# J4  = %12.6f\n', obj.J4*1e6);
+            fprintf(fid,'# J6  = %12.6f\n', obj.J6*1e6);
+            fprintf(fid,'# J8  = %12.6f\n', obj.J8*1e6);
+            fprintf(fid,'#\n');
+            fprintf(fid,'# Column data description (MKS):\n');
+            fprintf(fid,'# i     - level surface index (increasing with depth)\n');
+            fprintf(fid,'# s_i   - mean radius of level surface i\n');
+            fprintf(fid,'# a_i   - equatorial radius of level surface i\n');
+            fprintf(fid,'# rho_i - density on level surfaces i\n');
+            fprintf(fid,'# P_i   - pressure on level surface i\n');
+            fprintf(fid,'# m_i   - mass below level surface i\n');
+            fprintf(fid,'#\n');
+            
+            % Write the data
+            fprintf(fid,'# Column data:\n');
+            fprintf(fid,'# %-4s  ','i');
+            fprintf(fid,'%-10s  ','s_i','a_i');
+            fprintf(fid,'%-7s  ','rho_i');
+            fprintf(fid,'%-10s  ','P_i','m_i');
+            fprintf(fid,'\n');
+            for k=1:obj.N
+                fprintf(fid,'  %-4d  ',k);
+                fprintf(fid,'%10.4e  ', double(obj.si(k)));
+                fprintf(fid,'%10.4e  ', double(obj.ai(k)));
+                fprintf(fid,'%7.1f  ', double(obj.rhoi(k)));
+                fprintf(fid,'%10.4e  ', double(obj.Pi(k)), double(obj.mi(k)));
+                fprintf(fid,'\n');
+            end
+        end
+    end % End of reporters/exporters block
+
     %% Private methods
     methods (Access = private)
         function Upu = calc_equipotential_Upu(obj)
