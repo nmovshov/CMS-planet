@@ -248,6 +248,11 @@ classdef CMSPlanet < handle
             catch
             end
         end
+
+        function set_J_guess(obj, jlike)
+            % Use with caution
+            obj.CMS.JLike = jlike;
+        end
         
         function ab = renormalize(obj)
             % Match input and calculated mass and equatorial radius.
