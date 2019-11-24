@@ -651,7 +651,7 @@ classdef CMSPlanet < handle
             end
             
             if keepjlike
-                s.JLike = obj.CMS.JLike;
+                s.CMS.JLike = obj.CMS.JLike;
             end
         end
         
