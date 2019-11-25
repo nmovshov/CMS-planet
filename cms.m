@@ -312,7 +312,7 @@ nangles = size(Ps.Pnmu,2);
 Y = NaN(length(ind),nangles);
 
 % skip...
-for j=1:length(ind)
+parfor j=1:length(ind)
     for alfa=1:nangles
         oldzeta = oldzetas(ind(j),alfa);
         Y(j,alfa) = zeta_j_of_alfa(ind(j), alfa, Js, Ps, lamrats, qrot, oldzeta);
