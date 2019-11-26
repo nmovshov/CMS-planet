@@ -306,7 +306,7 @@ end
 function newzetas = skipnspline_zetas(Js, Ps, lamrats, qrot, oldzetas, zvec, sskip)
 % Update layer shapes using current value of Js.
 
-nlay = size(lamrats,2);
+nlay = size(Js.tilde,1);
 ind = 1:sskip:nlay;
 nangles = size(Ps.Pnmu,2);
 Y = NaN(length(ind),nangles);
@@ -395,7 +395,7 @@ end
 
 function y = eq52(zja, jl, alfa, Js, Ps, lamrats, qrot)
 % locals
-nlay = size(lamrats,2);
+nlay = size(Js.tilde,1);
 kmax = length(Ps.Pnzero)-1;
 Jt = Js.tilde;
 Jtp = Js.tildeprime;
