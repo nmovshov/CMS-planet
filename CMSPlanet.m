@@ -172,7 +172,7 @@ classdef CMSPlanet < handle
             if isempty(obj.CMS), obj.CMS.JLike = []; end
             [obj.Js, obj.CMS] = cms(zvec, dvec, obj.qrot,...
                 obj.opts.dJtol, obj.opts.MaxIterHE, obj.opts.splineskip,...
-                obj.CMS.JLike);
+                obj.CMS.JLike, obj.opts.prerat);
             ET = toc(t_rlx);
             dJ = obj.CMS.dJs;
             

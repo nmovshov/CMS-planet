@@ -16,6 +16,7 @@ function options = cmsset(varargin)
 %MaxIterHE - Number of iterations allowed for relaxation to equilibrium shape [ positive integer {60} ]
 %splineskip - Solve shape functions for every nth spheroid and spline the rest [ nonnegative integer {0} ]
 %verbosity - Level of runtime messages [0 {1} 2 3 4]
+%prerat - Precalculate powers of ratios of lambdas (trades memory for speed) [ {true} | false ]
 
 % If no arguments print usage and return.
 if (nargin == 0) && (nargout == 0)
@@ -33,6 +34,7 @@ p.addParameter('MaxIterHE',60,@isposintscalar)
 p.addParameter('MaxIterBar',60,@isposintscalar)
 p.addParameter('splineskip',0,@isnonnegintscalar)
 p.addParameter('verbosity',1,@isnonnegintscalar)
+p.addParameter('prerat',true,@islogicalscalar)
 
 % undocumented or obsolete options
 p.addParameter('nangles',48,@isposintscalar)% #colatitudes used to define level surface
@@ -49,7 +51,7 @@ function isposscalar(x)
 validateattributes(x,{'numeric'},{'positive','scalar'})
 end
 
-function islogicalscalar(x) %#ok<DEFNU>
+function islogicalscalar(x)
 validateattributes(x,{'logical'},{'scalar'})
 end
 

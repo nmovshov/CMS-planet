@@ -1,4 +1,4 @@
-function [Js, out] = cms(zvec, dvec, qrot, tol, maxiter, sskip, J0s)
+function [Js, out] = cms(zvec, dvec, qrot, tol, maxiter, sskip, J0s, prerat)
 %CMS Return gravity coefficients using the Concentric Maclaurin Spheroids method.
 %   Js = CMS(zvec, dvec, qrot)
 %   [Js, out] = CMS(zvec, dvec, qrot, tol, maxiter, sskip, J0s)
@@ -48,11 +48,12 @@ if nargin == 0
     fprintf('Usage:\n  CMS(zvec, dvec, qrot, tol=1e-6, maxiter=100, sskip=0)\n')
     return
 end
-narginchk(3,7);
+narginchk(3,8);
 if nargin < 4 || isempty(tol), tol = 1e-6; end
 if nargin < 5 || isempty(maxiter), maxiter = 100; end
 if nargin < 6 || isempty(sskip), sskip = 0; end
 if nargin < 7 || isempty(J0s), J0s = struct(); end
+if nargin < 8 || isempty(prerat), prerat = true; end
 validateattributes(zvec,{'numeric'},{'finite','nonnegative','vector'},'','zvec',1)
 validateattributes(dvec,{'numeric'},{'finite','nonnegative','vector'},'','dvec',2)
 validateattributes(qrot,{'numeric'},{'finite','nonnegative','scalar'},'','qrot',3)
@@ -60,6 +61,7 @@ validateattributes(tol,{'numeric'},{'finite','positive','scalar'},'','tol',4)
 validateattributes(maxiter,{'numeric'},{'positive','scalar','integer'},'','maxiter',5)
 validateattributes(sskip,{'numeric'},{'nonnegative','scalar','integer'},'','sskip',6)
 validateattributes(J0s,{'struct'},{'scalar'},'','J0s',7)
+validateattributes(prerat,{'logical'},{'scalar'},'','prerat',8)
 assert(length(zvec) == length(dvec),...
     'length(zvec)=%d~=%d=length(dvec)',length(zvec),length(dvec))
 [zvec, I] = sort(zvec);
@@ -104,14 +106,18 @@ for k=0:kmax
 end
 
 % Precompute powers of ratios of lambdas
-lamratpow = nan(kmax+2,nlay,nlay);
-for ii=1:nlay
-    for jj=1:nlay
-        for kk=1:kmax+2
-            lamratpow(kk,ii,jj) = ...
-                (lambdas(ii)/lambdas(jj))^(kk-1);
+if prerat
+    lamratpow = nan(kmax+2,nlay,nlay);
+    for ii=1:nlay
+        for jj=1:nlay
+            for kk=1:kmax+2
+                lamratpow(kk,ii,jj) = ...
+                    (lambdas(ii)/lambdas(jj))^(kk-1);
+            end
         end
     end
+else
+    lamratpow = @(kk,ii,jj)(lambdas(ii)./lambdas(jj)).^(kk-1);
 end
 
 %% The loop (see Hubbard, 2012 and ./notes/CMS.pdf)
