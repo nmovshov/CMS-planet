@@ -1,10 +1,16 @@
-function [Js, out] = cms(zvec, dvec, qrot, tol, maxiter, sskip, J0s, prerat)
+function [Js, out] = cms(zvec, dvec, qrot, varargin)
 %CMS Return gravity coefficients using the Concentric Maclaurin Spheroids method.
-%   Js = CMS(zvec, dvec, qrot)
-%   [Js, out] = CMS(zvec, dvec, qrot, tol, maxiter, sskip, J0s)
+%   Js = CMS(zvec, dvec, qrot) returns the even harmonic gravity coefficients from
+%   J0 to J30 in the vector Js, so that Js(1) is J0, Js(2) is J2, Js(3) is J4,
+%   etc. The mandatory inputs are a vector of equatorial radii zvec, vector of
+%   corresponding layer densities dvec, and rotation parameter qrot.
 %
-% Inputs
-% ------
+%   [Js, out] = CMS(zvec, dvec, qrot, 'NAME1',VALUE1, 'NAME2',VALUE2,...) takes
+%   additional optional parameters as NAME/VALUE pairs, and also returns an output
+%   struct holding diagnostic values and the full hydrostatic spheroid shapes.
+%
+% Inputs, required
+% ----------------
 % zvec : 1d array, positive real
 %     Equatorial radii of layers where density is specified. Units are unimportant
 %     as values will be normalized to outer radius.
@@ -15,18 +21,24 @@ function [Js, out] = cms(zvec, dvec, qrot, tol, maxiter, sskip, J0s, prerat)
 %     density deltas of concentric spheroids.)
 % qrot : scalar, nonnegative
 %     Dimensionless rotation parameter. Recall q = w^2a0^3/GM.
+%
+% Inputs, NAME/VALUE pairs
 % tol : scalar, positive, (tol=1e-6)
 %     Convergence tolerance on fractional change in Js in successive iterations.
 % maxiter : scalar, positive, integer, (maxiter=100)
 %     Maximum number of iterations of CMS algorithm.
-% sskip : scalar, nonnegative, integer (sskip=0)
-%     Step size for skip-and-spline approximation. The shape functions (zetas)
-%     will be explicitly calculated only on every sskip layer, and
+% xlayers : scalar of vector, nonnegative, integer (xlayers=64)
+%     Layers whose shape will be explicitly calculated. The shape functions
+%     (zetas) will be explicitly calculated for these layers, and
 %     spline-interpolated in between. This can result in significant speedup with
-%     minimal loss of precision, but the sskip value must be chosen by trial and
-%     error to fit the required precision and number of layers. For example, a
-%     1024-layer model can benefit from almost 16x-speedup by specifying sskip=16
-%     while retaining a 10^-6 relative precision on J2.
+%     minimal loss of precision, if the xlayers are chosen by trial and error to
+%     fit the required precision and the spacing of density layers. A scalar value
+%     is interpreted as a number of xlayers to be uniformaly distributed among the
+%     density layers. For example, a smooth-density 1024-layer model can benefit
+%     from almost 16x-speedup by specifying xlayers=64 while retaining a 10^-6
+%     relative precision on J2. A vector value is interpreted as indices of layers
+%     to be used as xlayers. (A negative value is a shortcut to flag a full
+%     calculation instead of skip-n-spline, useful for debugging.)
 % J0s : struct
 %     J-like values representing initial state. This is not just for speeding up
 %     convergence. Mostly it's a mechanism to preserve state between calls.
@@ -41,27 +53,20 @@ function [Js, out] = cms(zvec, dvec, qrot, tol, maxiter, sskip, J0s, prerat)
 %     cms. Including out.zetas and out.JLike that together define the converged
 %     hydrostatic shape.
 %
-%CMS(zvec, dvec, qrot, tol=1e-6, maxiter=100, sskip=0, J0s=[])
+%CMS(zvec, dvec, qrot)
 
 %% Input parsing
+% Zero inputs case, usage only
 if nargin == 0
-    fprintf('Usage:\n  CMS(zvec, dvec, qrot, tol=1e-6, maxiter=100, sskip=0)\n')
+    print_usage()
     return
 end
-narginchk(3,8);
-if nargin < 4 || isempty(tol), tol = 1e-6; end
-if nargin < 5 || isempty(maxiter), maxiter = 100; end
-if nargin < 6 || isempty(sskip), sskip = 0; end
-if nargin < 7 || isempty(J0s), J0s = struct(); end
-if nargin < 8 || isempty(prerat), prerat = true; end
+narginchk(3,inf);
+
+% Mandatory inputs
 validateattributes(zvec,{'numeric'},{'finite','nonnegative','vector'},'','zvec',1)
 validateattributes(dvec,{'numeric'},{'finite','nonnegative','vector'},'','dvec',2)
 validateattributes(qrot,{'numeric'},{'finite','nonnegative','scalar'},'','qrot',3)
-validateattributes(tol,{'numeric'},{'finite','positive','scalar'},'','tol',4)
-validateattributes(maxiter,{'numeric'},{'positive','scalar','integer'},'','maxiter',5)
-validateattributes(sskip,{'numeric'},{'nonnegative','scalar','integer'},'','sskip',6)
-validateattributes(J0s,{'struct'},{'scalar'},'','J0s',7)
-validateattributes(prerat,{'logical'},{'scalar'},'','prerat',8)
 assert(length(zvec) == length(dvec),...
     'length(zvec)=%d~=%d=length(dvec)',length(zvec),length(dvec))
 [zvec, I] = sort(zvec);
@@ -69,6 +74,9 @@ dvec = dvec(I);
 zvec = flipud(zvec(:)); % now it's a column for sure
 dvec = flipud(dvec(:)); % now it's a column for sure
 if zvec(end) == 0, zvec(end) = eps; end
+
+% Optional arguments
+opts = parsem(varargin{:});
 
 %% Normalize radii and density
 dro = [dvec(1); diff(dvec)];
@@ -81,17 +89,24 @@ dvec = dvec/robar;
 lambdas = zvec;
 deltas = [dvec(1); diff(dvec)];
 nlay = length(lambdas);
-nangles = 48;
-kmax = 30;
+nangles = opts.nangles;
+kmax = opts.kmax;
+if isscalar(opts.xlayers)
+    sskip = max(fix(nlay/opts.xlayers), 1);
+    xlay_ind = 1:sskip:nlay;
+else
+    warning('Experimental feature, use with care.')
+    xlay_ind = opts.xlayers;
+end
 
 % Initialize zetas as spherical
 zetas = ones(nlay, nangles);
 
 % Initialize J-like quantities for spherical planet
-if isempty(fieldnames(J0s))
+if isempty(fieldnames(opts.J0s))
     Jlike = allocate_spherical_Js(nlay, kmax, lambdas, deltas);
 else
-    Jlike = J0s;
+    Jlike = opts.J0s;
 end
 
 % Abscissas and weights for Gaussian quadrature
@@ -106,7 +121,7 @@ for k=0:kmax
 end
 
 % Precompute powers of ratios of lambdas
-if prerat
+if opts.prerat
     lamratpow = nan(kmax+2,nlay,nlay);
     for ii=1:nlay
         for jj=1:nlay
@@ -122,12 +137,12 @@ end
 
 %% The loop (see Hubbard, 2012 and ./notes/CMS.pdf)
 Js = Jlike.Jn;
-for iter=1:maxiter
+for iter=1:opts.maxiter
     % Update shape with current gravity
-    if sskip == 0
+    if any(xlay_ind <= 0)
         new_zetas = update_zetas(Jlike, Ps, lamratpow, qrot, zetas);
     else
-        new_zetas = skipnspline_zetas(Jlike, Ps, lamratpow, qrot, zetas, zvec, sskip);
+        new_zetas = skipnspline_zetas(Jlike, Ps, lamratpow, qrot, zetas, zvec, xlay_ind);
     end
     
     % Update gravity with current shape
@@ -136,7 +151,7 @@ for iter=1:maxiter
     
     % Check for convergence of J0-J8 to terminate...
     dJs = abs(Js - new_Js)./abs(Js+eps);
-    if all(dJs(1:5) < tol), break, end
+    if all(dJs(1:5) < opts.tol), break, end
     
     % ... or update to new values and continue
     Jlike = new_Jlike;
@@ -145,7 +160,7 @@ for iter=1:maxiter
 end
 
 % It's not always a disaster if maxiter is reached, but we'd like to know
-if iter == maxiter
+if iter == opts.maxiter
     warning('CMS:maxiter','Shape may not be fully converged.')
 end
 
@@ -164,6 +179,36 @@ out.Ps = Ps;
 end
 
 %% Helper functions
+function print_usage()
+fprintf('Usage:\n\tcms(zvec,dvec,qrot,''name'',value)\n')
+fprintf('Name-Value pair arguments:\n')
+fprintf('tol - Convergence tolerance for gravity coefficients [ positive real {1e-6} ]\n')
+fprintf('maxiter - Number of iterations allowed for relaxation to equilibrium shape [ positive integer {60} ]\n')
+fprintf('xlayers - Solve shape functions on xlayers and spline the rest [ integer scalar or vector {64} ]\n')
+fprintf('prerat - Precalculate powers of ratios of lambdas (trades memory for speed) [ {true} | false ]\n')
+fprintf('J0s - J-like values representing initial state [ scalar struct {[]} ]\n')
+end
+
+function options = parsem(varargin)
+p = inputParser;
+p.FunctionName = 'cms.m';
+
+p.addParameter('tol',1e-6,@(x)isscalar(x)&&isreal(x)&&x>0)
+p.addParameter('maxiter',60,@(x)isscalar(x)&&isreal(x)&&x>0&&mod(x,1)==0)
+p.addParameter('xlayers',64,@(x)validateattributes(x,{'numeric'},{'vector','integer'}))
+p.addParameter('prerat',true,@(x)isscalar(x)&&islogical(x))
+p.addParameter('J0s',struct(),@(x)isscalar(x)&&isstruct(x))
+
+% undocumented or obsolete options
+p.addParameter('nangles',48,@isposintscalar)% #colatitudes used to define level surface
+p.addParameter('kmax',30,@isposintscalar) % degree to carry out gravity mulitpole expansion
+p.addParameter('TolX',1e-12,@isposscalar) % termination tolerance for root finding
+
+% Parse name-value pairs and return.
+p.parse(varargin{:})
+options = p.Results;
+end
+
 function Js = allocate_spherical_Js(nlay,nmom,lambdas,deltas)
 Js.tilde = zeros(nlay,(nmom+1));
 Js.tildeprime = zeros(nlay,(nmom+1));
@@ -298,7 +343,7 @@ function newzetas = update_zetas(Js, Ps, lamrats, qrot, oldzetas)
 % Update level surfaces using current value of Js.
 
 % Loop over layers (outer) and colatitudes (inner)
-nlay = size(lamrats,2);
+nlay = size(Js.tilde,1);
 nangles = size(Ps.Pnmu,2);
 newzetas = NaN(nlay,nangles);
 for j=1:nlay
@@ -309,26 +354,25 @@ for j=1:nlay
 end
 end
 
-function newzetas = skipnspline_zetas(Js, Ps, lamrats, qrot, oldzetas, zvec, sskip)
+function newzetas = skipnspline_zetas(Js, Ps, lamrats, qrot, oldzetas, zvec, xind)
 % Update layer shapes using current value of Js.
 
 nlay = size(Js.tilde,1);
-ind = 1:sskip:nlay;
 nangles = size(Ps.Pnmu,2);
-Y = NaN(length(ind),nangles);
+Y = NaN(length(xind),nangles);
 
 % skip...
-parfor j=1:length(ind)
+parfor j=1:length(xind)
     for alfa=1:nangles
-        oldzeta = oldzetas(ind(j),alfa);
-        Y(j,alfa) = zeta_j_of_alfa(ind(j), alfa, Js, Ps, lamrats, qrot, oldzeta);
+        oldzeta = oldzetas(xind(j),alfa);
+        Y(j,alfa) = zeta_j_of_alfa(xind(j), alfa, Js, Ps, lamrats, qrot, oldzeta);
     end
 end
 
 % ... and spline
 newzetas = NaN(nlay,nangles);
 for alfa = 1:nangles
-    newzetas(:,alfa) = spline(zvec(ind), Y(:,alfa), zvec);
+    newzetas(:,alfa) = spline(zvec(xind), Y(:,alfa), zvec);
 end
 
 end

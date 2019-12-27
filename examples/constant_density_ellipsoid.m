@@ -24,6 +24,7 @@
 % $s$. For an oblate ellipsoid the radii are related by $s^3=ba^2$.
 
 %% Prepare workspace
+clear
 clc
 close all
 
@@ -35,17 +36,14 @@ b_exact = sqrt(1/(1 + el^2)); % polar radius
 s3 = b_exact; % *mean* radius, s^3=b*a^2 (but a=1) we will use this later
 xi_exact = @(mu)1./sqrt((1 + (el^2).*(mu.^2)));
 
-% Take a quick look for sanity check
-try % requires R2016a or later
-    theta = linspace(0,2*pi);
-    polax = polarplot(theta, xi_exact(cos(theta)));
-    polax.DisplayName = 'Exact ellipsoid';
-    polax.Parent.ThetaZeroLocation = 'top';
-    polax.Parent.ThetaDir = 'clockwise';
-    polax.Parent.ThetaAxisUnits = 'rad';
-    hold(polax.Parent, 'on')
-catch
-end
+% Take a quick look for sanity check (requires R2016a or later)
+theta = linspace(0,2*pi);
+polax = polarplot(theta, xi_exact(cos(theta)));
+polax.DisplayName = 'Exact ellipsoid';
+polax.Parent.ThetaZeroLocation = 'top';
+polax.Parent.ThetaDir = 'clockwise';
+polax.Parent.ThetaAxisUnits = 'rad';
+hold(polax.Parent, 'on')
 
 %% Call cms.m to compute the Js; the shape structure zetas is also returned in out
 q = m/s3; % CMS method uses q=w^2a^3/GM as rotation parameter
@@ -53,22 +51,19 @@ nlayers = 2; % can be any number really, all but the outer layers have zero dens
 zvec = linspace(1, 1/nlayers, nlayers); % can be anything really...
 dvec = ones(nlayers,1);
 
-[Js, cmsout] = cms(zvec, dvec, q, 1e-8);
+[Js, cmsout] = cms(zvec, dvec, q, 'tol', 1e-8);
 
 %% Get surface layer shape using the zetas array returned by cms
 mu = [0, cmsout.mus];
 xi_cms = [1, cmsout.zetas(1,:)];
 
-% Take a quick look for sanity check
-try % requires R2016a or later
-    polax = polarplot(acos(mu), xi_cms);
-    polax.DisplayName = 'CMS solution';
-    polax.Parent.ThetaZeroLocation = 'top';
-    polax.Parent.ThetaDir = 'clockwise';
-    polax.Parent.ThetaAxisUnits = 'rad';
-    legend('show')
-catch
-end
+% Take a quick look for sanity check (requires R2016a or later)
+polax = polarplot(acos(mu), xi_cms);
+polax.DisplayName = 'CMS solution';
+polax.Parent.ThetaZeroLocation = 'top';
+polax.Parent.ThetaDir = 'clockwise';
+polax.Parent.ThetaAxisUnits = 'rad';
+legend('show')
 
 %% Compare numerical and analytic solutions
 figure

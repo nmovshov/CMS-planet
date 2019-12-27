@@ -3,7 +3,7 @@ function options = cmsset(varargin)
 %   OPTIONS = CMSSET('NAME1',VALUE1,'NAME2',VALUE2,...) creates an options
 %   structure OPTIONS in which the named properties have the specified values.
 %   Any unspecified properties have default values. Case is ignored for property
-%   names.
+%   names and unique partials are allowed.
 %
 %   CMSSET with no input arguments displays all property names and their
 %   possible values.
@@ -14,7 +14,7 @@ function options = cmsset(varargin)
 %drhotol - Convergence tolerance for density adjustment [ positive real {1e-5} ]
 %MaxIterBar - Number of iterations allowed for relaxation to barotrope [ positive integer {60} ]
 %MaxIterHE - Number of iterations allowed for relaxation to equilibrium shape [ positive integer {60} ]
-%splineskip - Solve shape functions for every nth spheroid and spline the rest [ nonnegative integer {0} ]
+%xlayers - Solve shape functions on xlayers and spline the rest [ integer scalar or vector {64} ]
 %verbosity - Level of runtime messages [0 {1} 2 3 4]
 %prerat - Precalculate powers of ratios of lambdas (trades memory for speed) [ {true} | false ]
 
@@ -32,7 +32,7 @@ p.addParameter('dJtol',1e-8,@isposscalar)
 p.addParameter('drhotol',1e-5,@isposscalar)
 p.addParameter('MaxIterHE',60,@isposintscalar)
 p.addParameter('MaxIterBar',60,@isposintscalar)
-p.addParameter('splineskip',0,@isnonnegintscalar)
+p.addParameter('xlayers',64,@(x)validateattributes(x,{'numeric'},{'vector','integer'}))
 p.addParameter('verbosity',1,@isnonnegintscalar)
 p.addParameter('prerat',true,@islogicalscalar)
 

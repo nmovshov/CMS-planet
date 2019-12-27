@@ -22,19 +22,15 @@ s3 = b_exact; % *mean* radius, s^3=b*a^2 (but a=1) we will use this later
 xi_exact = @(mu)1./sqrt((1 + (el^2).*(mu.^2)));
 
 % Take a quick look for sanity check
-try % requires R2016a or later
-    fh = figure;
-    theta = linspace(0,2*pi);
-    polh = polarplot(theta, xi_exact(cos(theta)));
-    polh.DisplayName = 'Exact ellipsoid';
-    polh.Parent.ThetaZeroLocation = 'top';
-    polh.Parent.ThetaDir = 'clockwise';
-    polh.Parent.ThetaAxisUnits = 'rad';
-    polh.DisplayName = 'Exact solution';
-    hold(polh.Parent, 'on')
-catch
-    delete(fh);
-end
+fh = figure;
+theta = linspace(0,2*pi);
+polh = polarplot(theta, xi_exact(cos(theta)));
+polh.DisplayName = 'Exact ellipsoid';
+polh.Parent.ThetaZeroLocation = 'top';
+polh.Parent.ThetaDir = 'clockwise';
+polh.Parent.ThetaAxisUnits = 'rad';
+polh.DisplayName = 'Exact solution';
+hold(polh.Parent, 'on')
 
 %% Set up a CMS Planet with constant density and relax to HE
 N = 2; % number of layers doesn't matter for const. density!
@@ -53,15 +49,12 @@ mu = [0, cmp.CMS.mus];
 xi_cms = [1, cmp.CMS.zetas(1,:)];
 
 % Take a quick look for sanity check
-try % requires R2016a or later
-    polax = polarplot(acos(mu), xi_cms);
-    polax.DisplayName = 'CMS solution';
-    polax.Parent.ThetaZeroLocation = 'top';
-    polax.Parent.ThetaDir = 'clockwise';
-    polax.Parent.ThetaAxisUnits = 'rad';
-    legend('show')
-catch
-end
+polax = polarplot(acos(mu), xi_cms);
+polax.DisplayName = 'CMS solution';
+polax.Parent.ThetaZeroLocation = 'top';
+polax.Parent.ThetaDir = 'clockwise';
+polax.Parent.ThetaAxisUnits = 'rad';
+legend('show')
 
 %% Compare numerical and analytic solutions (still relies on underlying cms)
 figure

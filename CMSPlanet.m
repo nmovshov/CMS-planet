@@ -169,10 +169,11 @@ classdef CMSPlanet < handle
             t_rlx = tic;
             zvec = obj.ai/obj.ai(1);
             dvec = obj.rhoi/obj.rhoi(end);
-            if isempty(obj.CMS), obj.CMS.JLike = []; end
+            if isempty(obj.CMS), obj.CMS.JLike = struct(); end
             [obj.Js, obj.CMS] = cms(zvec, dvec, obj.qrot,...
-                obj.opts.dJtol, obj.opts.MaxIterHE, obj.opts.splineskip,...
-                obj.CMS.JLike, obj.opts.prerat);
+                'tol', obj.opts.dJtol, 'maxiter', obj.opts.MaxIterHE,...
+                'xlayers', obj.opts.xlayers, 'J0s', obj.CMS.JLike,...
+                'prerat', obj.opts.prerat);
             ET = toc(t_rlx);
             dJ = obj.CMS.dJs;
             
@@ -256,7 +257,7 @@ classdef CMSPlanet < handle
         
         function ab = renormalize(obj)
             % Match input and calculated mass and equatorial radius.
-            warning('OBSOLETE method, use fix_radius or normalize by hand')
+
             try
                 a = obj.radius/obj.a0;
                 obj.ai = obj.ai*a;
@@ -280,6 +281,16 @@ classdef CMSPlanet < handle
                 return
             end
             obj.ai = obj.ai*obj.radius/obj.a0;
+        end
+        
+        function obj = fix_mass(obj)
+            % Rescale density to match planet mass to observed value.
+            
+            if isempty(obj.mass) || isempty(obj.rhoi)
+                warning('Missing information; no action.')
+                return
+            end
+            obj.rhoi = obj.rhoi*obj.mass/obj.M;
         end
     end % End of public methods block
     

@@ -23,8 +23,8 @@ G = si.gravity;
 M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
-N = 64;
-sskip = 0;
+N = 128;
+xlayers = 64;
 cmp = CMSPlanet;
 cmp.ai = linspace(1, 1/N, N);
 cmp.rhoi = linspace(1/N, 1, N);
@@ -52,7 +52,7 @@ cmp.rhoi = rho_c*sin(a*x)./(a*x);
 
 %% Relax to desired barotrope
 cmp.opts.MaxIterBar = 40;
-cmp.opts.splineskip = sskip;
+cmp.opts.xlayers = xlayers;
 cmp.opts.dJtol = 1e-6;
 cmp.relax_to_barotrope;
 
