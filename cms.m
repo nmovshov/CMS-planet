@@ -200,11 +200,11 @@ p.addParameter('prerat',true,@(x)isscalar(x)&&islogical(x))
 p.addParameter('J0s',struct(),@(x)isscalar(x)&&isstruct(x))
 
 % undocumented or obsolete options
-p.addParameter('nangles',48,@isposintscalar)% #colatitudes used to define level surface
-p.addParameter('kmax',30,@isposintscalar) % degree to carry out gravity mulitpole expansion
-p.addParameter('TolX',1e-12,@isposscalar) % termination tolerance for root finding
+p.addParameter('nangles',48,@(x)isscalar(x)&&(x>0)&&(mod(x,1)==0)) % colatitudes defining level surface
+p.addParameter('kmax',30,@(x)isscalar(x)&&(x>6)&&(mod(x,2)==0)) % degree to cut mulitpole expansion
+p.addParameter('TolX',1e-12,@(x)isscalar(x)&&(x>0)) % termination tolerance for root finding
 
-% Parse name-value pairs and return.
+% Parse name-value pairs and return
 p.parse(varargin{:})
 options = p.Results;
 end
