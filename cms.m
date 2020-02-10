@@ -12,13 +12,18 @@ function [Js, out] = cms(zvec, dvec, qrot, varargin)
 % Inputs, required
 % ----------------
 % zvec : 1d array, positive real
-%     Equatorial radii of layers where density is specified. Units are unimportant
-%     as values will be normalized to outer radius.
+%     Equatorial radii of constant density layers, indexed from the outside in,
+%     i.e., zvec(1)=a0 is the outer radius of the outermost layer, zvec(2) is the
+%     inner radius of the outermost layer as well as the outer radius of the next
+%     layer, etc. The innermost layer extends all the way to the center, so that
+%     zvec(end) is the outer radius of a central spheroid layer. Units of zvec are
+%     unimportant as values will be normalized to outer radius.
 % dvec : 1d array, positive real
-%     Layer densities. Units are unimportant as values will be normalized to the
+%     Layer densities. The layer lying between zvec(i) and zvec(i+1) has constant
+%     density dvec(i). Units are unimportant as values will be normalized to the
 %     mean (bulk) density. The density should be monotonically non-increasing with
 %     zvec, but this is not enforced. (Note: these are layer densities and NOT the
-%     density deltas of concentric spheroids.)
+%     density "deltas" of concentric spheroids.)
 % qrot : scalar, nonnegative
 %     Dimensionless rotation parameter. Recall q = w^2a0^3/GM.
 %
