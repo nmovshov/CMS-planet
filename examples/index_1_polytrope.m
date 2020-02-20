@@ -23,7 +23,7 @@ G = si.gravity;
 M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
-N = 128;
+N = 2048;
 xlayers = 64;
 cmp = CMSPlanet;
 cmp.ai = linspace(1, 1/N, N);

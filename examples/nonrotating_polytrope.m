@@ -38,7 +38,7 @@ M = 317.8*si.earth_mass;
 R = 71492*si.km;
 
 %#ok<*SAGROW>
-N = [64];
+N = [512];
 SS = N/2;
 for k=1:length(N)
     cmps(k) = CMSPlanet;

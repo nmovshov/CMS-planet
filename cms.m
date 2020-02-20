@@ -32,7 +32,7 @@ function [Js, out] = cms(zvec, dvec, qrot, varargin)
 %     Convergence tolerance on fractional change in Js in successive iterations.
 % maxiter : scalar, positive, integer, (maxiter=100)
 %     Maximum number of iterations of CMS algorithm.
-% xlayers : scalar of vector, nonnegative, integer (xlayers=64)
+% xlayers : scalar or vector, nonnegative, integer (xlayers=64)
 %     Layers whose shape will be explicitly calculated. The shape functions
 %     (zetas) will be explicitly calculated for these layers, and
 %     spline-interpolated in between. This can result in significant speedup with
@@ -83,33 +83,40 @@ if zvec(end) == 0, zvec(end) = eps; end
 % Optional arguments
 opts = parsem(varargin{:});
 
-%% Normalize radii and density
+% Normalize radii and density
 dro = [dvec(1); diff(dvec)];
 m = sum(dro.*zvec.^3);
 robar = m/zvec(1)^3;
 zvec = zvec/zvec(1);
 dvec = dvec/robar;
 
-%% Initialize local variables (in CMS notation)
+%% Define and initialize local variables (in CMS notation)
 lambdas = zvec;
 deltas = [dvec(1); diff(dvec)];
 nlay = length(lambdas);
 nangles = opts.nangles;
 kmax = opts.kmax;
+
+% Define down-sampled variabels (for skip-n-spline)
 if isscalar(opts.xlayers)
     sskip = max(fix(nlay/opts.xlayers), 1);
-    xlay_ind = 1:sskip:nlay;
+    xind = 1:sskip:nlay;
 else
     warning('Experimental feature, use with care.')
-    xlay_ind = opts.xlayers;
+    xind = opts.xlayers;
 end
+xlambdas = lambdas(xind);
+xdvec = dvec(xind);
+xdeltas = [xdvec(1); diff(xdvec)];
+nxlay = length(xlambdas);
 
-% Initialize zetas as spherical
-zetas = ones(nlay, nangles);
+% Initialize spherical layer shapes
+zetas = NaN(nlay,nangles);
+xzetas = ones(nxlay, nangles);
 
 % Initialize J-like quantities for spherical planet
 if isempty(fieldnames(opts.J0s))
-    Jlike = allocate_spherical_Js(nlay, kmax, lambdas, deltas);
+    Jlike = allocate_spherical_Js(nxlay, kmax, xlambdas, xdeltas);
 else
     Jlike = opts.J0s;
 end
@@ -125,33 +132,32 @@ for k=0:kmax
     Ps.Pnzero(k+1,1) = Pn(k, 0);
 end
 
-% Precompute powers of ratios of lambdas
+% Precompute powers of ratios of lambdas (only for explicit layers)
 if opts.prerat
-    lamratpow = nan(kmax+2,nlay,nlay);
-    for ii=1:nlay
-        for jj=1:nlay
+    lamratpow = nan(kmax+2,nxlay,nxlay);
+    for ii=1:nxlay
+        for jj=1:nxlay
             for kk=1:kmax+2
                 lamratpow(kk,ii,jj) = ...
-                    (lambdas(ii)/lambdas(jj))^(kk-1);
+                    (xlambdas(ii)/xlambdas(jj))^(kk-1);
             end
         end
     end
 else
-    lamratpow = @(kk,ii,jj)(lambdas(ii)./lambdas(jj)).^(kk-1);
+    lamratpow = @(kk,ii,jj)(xlambdas(ii)./xlambdas(jj)).^(kk-1);
 end
 
 %% The loop (see Hubbard, 2012 and ./notes/CMS.pdf)
 Js = Jlike.Jn;
 for iter=1:opts.maxiter
     % Update shape with current gravity
-    if any(xlay_ind <= 0)
-        new_zetas = update_zetas(Jlike, Ps, lamratpow, qrot, zetas);
-    else
-        new_zetas = skipnspline_zetas(Jlike, Ps, lamratpow, qrot, zetas, zvec, xlay_ind);
+    new_xzetas = update_zetas(Jlike, Ps, lamratpow, qrot, xzetas);
+    for alfa = 1:nangles
+        zetas(:,alfa) = spline(xlambdas, new_xzetas(:,alfa), lambdas);
     end
     
     % Update gravity with current shape
-    new_Jlike = update_Js(lambdas, deltas, new_zetas, Ps, gws);
+    new_Jlike = update_Js(lambdas, deltas, zetas, xind, Ps, gws);
     new_Js = new_Jlike.Jn;
     
     % Check for convergence of J0-J8 to terminate...
@@ -161,7 +167,7 @@ for iter=1:opts.maxiter
     % ... or update to new values and continue
     Jlike = new_Jlike;
     Js = new_Js;
-    zetas = new_zetas;
+    xzetas = new_xzetas;
 end
 
 % It's not always a disaster if maxiter is reached, but we'd like to know
@@ -169,17 +175,23 @@ if iter == opts.maxiter
     warning('CMS:maxiter','Shape may not be fully converged.')
 end
 
+% For convenience output the shape info interpolated on full grid
+if nargout > 1
+
+end
+
 %% Return
 Js = new_Js; % may as well use the latest...
 out.dJs = dJs;
 out.iter = iter;
-out.zetas = new_zetas;
+out.zetas = zetas;
 out.lambdas = lambdas;
 out.deltas = deltas;
 out.JLike = new_Jlike;
 out.mus = mus;
 out.gws = gws;
 out.Ps = Ps;
+out.xind = xind;
 
 end
 
@@ -348,8 +360,8 @@ function newzetas = update_zetas(Js, Ps, lamrats, qrot, oldzetas)
 % Update level surfaces using current value of Js.
 
 % Loop over layers (outer) and colatitudes (inner)
-nlay = size(Js.tilde,1);
-nangles = size(Ps.Pnmu,2);
+nlay = size(oldzetas, 1);
+nangles = size(oldzetas, 2);
 newzetas = NaN(nlay,nangles);
 for j=1:nlay
     for alfa=1:nangles
@@ -359,36 +371,19 @@ for j=1:nlay
 end
 end
 
-function newzetas = skipnspline_zetas(Js, Ps, lamrats, qrot, oldzetas, zvec, xind)
-% Update layer shapes using current value of Js.
-
-nlay = size(Js.tilde,1);
-nangles = size(Ps.Pnmu,2);
-Y = NaN(length(xind),nangles);
-
-% skip...
-parfor j=1:length(xind)
-    for alfa=1:nangles
-        oldzeta = oldzetas(xind(j),alfa);
-        Y(j,alfa) = zeta_j_of_alfa(xind(j), alfa, Js, Ps, lamrats, qrot, oldzeta);
-    end
-end
-
-% ... and spline
-newzetas = NaN(nlay,nangles);
-for alfa = 1:nangles
-    newzetas(:,alfa) = spline(zvec(xind), Y(:,alfa), zvec);
-end
-
-end
-
-function newJs = update_Js(lambdas, deltas, zetas, Ps, gws)
+function newJs = update_Js(lambdas, deltas, zetas, xind, Ps, gws)
 % Single-pass update of gravitational moments by Gaussian quad.
 
 nlay = length(lambdas);
 kmax = length(Ps.Pnzero)-1;
+xlambdas = lambdas(xind);
+dvec = cumsum(deltas);
+xdvec = dvec(xind);
+xdeltas = [xdvec(1); diff(xdvec)];
+xzetas = zetas(xind, :);
+nxlay = length(xlambdas);
 
-% Do common denominator in eqs. (48)
+% Do common denominator in eqs. (48) (USING FULL DENSITY PROFILE)
 denom = 0;
 for j=1:nlay
     fun = zetas(j,:).^3;
@@ -397,46 +392,58 @@ for j=1:nlay
 end
 
 % Do J tilde, eq. (48a)
-new_tilde = zeros(nlay,kmax+1);
-for ii=1:nlay
+new_tilde = zeros(nxlay,kmax+1);
+for ii=1:nxlay
     for kk=0:kmax
         if rem(kk, 2), continue, end
-        fun = Ps.Pnmu(kk+1,:).*zetas(ii,:).^(kk+3);
+        fun = Ps.Pnmu(kk+1,:).*xzetas(ii,:).^(kk+3);
         I = gws*fun'; % gauss quad formula
-        new_tilde(ii,kk+1) = -(3/(kk + 3))*deltas(ii)*lambdas(ii)^3*I/denom;
+        new_tilde(ii,kk+1) = -(3/(kk + 3))*xdeltas(ii)*xlambdas(ii)^3*I/denom;
     end
 end
 
 % Do J tilde prime, eqs. (48b and 48c)
-new_tprime = zeros(nlay,kmax+1);
-for ii=1:nlay
+new_tprime = zeros(nxlay,kmax+1);
+for ii=1:nxlay
     for kk=0:kmax
         if rem(kk, 2), continue, end
         if kk == 2 % eq. (48c)
-            fun = Ps.Pnmu(3,:).*log(zetas(ii,:));
+            fun = Ps.Pnmu(3,:).*log(xzetas(ii,:));
             I = gws*fun'; % gauss quad formula
-            new_tprime(ii,kk+1) = -3*deltas(ii)*lambdas(ii)^3*I/denom;
+            new_tprime(ii,kk+1) = -3*xdeltas(ii)*xlambdas(ii)^3*I/denom;
         else       % eq. (48b)
-            fun = Ps.Pnmu(kk+1,:).*zetas(ii,:).^(2 - kk);
+            fun = Ps.Pnmu(kk+1,:).*xzetas(ii,:).^(2 - kk);
             I = gws*fun'; % gauss quad formula
-            new_tprime(ii,kk+1) = -(3/(2 - kk))*deltas(ii)*lambdas(ii)^3*I/denom;
+            new_tprime(ii,kk+1) = -(3/(2 - kk))*xdeltas(ii)*xlambdas(ii)^3*I/denom;
         end
     end
 end
 
 % Do J tilde double prime, eq. (48d)
-new_tpprime = zeros(nlay,1);
+new_tpprime = zeros(nxlay,1);
+for ii=1:nxlay
+    new_tpprime(ii) = 0.5*xdeltas(ii)*xlambdas(ii)^3/denom;
+end
+
+% And finally, the external Js deserve full grid resolution
+full_tilde = zeros(nlay,kmax+1);
 for ii=1:nlay
-    new_tpprime(ii) = 0.5*deltas(ii)*lambdas(ii)^3/denom;
+    for kk=0:kmax
+        if rem(kk, 2), continue, end
+        fun = Ps.Pnmu(kk+1,:).*zetas(ii,:).^(kk+3);
+        I = gws*fun'; % gauss quad formula
+        full_tilde(ii,kk+1) = -(3/(kk + 3))*deltas(ii)*lambdas(ii)^3*I/denom;
+    end
 end
 
 % Return updated Js struct
 newJs.tilde = new_tilde;
 newJs.tildeprime = new_tprime;
 newJs.tildeprimeprime = new_tpprime;
+newJs.fulltilde = full_tilde;
 n = 0:2:kmax;
 for k=1:length(n)
-    newJs.Jn(k) = dot(newJs.tilde(:,n(k)+1),lambdas.^n(k));
+    newJs.Jn(k) = dot(full_tilde(:,n(k)+1),lambdas.^n(k));
 end
 
 end

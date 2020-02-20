@@ -223,7 +223,9 @@ classdef CMSPlanet < handle
                 P_m(1:end-1) = (P(1:end-1) + P(2:end))/2;
                 P_m(end) = P(end) + ...
                     (P(end) - P(end-1))/(r(end-1) - r(end))*(r(end)/2);
-            catch
+            catch ME
+                warning(ME.identifier, ...
+                    'Pressure integration failed with message %s',ME.message)
                 P_m = [];
             end
         end
@@ -767,14 +769,19 @@ classdef CMSPlanet < handle
             P2k = obj.CMS.Ps.Pnmu(:,2);
             
             n = (0:obj.opts.kmax)';
+            xind = obj.CMS.xind;
+            xlam = lam(xind);
+            nx = length(xind);
             for j=1:obj.N
                 U = 0;
-                for i=j:obj.N
-                    U = U + sum((lam(i)/lam(j)).^n.*til(i,:)'.*zet(j).^-n.*P2k(:));
+                xj = find(xlam <= lam(j), 1);
+                if isempty(xj), xj = nx + 1; end % if no xplicit layer below jth
+                for i=xj:nx
+                    U = U + sum((xlam(i)/lam(j)).^n.*til(i,:)'.*zet(j).^-n.*P2k(:));
                 end
-                for i=1:j-1
-                    U = U + sum((lam(j)/lam(i)).^(n+1).*tilp(i,:)'.*zet(j).^(n+1).*P2k(:));
-                    U = U + (lam(j)/lam(i))^3*tilpp(i)*zet(j)^3;
+                for i=1:xj-1
+                    U = U + sum((lam(j)/xlam(i)).^(n+1).*tilp(i,:)'.*zet(j).^(n+1).*P2k(:));
+                    U = U + (lam(j)/xlam(i))^3*tilpp(i)*zet(j)^3;
                 end
                 U = U*(-1/(lam(j)*zet(j)));
                 U = U + (1/3)*q*lam(j)^2*zet(j)^2*(1 - P2k(3)); % add rotation
