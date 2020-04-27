@@ -162,6 +162,7 @@ for iter=1:opts.maxiter
     
     % Check for convergence of J0-J8 to terminate...
     dJs = abs(Js - new_Js)./abs(Js+eps);
+    dJs(abs(new_Js) < 1e-12) = 0; % a hack for nonrotating planets
     if all(dJs(1:5) < opts.tol), break, end
     
     % ... or update to new values and continue
