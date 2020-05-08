@@ -34,7 +34,6 @@ classdef CMSPlanet < handle
         si     % calculated spheroid mean radii
         rhobar % calculated mean density
         mrot   % rotation parameter referenced to s0
-        NMoI   % normalized moment of inertia
         J2     % convenience alias to obj.Js(2)
         J4     % convenience alias to obj.Js(3)
         J6     % convenience alias to obj.Js(4)
@@ -497,7 +496,7 @@ classdef CMSPlanet < handle
             % Prepare the data
             y = nan(obj.N, length(n));
             for k=1:length(n)
-                cJi = cumsum(obj.CMS.JLike.tilde(:,n(k)+1).*obj.CMS.lambdas.^n(k));
+                cJi = cumsum(obj.CMS.JLike.fulltilde(:,n(k)+1).*obj.CMS.lambdas.^n(k));
                 dJi = sdderiv(obj.CMS.lambdas, cJi);
                 if pr.cumulative
                     y(:,k) = cJi/cJi(end);
@@ -545,6 +544,51 @@ classdef CMSPlanet < handle
                 gh.Location = 'northwest';
             end
             gh.FontSize = 11;
+        end
+        
+        function [ah, lh] = plot_moi_contribution(obj, varargin)
+            % Plot relative contribution to MoI by depth.
+            
+            p = inputParser;
+            p.addParameter('axes',[],@(x)isscalar(x)&&isgraphics(x, 'axes'))
+            p.addParameter('cumulative',false,@(x)isscalar(x)&&islogical(x))
+            p.parse(varargin{:})
+            pr = p.Results;
+            
+            % Prepare the data
+            if pr.cumulative
+                y = obj.NMoI('csum');
+                y = y/y(end);
+            else
+                y = obj.NMoI('none');
+                y = y/max(abs(y));
+            end
+            
+            % Prepare the canvas
+            if isempty(pr.axes)
+                fh = figure;
+                set(fh, 'defaultTextInterpreter', 'latex')
+                set(fh, 'defaultLegendInterpreter', 'latex')
+                ah = axes;
+            else
+                ah = pr.axes;
+                axes(ah)
+            end
+            hold(ah, 'on')
+            
+            % Plot the lines
+            lh = plot(obj.si/obj.s0, y, 'LineWidth',2);
+            
+            % Style and annotate axes
+            if isempty(pr.axes)
+                ah.Box = 'on';
+                xlabel('Spheroid normalized equatorial radius, $\lambda$', 'fontsize', 12)
+                if pr.cumulative
+                    ylabel('$I(\lambda>\lambda_i)$ [normalized]', 'fontsize', 12)
+                else
+                    ylabel('$I(\lambda_i)$ [normalized]', 'fontsize', 12)
+                end
+            end
         end
     end % End of visulaizers block
     
@@ -1032,23 +1076,34 @@ classdef CMSPlanet < handle
             end
         end
         
-        function val = get.NMoI(obj)
+        function val = NMoI(obj, reduce)
             % C/Ma^2, see eq. 5 in Hubbard & Militzer 2016
-            try
-                num = 0;
-                den = 0;
+            
+            if nargin < 2 || isempty(reduce), reduce = 'sum'; end
+            reduce = validatestring(reduce, {'sum', 'csum', 'none'});
+            
+            if isempty(obj.CMS)
+                deltas = [obj.rhoi(1); diff(obj.rhoi)];
+                lambdas = obj.ai/obj.a0;
+                zetas = ones(obj.N, obj.opts.nangles);
+            else
                 deltas = obj.CMS.deltas;
                 lambdas = obj.CMS.lambdas;
                 zetas = obj.CMS.zetas;
-                gws = obj.CMS.gws;
-                for j=1:obj.N
-                    num = num + deltas(j)*((zetas(j,:)*lambdas(j)).^5)*gws';
-                    den = den + deltas(j)*((zetas(j,:)*lambdas(j)).^3)*gws';
-                end
-                val = 2/5*num/den + 2/3*obj.J2;
-            catch
-                val = [];
             end
+            [mus, gws] = gauleg(0, 1, obj.opts.nangles); % Abscissas and weights for Gauss-quad
+            p2term = 1 - Pn(2, mus);
+            num(obj.N) = 0;
+            den = 0;
+            for j=1:obj.N
+                fun1 = deltas(j)*((zetas(j,:)*lambdas(j)).^5).*p2term;
+                fun2 = deltas(j)*((zetas(j,:)*lambdas(j)).^3);
+                num(j) = fun1*gws';
+                den = den + fun2*gws';
+            end
+            if isequal(reduce, 'none'), val = (2/5)*(num/den); end
+            if isequal(reduce, 'sum'), val = (2/5)*sum(num)/den; end
+            if isequal(reduce, 'csum'), val = (2/5)*cumsum(num)/den; end
         end
     end % End of access methods block
     
@@ -1058,3 +1113,120 @@ classdef CMSPlanet < handle
 end % End of classdef
 
 %% Class-related functions
+function [x,w] = gauleg(x1,x2,n)
+%GAULEG Calculate abscissas and weights for Gauss-Legendre n-point quadrature.
+%   [x,w] = GAULEG(x1,x2,n) returns the abscissas x and weights w that can be
+%   used to evaluate the definite integral, I, of a function well approximated
+%   by an (2n - 1) degree polynomial in the interval [x1,x2] using the
+%   Gauss-Legendre formula:
+%
+%       I = sum(w.*f(x))
+%
+%   Algorithm
+%     This function is based on the C++ implementation of a routine with the
+%     same name in Numerical Recipes, 3rd Edition. But in several places I opt
+%     for readability over performance, on the assumption that this function is
+%     most likely to be called in a setup routine rather than in an inner-loop
+%     computation.
+%
+%   Example
+%     fun = @(x)sin(x);
+%     [x,w] = gauleg(0,pi,6);
+%     I_adaptive = integral(fun,0,pi)
+%     I_gaussleg = sum(w.*fun(x))
+%
+% Author: Naor Movshovitz (nmovshov at google dot com)
+%         Earth and Planetary Sciences, UC Santa Cruz
+%
+% Reference: William H. Press, Saul A. Teukolsky, William T. Vetterling, and
+% Brian P. Flannery. 2007. Numerical Recipes 3rd Edition: The Art of Scientific
+% Computing (3 ed.). Cambridge University Press, New York, NY, USA.
+
+% Input parsing and minimal assertions
+narginchk(3,3)
+nargoutchk(2,2)
+validateattributes(x1,{'numeric'},{'scalar','finite','real'},1)
+validateattributes(x2,{'numeric'},{'scalar','finite','real'},2)
+validateattributes(n,{'numeric'},{'scalar','finite','integer','>=',2},3)
+assert(x2 > x1, 'Interval must be positive.');
+
+% Local variables
+tol = 1e-14;
+m = ceil(n/2);
+xmid = (x1 + x2)/2;
+dx = (x2 - x1);
+x = NaN(1,n);
+w = NaN(1,n);
+
+% Main loop
+for j=1:m
+    % Get j-th root of Legendre polynomial Pn, along with Pn' value there.
+    z = cos(pi*((j - 1) + 0.75)/(n + 0.5)); % initial guess for j-th root
+    while true
+        % Calculate Pn(z) and Pn-1(z) and Pn'(z)
+        p = NaN(1,n+1);
+        p(1) = 1;
+        p(2) = z;
+        for k=2:n
+            pkm1 = p(k);
+            pkm2 = p(k-1);
+            pk = (1/k)*((2*k - 1)*z*pkm1 - (k - 1)*pkm2);
+            p(k+1) = pk;
+        end
+        pn = p(end);
+        pp = (n*p(end-1) - n*z*p(end))/(1 - z^2);
+        
+        % And now Newton's method (we are hopefully very near j-th root)
+        oldz = z;
+        z = z - pn/pp;
+        if abs(z - oldz) < tol, break, end
+    end
+    
+    % Now use j-th root to get 2 abscissas and weights
+    x(j)     = xmid - z*dx/2; % Scaled abscissa left of center
+    x(n+1-j) = xmid + z*dx/2; % Scaled abscissa right of center
+    w(j)     = dx/((1 - z^2)*pp^2);
+    w(n+1-j) = w(j);
+end
+
+% Verify and return
+assert(all(isfinite(x)))
+assert(all(isfinite(w)))
+end
+
+function y = Pn(n,x)
+% Fast implementation of ordinary Legendre polynomials of low degree.
+switch n
+    case 0
+        y = ones(size(x));
+    case 1
+        y = x;
+    case 2
+        y = 0.5*(3*x.^2 - 1);
+    case 3
+        y = 0.5*(5*x.^3 - 3*x);
+    case 4
+        y = (1/8)*(35*x.^4 - 30*x.^2 + 3);
+    case 5
+        y = (1/8)*(63*x.^5 - 70*x.^3 + 15*x);
+    case 6
+        y = (1/16)*(231*x.^6 - 315*x.^4 + 105*x.^2 - 5);
+    case 7
+        y = (1/16)*(429*x.^7 - 693*x.^5 + 315*x.^3 - 35*x);
+    case 8
+        y = (1/128)*(6435*x.^8 - 12012*x.^6 + 6930*x.^4 - 1260*x.^2 + 35);
+    case 9
+        y = (1/128)*(12155*x.^9 - 25740*x.^7 + 18018*x.^5 - 4620*x.^3 + 315*x);
+    case 10
+        y = (1/256)*(46189*x.^10 - 109395*x.^8 + 90090*x.^6 - 30030*x.^4 + 3465*x.^2 - 63);
+    case 11
+        y = (1/256)*(88179*x.^11 - 230945*x.^9 + 218790*x.^7 - 90090*x.^5 + 15015*x.^3 - 693*x);
+    case 12
+        y = (1/1024)*(676039*x.^12 - 1939938*x.^10 + 2078505*x.^8 - 1021020*x.^6 + 225225*x.^4 - 18018*x.^2 + 231);
+    otherwise
+        assert(isvector(x))
+        Pnm = legendre(n,x);
+        y = Pnm(1,:);
+        if ~isrow(x), y = y'; end
+end
+end
