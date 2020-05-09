@@ -26,13 +26,14 @@ R = 71492*si.km;
 N = 2048;
 xlayers = 64;
 cmp = CMSPlanet;
-cmp.ai = linspace(1, 1/N, N);
+cmp.ai = R*lambdas.best(N);
 cmp.rhoi = linspace(1/N, 1, N);
 cmp.name = [int2str(cmp.N),'-layer CMS'];
 cmp.mass = M;
 cmp.radius = R;
 cmp.renormalize();
 cmp.qrot = 0.089195487; % Hubbard (2013) Table 5
+cmp.P0 = 0*si.bar;
 
 %% Construct a polytrope of index 1 to represent the planet's eos
 n = 1;

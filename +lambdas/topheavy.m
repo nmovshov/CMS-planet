@@ -2,11 +2,11 @@ function lambdas = topheavy(N, skew, I, halftop)
 %TOPHEAVY Return a lambda distribution with top-heavy spacing.
 %    lambdas = TOPHEAVY(N) returns a vector of normalized radii with three
 %    quarters of them equally distributed in the top half and the rest equally
-%    distributed in the bottom half of the interval (0,1].
+%    distributed in the bottom half of the interval [1/N,1].
 %
 %    lambdas = TOPHEAVY(N, skew) returns a vector of normalized radii with skew(1)
 %    of them equally distributed in the interval [1-skew(2), 1] and the rest
-%    equally distributed in the interval (0, 1-skew(2)].
+%    equally distributed in the interval [1/N, 1-skew(2)].
 %
 %    lambdas = TOPHEAVY(N, skew, interval) returns a vector of normalized radii
 %    with skew(1) of them equally distributed in the interval

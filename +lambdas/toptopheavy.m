@@ -2,7 +2,7 @@ function lambdas = toptopheavy(N, skew, halftop)
 %TOPTOPHEAVY Return a lambda distribution with top-top-heavy spacing.
 %    lambdas = TOPTOPHEAVY(N) returns a vector of normalized radii with two thirds
 %    of them distributed in the top half and the rest equally distributed in the
-%    bottom half of the interval (0,1]. The upper distribution follow the same
+%    bottom half of the interval [1/N,1]. The upper distribution follow the same
 %    rule: two thirds of those layers in the top half and the rest in the bottom
 %    half of the interval [0.5,1].
 %

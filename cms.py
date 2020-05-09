@@ -6,23 +6,57 @@
 from __future__ import division
 import sys
 import numpy as np
+from scipy.interpolate import CubicSpline as spline
 import warnings
 from numba import jit
 
 def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
     """Return gravity coefficients of density profile in hydrostatic equilibrium.
 
-    Parameters
+    Js,out = cms(zvec, dvec, qrot) returns the even harmonic gravity coefficients
+    from J0 to J30 in the vector Js, so that Js[0] is J0, Js[1] is J2, Js[2] is
+    J4, etc. The mandatory inputs are a vector of equatorial radii zvec, vector of
+    corresponding layer densities dvec, and rotation parameter qrot. The struct
+    out holds diagnostic values and the full hydrostatic spheroid shapes.
+
+    Required inputs
     ----------
     zvec : ndarray, 1d, positive
-        Equatorial radii of constant density layers.
+        Equatorial radii of constant density layers, indexed from the outside in,
+        i.e., zvec[0]=a0 is the outer radius of the outermost layer, zvec[1] is
+        the inner radius of the outermost layer as well as the outer radius of the
+        next layer, etc. The innermost layer extends all the way to the center, so
+        that zvec[-1] is the outer radius of a central spheroid layer. Units of
+        zvec are unimportant as values will be normalized to outer radius.
     dvec : ndarray, 1d, positive
-        Densities of layers. The density should be monotonically non-increasing
-        with z, but this is not enforced.
+        Layer densities. The layer lying between zvec[i] and zvec[i+1] has
+        constant density dvec[i]. Units are unimportant as values will be
+        normalized to the mean (bulk) density. Density is expected to be
+        monotonically non-increasing with zvec, but this is not enforced.
+        (Note: these are layer densities and NOT the density "deltas" of
+        concentric spheroids.)
     qrot : float, scalar, nonnegative
-        Dimensionless rotation parameter, w^2*a^3/GM.
-    xlayers : integer, nonnegative
-        number of layers whose shape is explicitly calculated (rest will spline).
+        Dimensionless rotation parameter. Recall q = w^2a0^3/GM.
+
+    Optional parameters
+    ----------
+    dJtol : scalar, positive (dJtol=1e-6)
+        Convergence tolerance on fractional change in Js in successive iterations.
+    maxiter : scalar, positive, integer, (maxiter=100)
+        Limit iterations of CMS algorithm.
+    xlayers : scalar or vector, nonnegative, integer (xlayers=64)
+        Layers whose shape will be explicitly calculated. The shape functions
+        (zetas) will be explicitly calculated for these layers, and
+        spline-interpolated in between. This can result in significant speedup
+        with minimal loss of precision, if the xlayers are chosen by trial and
+        error to fit the required precision and the spacing of density layers. A
+        scalar value is interpreted as a number of xlayers to be uniformaly
+        distributed among the density layers. For example, a smooth-density,
+        1024-layer model can benefit from almost 16x-speedup by specifying
+        xlayers=64 while retaining a 10^-6 relative precision on J2. A vector
+        value is interpreted as indices of layers to be used as xlayers. (A
+        negative value is a shortcut to flag a full calculation instead of
+        skip-n-spline, useful for debugging.)
     J0s : struct
        J-like values representing initial state. This is not just for speeding up
        convergence. Mostly it's a mechanism to preserve state between calls.
@@ -43,7 +77,6 @@ def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
     dvec = np.array(dvec)
     assert zvec.shape == dvec.shape
     assert qrot >= 0
-    assert xlayers >= 0
 
     # Normalize and flip radii and densities (it's safe to normalize a normal)
     p = np.argsort(zvec)
@@ -57,19 +90,31 @@ def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
     zvec = np.flipud(zvec/zvec[-1])
     dvec = np.flipud(dvec/robar)
 
-    ## Initialize local variables (in CMS notation)
+    ## Define and initialize local variables (in CMS notation)
     lambdas = zvec
     deltas = np.hstack((dvec[0], np.diff(dvec)))
     nlay = len(lambdas)
     nangles = 48
     kmax = 30
 
+    # Define down-sampled variabels (for skip-n-spline)
+    if np.isscalar(xlayers):
+        sskip = max(nlay//xlayers, 1)
+        xind = np.arange(0,nlay,sskip)
+    else:
+        xind = np.array(xlayers)
+    xlambdas = lambdas[xind]
+    xdvec = dvec[xind]
+    xdeltas = np.hstack((xdvec[0], np.diff(xdvec)))
+    nxlay = len(xlambdas)
+
     # Initialize zetas as spherical
     zetas = np.ones((nlay, nangles))
+    xzetas = np.ones((nxlay, nangles))
 
     # Initialize J-like quantities for spherical planet
     if J0s is None:
-        Jlike = _allocate_spherical_Js(nlay, kmax, lambdas, deltas)
+        Jlike = _allocate_spherical_Js(nxlay, kmax, xlambdas, xdeltas)
     else:
         Jlike = J0s
 
@@ -85,23 +130,30 @@ def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
         Ps.Pnmu[k,:] = _Pn(k, mus)
         Ps.Pnzero[k] = _Pn(k, 0)
 
-    # Precompute powers of ratios of lambdas
-    lamratpow = np.nan*np.zeros((kmax+2,nlay,nlay))
-    for ii in range(nlay):
-        for jj in range(nlay):
+    # Precompute powers of ratios of lambdas (only for explicit layers)
+    lamratpow = np.nan*np.zeros((kmax+2,nxlay,nxlay))
+    for ii in range(nxlay):
+        for jj in range(nxlay):
             for kk in range(kmax+2):
-                lamratpow[kk,ii,jj] = (lambdas[ii]/lambdas[jj])**(kk)
+                lamratpow[kk,ii,jj] = (xlambdas[ii]/xlambdas[jj])**(kk)
 
     # The loop (see Hubbard, 2012 and ./notes/CMS.pdf)
     Js = Jlike.Jn # J0=0 ensures at least one iteration
-    sskip = max(nlay//xlayers, 1)
     eps = np.finfo(float).eps
     for iter in range(maxiter):
         # Update shape with current gravity
-        new_zetas = _skipnspline_zetas(Jlike, Ps, lamratpow, qrot, zetas, lambdas, sskip)
+        new_xzetas = _update_zetas(Jlike, Ps, lamratpow, qrot, xzetas)
+
+        #... and spline
+        for alfa in range(nangles):
+            x = np.flipud(xlambdas)
+            y = np.flipud(new_xzetas[:,alfa])
+            cs = spline(x, y)
+            zetas[:,alfa] = cs(lambdas)
+        assert np.all(np.isfinite(zetas)), "interpolation error"
 
         # Update gravity with current shape
-        new_Jlike = _update_Js(lambdas, deltas, new_zetas, Ps, gws)
+        new_Jlike = _update_Js(lambdas, deltas, zetas, xind, Ps, gws)
         new_Js = new_Jlike.Jn
 
         # Check for convergence of J0-J8 to terminate...
@@ -111,7 +163,7 @@ def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
         # ... or update to new values
         Jlike = new_Jlike
         Js = new_Js
-        zetas = new_zetas
+        xzetas = new_xzetas
 
     # It's not necessarily terrible to reach maxiter, but we'd want to know
     if iter == (maxiter - 1):
@@ -123,13 +175,14 @@ def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
         pass
     out.dJs = dJs
     out.iter = iter
-    out.zetas = new_zetas
+    out.zetas = zetas
     out.lambdas = lambdas
     out.deltas = deltas
     out.Jlike = new_Jlike
     out.mus = mus
     out.gws = gws
     out.Ps = Ps
+    out.xind = xind
 
     return (Js, out)
 
@@ -343,38 +396,34 @@ def _eq52(zja, jl, Jt, Jtp, Jtpp, P0, Pmu, lamrats, qrot):
     # And BYO
     return y
 
-def _skipnspline_zetas(Js, Ps, lamrats, qrot, oldzetas, lambdas, sskip):
+def _update_zetas(Js, Ps, lamrats, qrot, oldzetas):
     """Update layer shapes using current value of Js."""
     # locals
-    nlay = lamrats.shape[1]
-    nangles = Ps.Pnmu.shape[1]
-    ind = np.arange(0,nlay,sskip)
-    Y = np.nan*np.zeros((len(ind),nangles))
-
-    # skip...
-    for j in range(len(ind)):
-        for alfa in range(nangles):
-            oldzeta = oldzetas[ind[j],alfa]
-            Y[j,alfa] = _zeta_j_of_alfa(ind[j], alfa, Js, Ps, lamrats, qrot, oldzeta)
-
-    #... and spline
-    from scipy.interpolate import CubicSpline as spline
+    nlay = oldzetas.shape[0]
+    nangles = oldzetas.shape[1]
     newzetas = np.nan*np.zeros((nlay,nangles))
-    for alfa in range(nangles):
-        x = np.flipud(lambdas[ind])
-        y = np.flipud(Y[:,alfa])
-        cs = spline(x, y)
-        newzetas[:,alfa] = cs(lambdas)
 
-    assert np.all(np.isfinite(newzetas)), "interpolation error"
+    # loop over layers (outer) and colatitudes (inner)
+    for j in range(nlay):
+        for alfa in range(nangles):
+            oldzeta = oldzetas[j,alfa]
+            newzetas[j,alfa] = _zeta_j_of_alfa(j, alfa, Js, Ps, lamrats, qrot, oldzeta)
+
     return newzetas
 
-def _update_Js(lambdas, deltas, zetas, Ps, gws):
+def _update_Js(lambdas, deltas, zetas, xind, Ps, gws):
     """Single-pass update of gravitational moments by Gaussian quad."""
+
     nlay = len(lambdas)
     kmax = len(Ps.Pnzero)-1
+    xlambdas = lambdas[xind]
+    dvec = np.cumsum(deltas)
+    xdvec = dvec[xind]
+    xdeltas = np.hstack((xdvec[0], np.diff(xdvec)))
+    xzetas = zetas[xind, :]
+    nxlay = len(xlambdas)
 
-    # Precompute common denominator in eqs. (48)
+    # Precompute common denominator in eqs. (48) (USING FULL DENSITY PROFILE)
     denom = 0
     for j in range(nlay):
         fun = zetas[j,:]**3
@@ -382,34 +431,44 @@ def _update_Js(lambdas, deltas, zetas, Ps, gws):
         denom = denom + I*deltas[j]*lambdas[j]**3
 
     # Do J tilde, eq. (48a)
-    new_tilde = np.zeros((nlay,kmax+1))
-    for ii in range(nlay):
+    new_tilde = np.zeros((nxlay,kmax+1))
+    for ii in range(nxlay):
         for kk in range(kmax+1):
             if (kk%2 > 0):
                 continue
-            fun = Ps.Pnmu[kk,:]*zetas[ii,:]**(kk+3)
+            fun = Ps.Pnmu[kk,:]*xzetas[ii,:]**(kk+3)
             I = sum(gws*fun) # gauss quad formula
-            new_tilde[ii,kk] = -(3/(kk + 3))*deltas[ii]*lambdas[ii]**3*I/denom
+            new_tilde[ii,kk] = -(3/(kk + 3))*xdeltas[ii]*xlambdas[ii]**3*I/denom
 
     # Do J tilde prime, eqs. (48b and 48c)
-    new_tprime = np.zeros([nlay,kmax+1])
-    for ii in range(nlay):
+    new_tprime = np.zeros((nxlay,kmax+1))
+    for ii in range(nxlay):
         for kk in range(kmax+1):
             if (kk%2 > 0):
                 continue
             if kk == 2: # eq. (48c)
-                fun = Ps.Pnmu[2,:]*np.log(zetas[ii,:])
+                fun = Ps.Pnmu[2,:]*np.log(xzetas[ii,:])
                 I = sum(gws*fun) # gauss quad formula
-                new_tprime[ii,kk] = -3*deltas[ii]*lambdas[ii]**3*I/denom
+                new_tprime[ii,kk] = -3*xdeltas[ii]*xlambdas[ii]**3*I/denom
             else:       # eq. (48b)
-                fun = Ps.Pnmu[kk,:]*zetas[ii,:]**(2 - kk)
+                fun = Ps.Pnmu[kk,:]*xzetas[ii,:]**(2 - kk)
                 I = sum(gws*fun) # gauss quad formula
-                new_tprime[ii,kk] = -(3/(2 - kk))*deltas[ii]*lambdas[ii]**3*I/denom
+                new_tprime[ii,kk] = -(3/(2 - kk))*xdeltas[ii]*xlambdas[ii]**3*I/denom
 
     # Do J tilde double prime, eq. (48d)
-    new_tpprime = np.zeros((nlay,))
+    new_tpprime = np.zeros((nxlay,))
+    for ii in range(nxlay):
+        new_tpprime[ii] = 0.5*xdeltas[ii]*xlambdas[ii]**3/denom
+
+    # And finally, the EXTERNAL Js deserve full grid resolution
+    full_tilde = np.zeros((nlay,kmax+1))
     for ii in range(nlay):
-        new_tpprime[ii] = 0.5*deltas[ii]*lambdas[ii]**3/denom
+        for kk in range(kmax+1):
+            if (kk%2 < 0):
+                continue
+            fun = Ps.Pnmu[kk,:]*zetas[ii,:]**(kk+3)
+            I = sum(gws*fun) # gauss quad formula
+            full_tilde[ii,kk] = -(3/(kk + 3))*deltas[ii]*lambdas[ii]**3*I/denom
 
     # Return updated Js struct
     class newJs:
@@ -417,23 +476,26 @@ def _update_Js(lambdas, deltas, zetas, Ps, gws):
     newJs.tilde = new_tilde
     newJs.tildeprime = new_tprime
     newJs.tildeprimeprime = new_tpprime
+    newJs.fulltilde = full_tilde
     n = np.arange(0,kmax+1,2)
     newJs.Jn = np.zeros((len(n),))
     for k in range(len(n)):
-        newJs.Jn[k] = sum(newJs.tilde[:,n[k]]*lambdas**n[k])
+        newJs.Jn[k] = sum(newJs.fulltilde[:,n[k]]*lambdas**n[k])
 
     return newJs
 
 def _test():
     import time
-    N = 12
+    N = 128
+    nx = 16
     zvec = np.linspace(1, 1.0/N, N)
     dvec = np.linspace(1/N,2,N)
     qrot = 0.1
     tic = time.time()
-    Js, out = cms(zvec,dvec,qrot,xlayers=12)
+    Js, out = cms(zvec,dvec,qrot,xlayers=nx)
     toc = time.time()
     print(Js[0:3])
+    print(out)
     print("Elapsed time {} seconds".format(toc-tic))
 
 if __name__ == '__main__':

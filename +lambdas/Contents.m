@@ -1,9 +1,10 @@
 % +LAMBDAS CMS layer distributions.
 %
 % Each function in this package returns a vector of length N suitable for use as
-% the lambdas property of the ConcentricMaclaurinSpheroids class. For example:
+% normalized equatorial radii for a CMSPlanet object. For example:
 %    cmp = CMSPlanet(128);
-%    cmp.cms.lambdas = lambdas.topheavy(128);
+%    a0 = 71492*1e3
+%    cmp.ai = a0*lambdas.topheavy(128);
 %
 % Distributions:
 %   best         - Return our current notion of the best lambda distribution.
