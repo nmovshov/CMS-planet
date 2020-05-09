@@ -486,14 +486,16 @@ classdef CMSPlanet < handle
                 fprintf('Usage:\n\tCMP.plot_spheroid_J_contributions([2,4,...]).\n')
                 return
             end
-            validateattributes(n,{'numeric'},{'row','positive','integer','even'})
+            validateattributes(n,{'numeric'},{'row','nonnegative','integer','even'})
             p = inputParser;
             p.addParameter('axes',[],@(x)isscalar(x)&&isgraphics(x, 'axes'))
             p.addParameter('cumulative',false,@(x)isscalar(x)&&islogical(x))
+            p.addParameter('noisecancel',false,@(x)isscalar(x)&&islogical(x))
             p.parse(varargin{:})
             pr = p.Results;
             
             % Prepare the data
+            x = obj.ai/obj.a0;
             y = nan(obj.N, length(n));
             for k=1:length(n)
                 cJi = cumsum(obj.CMS.JLike.fulltilde(:,n(k)+1).*obj.CMS.lambdas.^n(k));
@@ -501,6 +503,9 @@ classdef CMSPlanet < handle
                 if pr.cumulative
                     y(:,k) = cJi/cJi(end);
                 else
+                    if pr.noisecancel
+                        dJi(x > 0.99) = nan;
+                    end
                     y(:,k) = abs(dJi)/max(abs(dJi));
                 end
             end
@@ -552,15 +557,20 @@ classdef CMSPlanet < handle
             p = inputParser;
             p.addParameter('axes',[],@(x)isscalar(x)&&isgraphics(x, 'axes'))
             p.addParameter('cumulative',false,@(x)isscalar(x)&&islogical(x))
+            p.addParameter('noisecancel',false,@(x)isscalar(x)&&islogical(x))
             p.parse(varargin{:})
             pr = p.Results;
             
             % Prepare the data
+            x = obj.ai/obj.a0;
             if pr.cumulative
                 y = obj.NMoI('csum');
                 y = y/y(end);
             else
                 y = obj.NMoI('none');
+                if pr.noisecancel
+                    y(x > 0.99) = nan; % the top is always noise
+                end
                 y = y/max(abs(y));
             end
             
@@ -577,7 +587,7 @@ classdef CMSPlanet < handle
             hold(ah, 'on')
             
             % Plot the lines
-            lh = plot(obj.si/obj.s0, y, 'LineWidth',2);
+            lh = plot(x, y, 'LineWidth',2);
             
             % Style and annotate axes
             if isempty(pr.axes)
