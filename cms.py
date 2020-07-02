@@ -46,7 +46,7 @@ def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
         Limit iterations of CMS algorithm.
     xlayers : scalar or vector, nonnegative, integer (xlayers=64)
         Layers whose shape will be explicitly calculated. The shape functions
-        (zetas) will be explicitly calculated for these layers, and
+        (zetas) will be explicitly calculated for these layers and
         spline-interpolated in between. This can result in significant speedup
         with minimal loss of precision, if the xlayers are chosen by trial and
         error to fit the required precision and the spacing of density layers. A
@@ -131,11 +131,7 @@ def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
         Ps.Pnzero[k] = _Pn(k, 0)
 
     # Precompute powers of ratios of lambdas (only for explicit layers)
-    lamratpow = np.nan*np.zeros((kmax+2,nxlay,nxlay))
-    for ii in range(nxlay):
-        for jj in range(nxlay):
-            for kk in range(kmax+2):
-                lamratpow[kk,ii,jj] = (xlambdas[ii]/xlambdas[jj])**(kk)
+    lamratpow = _powers_of_ratios(xlambdas, kmax)
 
     # The loop (see Hubbard, 2012 and ./notes/CMS.pdf)
     Js = Jlike.Jn # J0=0 ensures at least one iteration
@@ -189,6 +185,18 @@ def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
 #--------------------------------
 #  Helper functions
 #--------------------------------
+@jit(nopython=True)
+def _powers_of_ratios(xlam, kmax):
+    """Return array of powers of ratios of spheroid radii."""
+
+    nx = len(xlam)
+    lamrat = np.zeros((kmax+2,nx,nx))
+    for ii in range(nx):
+        for jj in range(nx):
+            for kk in range(kmax+2):
+                lamrat[kk,ii,jj] = (xlam[ii]/xlam[jj])**(kk)
+    return lamrat
+
 def _allocate_spherical_Js(nlay,nmom,lambdas,deltas):
     """Return a struct of J-like quantities initialized to a spherical planet."""
 
@@ -328,6 +336,7 @@ def _Pn(n, x):
 def _zeta_j_of_alfa(j, alfa, Js, Ps, lamrats, qrot, oldzeta):
     """Call fzero on _eq52 to find equilibrium zeta."""
     from scipy.optimize import root_scalar
+    from scipy.optimize import brentq
     Jt = Js.tilde
     Jtp = Js.tildeprime
     Jtpp = Js.tildeprimeprime
@@ -339,8 +348,10 @@ def _zeta_j_of_alfa(j, alfa, Js, Ps, lamrats, qrot, oldzeta):
         x1 = oldzeta*0.99
     else:
         x1 = 1.0
-    sol = root_scalar(fun, x0=oldzeta, x1=x1)
-    return sol.root
+    #sol = root_scalar(fun, x0=oldzeta, x1=x1).root
+    #sol = root_scalar(fun, bracket=[0.8,1.0],method='brentq').root
+    sol = brentq(fun, 0.8, 1.0, xtol=1e-9, rtol=1e-9)
+    return sol
 
 @jit(nopython=True)
 def _eq52(zja, jl, Jt, Jtp, Jtpp, P0, Pmu, lamrats, qrot):
@@ -411,6 +422,64 @@ def _update_zetas(Js, Ps, lamrats, qrot, oldzetas):
 
     return newzetas
 
+@jit(nopython=True)
+def _eqs48(lambdas, deltas, zetas, xlambdas, xdeltas, xzetas, pnmu, gws):
+    """A nopython version of eqs. 48."""
+
+    nlay = lambdas.shape[0]
+    nxlay = xlambdas.shape[0]
+    kmax = pnmu.shape[0]-1
+
+    # Precompute common denominator in eqs. (48) (USING FULL DENSITY PROFILE)
+    denom = 0
+    for j in range(nlay):
+        fun = zetas[j,:]**3
+        I = np.dot(fun,gws) # the gauss quadrature formula
+        denom = denom + I*deltas[j]*lambdas[j]**3
+
+    # Do J tilde, eq. (48a)
+    tilde = np.zeros((nxlay,kmax+1))
+    for ii in range(nxlay):
+        for kk in range(kmax+1):
+            if (kk%2 > 0):
+                continue
+            fun = pnmu[kk,:]*xzetas[ii,:]**(kk+3)
+            I = np.dot(gws,fun) # gauss quad formula
+            tilde[ii,kk] = -(3/(kk + 3))*xdeltas[ii]*xlambdas[ii]**3*I/denom
+
+    # Do J tilde prime, eqs. (48b and 48c)
+    tprime = np.zeros((nxlay,kmax+1))
+    for ii in range(nxlay):
+        for kk in range(kmax+1):
+            if (kk%2 > 0):
+                continue
+            if kk == 2: # eq. (48c)
+                fun = pnmu[2,:]*np.log(xzetas[ii,:])
+                I = np.dot(gws,fun) # gauss quad formula
+                tprime[ii,kk] = -3*xdeltas[ii]*xlambdas[ii]**3*I/denom
+            else:       # eq. (48b)
+                fun = pnmu[kk,:]*xzetas[ii,:]**(2 - kk)
+                I = np.dot(gws,fun) # gauss quad formula
+                tprime[ii,kk] = -(3/(2 - kk))*xdeltas[ii]*xlambdas[ii]**3*I/denom
+
+    # Do J tilde double prime, eq. (48d)
+    tpprime = np.zeros((nxlay,))
+    for ii in range(nxlay):
+        tpprime[ii] = 0.5*xdeltas[ii]*xlambdas[ii]**3/denom
+
+    # And finally, the EXTERNAL Js deserve full grid resolution
+    full_tilde = np.zeros((nlay,kmax+1))
+    for ii in range(nlay):
+        for kk in range(kmax+1):
+            if (kk%2 < 0):
+                continue
+            fun = pnmu[kk,:]*zetas[ii,:]**(kk+3)
+            I = np.dot(gws,fun) # gauss quad formula
+            full_tilde[ii,kk] = -(3/(kk + 3))*deltas[ii]*lambdas[ii]**3*I/denom
+
+    # Return the arrays in a tuple
+    return (tilde, tprime, tpprime, full_tilde)
+
 def _update_Js(lambdas, deltas, zetas, xind, Ps, gws):
     """Single-pass update of gravitational moments by Gaussian quad."""
 
@@ -423,52 +492,8 @@ def _update_Js(lambdas, deltas, zetas, xind, Ps, gws):
     xzetas = zetas[xind, :]
     nxlay = len(xlambdas)
 
-    # Precompute common denominator in eqs. (48) (USING FULL DENSITY PROFILE)
-    denom = 0
-    for j in range(nlay):
-        fun = zetas[j,:]**3
-        I = sum(fun*gws) # the gauss quadrature formula
-        denom = denom + I*deltas[j]*lambdas[j]**3
-
-    # Do J tilde, eq. (48a)
-    new_tilde = np.zeros((nxlay,kmax+1))
-    for ii in range(nxlay):
-        for kk in range(kmax+1):
-            if (kk%2 > 0):
-                continue
-            fun = Ps.Pnmu[kk,:]*xzetas[ii,:]**(kk+3)
-            I = sum(gws*fun) # gauss quad formula
-            new_tilde[ii,kk] = -(3/(kk + 3))*xdeltas[ii]*xlambdas[ii]**3*I/denom
-
-    # Do J tilde prime, eqs. (48b and 48c)
-    new_tprime = np.zeros((nxlay,kmax+1))
-    for ii in range(nxlay):
-        for kk in range(kmax+1):
-            if (kk%2 > 0):
-                continue
-            if kk == 2: # eq. (48c)
-                fun = Ps.Pnmu[2,:]*np.log(xzetas[ii,:])
-                I = sum(gws*fun) # gauss quad formula
-                new_tprime[ii,kk] = -3*xdeltas[ii]*xlambdas[ii]**3*I/denom
-            else:       # eq. (48b)
-                fun = Ps.Pnmu[kk,:]*xzetas[ii,:]**(2 - kk)
-                I = sum(gws*fun) # gauss quad formula
-                new_tprime[ii,kk] = -(3/(2 - kk))*xdeltas[ii]*xlambdas[ii]**3*I/denom
-
-    # Do J tilde double prime, eq. (48d)
-    new_tpprime = np.zeros((nxlay,))
-    for ii in range(nxlay):
-        new_tpprime[ii] = 0.5*xdeltas[ii]*xlambdas[ii]**3/denom
-
-    # And finally, the EXTERNAL Js deserve full grid resolution
-    full_tilde = np.zeros((nlay,kmax+1))
-    for ii in range(nlay):
-        for kk in range(kmax+1):
-            if (kk%2 < 0):
-                continue
-            fun = Ps.Pnmu[kk,:]*zetas[ii,:]**(kk+3)
-            I = sum(gws*fun) # gauss quad formula
-            full_tilde[ii,kk] = -(3/(kk + 3))*deltas[ii]*lambdas[ii]**3*I/denom
+    (new_tilde, new_tprime, new_tpprime, full_tilde) = _eqs48(lambdas,
+            deltas, zetas, xlambdas, xdeltas, xzetas, Ps.Pnmu, gws)
 
     # Return updated Js struct
     class newJs:
@@ -480,14 +505,12 @@ def _update_Js(lambdas, deltas, zetas, xind, Ps, gws):
     n = np.arange(0,kmax+1,2)
     newJs.Jn = np.zeros((len(n),))
     for k in range(len(n)):
-        newJs.Jn[k] = sum(newJs.fulltilde[:,n[k]]*lambdas**n[k])
+        newJs.Jn[k] = np.sum(newJs.fulltilde[:,n[k]]*lambdas**n[k])
 
     return newJs
 
-def _test():
+def _test(N,nx):
     import time
-    N = 128
-    nx = 16
     zvec = np.linspace(1, 1.0/N, N)
     dvec = np.linspace(1/N,2,N)
     qrot = 0.1
@@ -495,9 +518,10 @@ def _test():
     Js, out = cms(zvec,dvec,qrot,xlayers=nx)
     toc = time.time()
     print(Js[0:3])
-    print(out)
     print("Elapsed time {} seconds".format(toc-tic))
 
 if __name__ == '__main__':
-    _test()
+    N = int(sys.argv[1])
+    nx = int(sys.argv[2])
+    _test(N, nx)
     sys.exit(0)
