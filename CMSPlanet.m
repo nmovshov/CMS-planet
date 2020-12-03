@@ -617,8 +617,8 @@ classdef CMSPlanet < handle
             end
             
             % Basic table
-            vitals = {'Mass [kg]'; 'J2'; 'J4'; 'J6'; 'J8'; 'NMoI'};
-            CMP1 = [obj.M; obj.J2; obj.J4; obj.J6; obj.J8; obj.NMoI];
+            vitals = {'Mass [kg]'; 'R_eq [km]'; 'J2'; 'J4'; 'J6'; 'J8'; 'NMoI'};
+            CMP1 = [obj.M; obj.a0/1e3; obj.J2; obj.J4; obj.J6; obj.J8; obj.NMoI];
             CMP1 = double(CMP1);
             T = table(CMP1, 'RowNames', vitals);
             if ~isempty(obj.name)
@@ -632,6 +632,11 @@ classdef CMSPlanet < handle
                 oM = obs.M;
             catch
                 oM = NaN;
+            end
+            try
+                oa0 = obs.a0/1e3;
+            catch
+                oa0 = NaN;
             end
             try
                 oJ2 = obs.J2;
@@ -654,7 +659,7 @@ classdef CMSPlanet < handle
             catch
                 oname = [];
             end
-            OBS1 = [oM; oJ2; oJ4; oJ6; oJ8; oNMoI];
+            OBS1 = [oM; oa0; oJ2; oJ4; oJ6; oJ8; oNMoI];
             OBS1 = double(OBS1);
             T = [T table(OBS1)];
             if ~isempty(oname)
