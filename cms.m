@@ -1,29 +1,35 @@
 function [Js, out] = cms(zvec, dvec, qrot, varargin)
-%CMS Return gravity coefficients using the Concentric Maclaurin Spheroids method.
-%   Js = CMS(zvec, dvec, qrot) returns the even harmonic gravity coefficients from
-%   J0 to J30 in the vector Js, so that Js(1) is J0, Js(2) is J2, Js(3) is J4,
-%   etc. The mandatory inputs are a vector of equatorial radii zvec, vector of
-%   corresponding layer densities dvec, and rotation parameter qrot.
+%CMS Concentric Maclaurin Spheroids equilibrium shape and gravity.
+%   Js = CMS(zvec, dvec, qrot) returns 1-by-16 vector Js of gravity
+%   coefficients J0 through J30 of a rotating fluid planet in hydrostatic
+%   equilibrium. Coefficients are stored in ascending order so that Js(1) is
+%   J0, Js(2) is J2, Js(3) is J4, etc. The mandatory inputs are a vector of
+%   equatorial radii zvec, vector of corresponding layer densities dvec, and
+%   rotation parameter qrot, assumed normalized to the outer layer's equatorial
+%   radius (to zvec(1)).
 %
-%   [Js, out] = CMS(zvec, dvec, qrot, 'NAME1',VALUE1, 'NAME2',VALUE2,...) takes
-%   additional optional parameters as NAME/VALUE pairs, and also returns an output
-%   struct holding diagnostic values and the full hydrostatic spheroid shapes.
+%   [Js, out] = CMS(zvec, dvec, qrot, 'NAME1',VALUE1, 'NAME2',VALUE2,...)
+%   accepts additional parameters as NAME/VALUE pairs, and also returns an
+%   output struct holding diagnostic values and additional derived quantities,
+%   including the full hydrostatic spheroid shapes.
 %
 % Inputs, required
 % ----------------
 % zvec : 1d array, positive real
 %     Equatorial radii of constant density layers, indexed from the outside in,
-%     i.e., zvec(1)=a0 is the outer radius of the outermost layer, zvec(2) is the
-%     inner radius of the outermost layer as well as the outer radius of the next
-%     layer, etc. The innermost layer extends all the way to the center, so that
-%     zvec(end) is the outer radius of a central spheroid layer. Units of zvec are
-%     unimportant as values will be normalized to outer radius.
+%     i.e., zvec(1)=a0 is the outer radius of the outermost layer, zvec(2) is
+%     the inner radius of the outermost layer as well as the outer radius of
+%     the next layer, etc. The innermost layer extends all the way to the
+%     center, so that zvec(end) is the outer radius of a central spheroid
+%     layer. Units of zvec are unimportant as values will be normalized to
+%     outer radius.
 % dvec : 1d array, positive real
-%     Layer densities. The layer lying between zvec(i) and zvec(i+1) has constant
-%     density dvec(i). Units are unimportant as values will be normalized to the
-%     mean (bulk) density. The density should be monotonically non-increasing with
-%     zvec, but this is not enforced. (Note: these are layer densities and NOT the
-%     density "deltas" of concentric spheroids.)
+%     Layer densities. The layer lying between zvec(i) and zvec(i+1) has
+%     constant density dvec(i). Units are unimportant as values will be
+%     normalized to the mean (bulk) density. The density should be
+%     monotonically non-increasing with zvec, but this is not enforced. (Note:
+%     these are layer densities and NOT the density "deltas" of concentric
+%     spheroids.)
 % qrot : scalar, nonnegative
 %     Dimensionless rotation parameter. Recall q = w^2a0^3/GM.
 %
@@ -32,18 +38,19 @@ function [Js, out] = cms(zvec, dvec, qrot, varargin)
 %     Convergence tolerance on fractional change in Js in successive iterations.
 % maxiter : scalar, positive, integer, (maxiter=100)
 %     Maximum number of iterations of CMS algorithm.
-% xlayers : scalar or vector, nonnegative, integer (xlayers=64)
+% xlayers : scalar or vector, nonnegative, integer (xlayers=-1)
 %     Layers whose shape will be explicitly calculated. The shape functions
 %     (zetas) will be explicitly calculated for these layers, and
-%     spline-interpolated in between. This can result in significant speedup with
-%     minimal loss of precision, if the xlayers are chosen by trial and error to
-%     fit the required precision and the spacing of density layers. A scalar value
-%     is interpreted as a number of xlayers to be uniformaly distributed among the
-%     density layers. For example, a smooth-density 1024-layer model can benefit
-%     from almost 16x-speedup by specifying xlayers=64 while retaining a 10^-6
-%     relative precision on J2. A vector value is interpreted as indices of layers
-%     to be used as xlayers. (A negative value is a shortcut to flag a full
-%     calculation instead of skip-n-spline, useful for debugging.)
+%     spline-interpolated in between. This can result in significant speedup
+%     with minimal loss of precision, if the xlayers are chosen by trial and
+%     error to fit the required precision and the spacing of density layers. A
+%     scalar value is interpreted as a number of xlayers to be uniformaly
+%     distributed among the density layers. For example, a smooth-density
+%     1024-layer model can benefit from almost 16x-speedup by specifying
+%     xlayers=64 while retaining a 10^-6 relative precision on J2. A vector
+%     value is interpreted as indices of layers to be used as xlayers. (A
+%     negative value is a shortcut to flag a full calculation instead of
+%     skip-n-spline.)
 % J0s : struct
 %     J-like values representing initial state. This is not just for speeding up
 %     convergence. Mostly it's a mechanism to preserve state between calls.
@@ -58,7 +65,9 @@ function [Js, out] = cms(zvec, dvec, qrot, varargin)
 %     cms. Including out.zetas and out.JLike that together define the converged
 %     hydrostatic shape.
 %
-%CMS(zvec, dvec, qrot)
+% Algorithm
+% ---------
+% Concentric Maclaurin Spheroids from Hubbard 2012, 2013 ApJ/ApJL.
 
 %% Input parsing
 % Zero inputs case, usage only
@@ -99,10 +108,14 @@ kmax = opts.kmax;
 
 % Define down-sampled variabels (for skip-n-spline)
 if isscalar(opts.xlayers)
-    sskip = max(fix(nlay/opts.xlayers), 1);
-    xind = 1:sskip:nlay;
+    if opts.xlayers > 0
+        sskip = max(fix(nlay/opts.xlayers), 1);
+        xind = 1:sskip:nlay;
+    else
+        xind = 1:nlay;
+    end
 else
-    warning('Experimental feature, use with care.')
+    warning('CMS:xind','Experimental feature, use with care.')
     xind = opts.xlayers;
 end
 xlambdas = lambdas(xind);
@@ -124,7 +137,7 @@ end
 % Abscissas and weights for Gaussian quadrature
 [mus, gws] = gauleg(0, 1, nangles);
 
-% Precompute Legendre polynomials for fixed colatitudes (gauss quad)
+% Precompute Legendre polynomials for fixed colatitudes (for gauss quad)
 Ps.Pnmu(kmax+1,nangles) = 0;
 Ps.Pnzero(kmax+1,1) = 0;
 for k=0:kmax
@@ -176,11 +189,6 @@ if iter == opts.maxiter
     warning('CMS:maxiter','Shape may not be fully converged.')
 end
 
-% For convenience output the shape info interpolated on full grid
-if nargout > 1
-
-end
-
 %% Return
 Js = new_Js; % may as well use the latest...
 out.dJs = dJs;
@@ -202,7 +210,7 @@ fprintf('Usage:\n\tcms(zvec,dvec,qrot,''name'',value)\n')
 fprintf('Name-Value pair arguments:\n')
 fprintf('tol - Convergence tolerance for gravity coefficients [ positive real {1e-6} ]\n')
 fprintf('maxiter - Number of iterations allowed for relaxation to equilibrium shape [ positive integer {60} ]\n')
-fprintf('xlayers - Solve shape functions on xlayers and spline the rest [ integer scalar or vector {64} ]\n')
+fprintf('xlayers - Solve shape functions on xlayers and spline the rest [ integer scalar or vector {-1} ]\n')
 fprintf('prerat - Precalculate powers of ratios of lambdas (trades memory for speed) [ {true} | false ]\n')
 fprintf('J0s - J-like values representing initial state [ scalar struct {[]} ]\n')
 end
@@ -213,7 +221,7 @@ p.FunctionName = 'cms.m';
 
 p.addParameter('tol',1e-6,@(x)isscalar(x)&&isreal(x)&&x>0)
 p.addParameter('maxiter',60,@(x)isscalar(x)&&isreal(x)&&x>0&&mod(x,1)==0)
-p.addParameter('xlayers',64,@(x)validateattributes(x,{'numeric'},{'vector','integer'}))
+p.addParameter('xlayers',-1,@(x)validateattributes(x,{'numeric'},{'vector','integer'}))
 p.addParameter('prerat',true,@(x)isscalar(x)&&islogical(x))
 p.addParameter('J0s',struct(),@(x)isscalar(x)&&isstruct(x))
 

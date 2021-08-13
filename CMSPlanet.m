@@ -1,39 +1,60 @@
 classdef CMSPlanet < handle
     %CMSPLANET Interior model of rotating fluid planet.
-    %   This class implements a model of a rotating fluid planet using Concentric
-    %   Maclaurin Spheroids to calculate the hydrostatic equilibrium shape and
-    %   resulting gravity field. A CMSPlanet object is defined by a given mass,
-    %   equatorial radius, rotation parameter, and optionally a barotrope.
+    %   This class implements a model of a rotating fluid planet using
+    %   Concentric Maclaurin Spheroids to calculate the hydrostatic equilibrium
+    %   shape and resulting gravity field. A CMSPlanet object is defined by a
+    %   densiy profile rho(a), supplied by the user and stored in the column
+    %   vectors obj.ai and obj.rhoi, indexed from the surface in. To complete
+    %   the definition the user must also specify a mass, equatorial radius,
+    %   and rotation period. With these a gravity field and equilibrium shape
+    %   can be determined, with a call to obj.relax_to_HE(). Note, however,
+    %   that the oblate shape calculated with obj.relax_to_HE() preserves the
+    %   equatorial radius of the planet, but not the total mass. A call to
+    %   obj.renormalize() will multiply obj.rhoi by a constant to yield the
+    %   correct reference mass at the cost of modifying the assigned density.
+    %   It is not possible to define mass, radius, and density simultaneously.
+    %
+    %   Alternatively the user may supply a barotrope object, stored in
+    %   obj.eos, and call obj.relax_to_barotrope() to iteratively find a
+    %   density profile consistent with the calculated equilibrium pressure. To
+    %   this end a boundary pressure must also be given, in obj.P0, and an
+    %   initial density profile guess is still required (can be a simple one).
+    %   Again, we can't simultaneously impose an exact mass, radius, and
+    %   barotrope. By default the reference mass and radius will be honored, by
+    %   renormalizing the converged density profile, and this will modify the
+    %   _effective_ barotrope (to override set obj.opts.renorm=false).
     
     %% Properties
     properties
         name   % model name
         mass   % reference mass
         radius % reference radius (equatorial!)
+        period % refernce rotation period
         P0     % reference pressure
         ai     % vector of equatorial radii (top down, a0=ai(1) is outer radius)
-        rhoi   % vector of spheroid densities
-        qrot   % rotation parameter, w^2a0^3/GM
+        rhoi   % vector of layer densities
         eos    % barotrope(s) (tip: help barotropes for options)
         bgeos  % optional background barotrope
         fgeos  % optional foreground barotrope
         opts   % holds user configurable options (tip: help cmsset)
     end
     properties (SetAccess = private)
-        N      % convenience name for length(obj.si)
+        N      % convenience name for length(obj.ai)
         CMS    % spheroid shape and other information returned by cms.m
         Js     % external gravity coefficients (returned by cms.m)
-        betam  % mass renormalization factor (obj.mass/obj.M)
-        alfar  % radius renormalization factor (obj.radius/obj.a0)
+        betam  % mass renormalization factor returned by obj.renormalize()
+        alfar  % radius renormalization factor returned by obj.renormalize()
     end
     properties (Dependent)
-        M      % calculated mass
+        M      % calculated mass (equal to mass *after* renorm)
         mi     % cumulative mass below ai
-        a0     % calculated equatorial radius (another name for obj.ai(1))
-        s0     % calculated mean radius
+        a0     % another name for obj.ai(1)
+        s0     % calculated mean radius, another name for obj.si(1)
         si     % calculated spheroid mean radii
         rhobar % calculated mean density
-        mrot   % rotation parameter referenced to s0
+        wrot   % rotation frequency, 2pi/period
+        qrot   % rotation parameter wrot^2a0^3/GM
+        mrot   % rotation parameter, wrot^2s0^3/GM
         J2     % convenience alias to obj.Js(2)
         J4     % convenience alias to obj.Js(3)
         J6     % convenience alias to obj.Js(4)
@@ -41,7 +62,6 @@ classdef CMSPlanet < handle
     end
     properties (GetAccess = private)
         G      % Gravitational constant
-        u      % let's hold a units struct for convenience
     end
     
     %% A simple constructor
@@ -54,20 +74,30 @@ classdef CMSPlanet < handle
             obj.opts = cmsset(varargin{:});
             
             % Init privates
-            try
-                obj.u = setFUnits;
-                obj.G = obj.u.gravity;
-            catch ME
-                if isequal(ME.identifier,'MATLAB:UndefinedFunction')
-                    error('Check your path, did you forget to run setws()?\n%s',ME.message)
-                end
-                rethrow(ME)
-            end
+            obj.G = 6.67430e-11; % m^3 kg^-1 s^-2 (2018 NIST reference)
         end
     end % End of constructor block
     
     %% Public methods
     methods (Access = public)
+        function obj = set_J_guess(obj, jlike)
+            % Use with caution
+            obj.CMS.JLike = jlike;
+        end
+        
+        function obj = set_observables(obj, obs)
+            % Copy physical properties from an +observables struct.
+            obj.mass = obs.M;
+            obj.radius = obs.a0;
+            obj.period = obs.P;
+            obj.P0 = obs.P0;
+            try
+                obj.bgeos = obs.bgeos;
+                obj.fgeos = obs.fgeos;
+            catch
+            end
+        end
+        
         function ET = relax_to_barotrope(obj)
             % Relax equilibrium shape, Js, and density simultaneously.
             
@@ -84,13 +114,13 @@ classdef CMSPlanet < handle
             end
             if isempty(obj.qrot)
                 warning('CMSPLANET:assertion',...
-                    'First set rotation parameter (<obj>.qrot).')
+                    'First set rotation period (<obj>.period).')
                 return
             end
             if isempty(obj.P0)
                 warning('CMSPLANET:P0',...
-                    'Setting reference pressure to one bar (<obj>.P0=1e5).')
-                obj.P0 = 1*obj.u.bar;
+                    'First set reference pressure (<obj>.P0).')
+                return
             end
             
             % Optional communication
@@ -100,8 +130,6 @@ classdef CMSPlanet < handle
             end
             
             % Ready, set,...
-            mihe = obj.opts.MaxIterHE;
-            obj.opts.MaxIterHE = 2;
             warning('off','CMS:maxiter')
             t_rlx = tic;
             
@@ -116,11 +144,24 @@ classdef CMSPlanet < handle
                 
                 old_Js = obj.Js;
                 old_Js(abs(old_Js) < 1e-12) = 0; % a hack for nonrotating planets
-                if isempty(old_Js), old_Js = [-1,zeros(1,15)]; end
+                if isempty(old_Js)
+                    old_Js = [-1,zeros(1,15)];
+                end
                 old_ro = obj.rhoi;
-                obj.relax_to_HE();
-                obj.update_densities;
-                dJs = abs((obj.Js - old_Js)./(old_Js));
+                
+                % Call the cms algorithm
+                if isempty(obj.CMS), obj.CMS.JLike = struct(); end
+                [obj.Js, obj.CMS] = cms(obj.ai, obj.rhoi, obj.qrot,...
+                    'tol',obj.opts.dJtol, 'maxiter',obj.opts.MaxIterHE,...
+                    'xlayers', obj.opts.xlayers, 'J0s', obj.CMS.JLike,...
+                    'prerat', obj.opts.prerat);
+                
+                % Update density from barotrope and renormalize
+                obj.update_densities();
+                obj.renormalize();
+                
+                % Calculate changes in shape/density
+                dJs = abs((obj.Js - old_Js)./old_Js);
                 dJs = max(dJs(isfinite(dJs(1:6))));
                 dro = obj.rhoi./old_ro;
                 dro = var(dro(isfinite(dro)));
@@ -141,14 +182,17 @@ classdef CMSPlanet < handle
                 iter = iter + 1;
             end
             ET = toc(t_rlx);
+            if iter > obj.opts.MaxIterBar
+                warning('CMSPLANET:maxiter','Pressure/density may not be fully converged.')
+            end
             
-            % Renormalize and record renorm factors
+            % Renorm and record factors
+            % TODO: if we still need betam we must fix this
             renorms = obj.renormalize();
             obj.alfar = renorms(1);
             obj.betam = renorms(2);
             
             % Some clean up
-            obj.opts.MaxIterHE = mihe;
             warning('on','CMS:maxiter')
             
             % Optional communication
@@ -170,8 +214,8 @@ classdef CMSPlanet < handle
             dvec = obj.rhoi/obj.rhoi(end);
             if isempty(obj.CMS), obj.CMS.JLike = struct(); end
             [obj.Js, obj.CMS] = cms(zvec, dvec, obj.qrot,...
-                'tol', obj.opts.dJtol, 'maxiter', obj.opts.MaxIterHE,...
-                'xlayers', obj.opts.xlayers, 'J0s', obj.CMS.JLike,...
+                'tol',obj.opts.dJtol, 'maxiter',obj.opts.MaxIterHE,...
+                'xlayers',obj.opts.xlayers, 'J0s',obj.CMS.JLike,...
                 'prerat', obj.opts.prerat);
             ET = toc(t_rlx);
             dJ = obj.CMS.dJs;
@@ -186,8 +230,7 @@ classdef CMSPlanet < handle
             % Set layer densities to match prescribed barotrope.
             
             if isempty(obj.eos)
-                warning('Make sure input barotrope (<obj>.eos) is set.')
-                return
+                error('CMSPLANET:noeos','Make sure input barotrope (<obj>.eos) is set.')
             end
             
             t_rho = tic;
@@ -215,17 +258,17 @@ classdef CMSPlanet < handle
         
         function P_m = P_mid(obj)
             % Mid-layer pressure (by interpolation)
-            try
-                P = obj.Pi;
-                r = obj.ai;
-                P_m = NaN(size(P));
-                P_m(1:end-1) = (P(1:end-1) + P(2:end))/2;
-                P_m(end) = P(end) + ...
-                    (P(end) - P(end-1))/(r(end-1) - r(end))*(r(end)/2);
-            catch ME
-                warning(ME.identifier, ...
-                    'Pressure integration failed with message %s',ME.message)
-                P_m = [];
+            P = obj.Pi;
+            r = obj.ai;
+            P_m = NaN(size(P));
+            switch obj.opts.prsmeth
+                case 'linear'
+                    P_m(1:end-1) = (P(1:end-1) + P(2:end))/2;
+                    P_m(end) = P(end) + ...
+                        (P(end) - P(end-1))/(r(end-1) - r(end))*(r(end)/2);
+                case 'spline'
+                otherwise
+                    error('Unknown prsmeth; check cmsset for options.')
             end
         end
         
@@ -238,27 +281,8 @@ classdef CMSPlanet < handle
             end
         end
         
-        function obj = set_observables(obj, obs)
-            % Copy physical properties from an +observables struct.
-            obj.mass = obs.M;
-            obj.radius = obs.a0;
-            obj.qrot = obs.q;
-            obj.P0 = obs.P0;
-            try
-                obj.bgeos = obs.bgeos;
-                obj.fgeos = obs.fgeos;
-            catch
-            end
-        end
-
-        function obj = set_J_guess(obj, jlike)
-            % Use with caution
-            obj.CMS.JLike = jlike;
-        end
-        
         function ab = renormalize(obj)
             % Match input and calculated mass and equatorial radius.
-
             try
                 a = obj.radius/obj.a0;
                 obj.ai = obj.ai*a;
@@ -278,7 +302,7 @@ classdef CMSPlanet < handle
             % Resize planet to match equatorial radius to observed value.
             
             if isempty(obj.radius) || isempty(obj.a0) || isempty(obj.ai)
-                warning('Missing information; no action.')
+                warning('CMP:noref','Missing information; no action.')
                 return
             end
             obj.ai = obj.ai*obj.radius/obj.a0;
@@ -288,10 +312,40 @@ classdef CMSPlanet < handle
             % Rescale density to match planet mass to observed value.
             
             if isempty(obj.mass) || isempty(obj.rhoi)
-                warning('Missing information; no action.')
+                warning('CMP:noref','Missing information; no action.')
                 return
             end
             obj.rhoi = obj.rhoi*obj.mass/obj.M;
+        end
+        
+        function I = NMoI(obj, reduce)
+            % C/Ma^2, see eq. 5 in Hubbard & Militzer 2016
+            
+            if nargin < 2 || isempty(reduce), reduce = 'sum'; end
+            reduce = validatestring(reduce, {'sum', 'csum', 'none'});
+            
+            if isempty(obj.CMS)
+                deltas = [obj.rhoi(1); diff(obj.rhoi)];
+                lambdas = obj.ai/obj.a0;
+                zetas = ones(obj.N, obj.opts.nangles);
+            else
+                deltas = obj.CMS.deltas;
+                lambdas = obj.CMS.lambdas;
+                zetas = obj.CMS.zetas;
+            end
+            [mus, gws] = gauleg(0, 1, obj.opts.nangles); % Abscissas and weights for Gauss-quad
+            p2term = 1 - Pn(2, mus);
+            num(obj.N) = 0;
+            den = 0;
+            for j=1:obj.N
+                fun1 = deltas(j)*((zetas(j,:)*lambdas(j)).^5).*p2term;
+                fun2 = deltas(j)*((zetas(j,:)*lambdas(j)).^3);
+                num(j) = fun1*gws';
+                den = den + fun2*gws';
+            end
+            if isequal(reduce, 'none'), I = (2/5)*(num/den); end
+            if isequal(reduce, 'sum'), I = (2/5)*sum(num)/den; end
+            if isequal(reduce, 'csum'), I = (2/5)*cumsum(num)/den; end
         end
     end % End of public methods block
     
@@ -335,7 +389,7 @@ classdef CMSPlanet < handle
             elseif isequal(lower(pr.plottype), 'line')
                 lh = line(x, y/1000);
             else
-                error('Unknown value of parameter plottype.')
+                error('Unknown value of parameter plottype.') %#ok<*ERTAG>
             end
             lh.LineWidth = 2;
             if isempty(pr.axes)
@@ -612,14 +666,13 @@ classdef CMSPlanet < handle
             try
                 obj.J2;
             catch
-                warning('Uncooked object.')
+                warning('Uncooked object.') %#ok<*WNTAG>
                 return
             end
             
             % Basic table
             vitals = {'Mass [kg]'; 'R_eq [km]'; 'J2'; 'J4'; 'J6'; 'J8'; 'NMoI'};
             CMP1 = [obj.M; obj.a0/1e3; obj.J2; obj.J4; obj.J6; obj.J8; obj.NMoI];
-            CMP1 = double(CMP1);
             T = table(CMP1, 'RowNames', vitals);
             if ~isempty(obj.name)
                 vname = matlab.lang.makeValidName(obj.name);
@@ -684,7 +737,6 @@ classdef CMSPlanet < handle
             s.M      = obj.M;
             s.s0     = obj.s0;
             s.a0     = obj.a0;
-            s.M_Z    = obj.M_Z;
             s.rhobar = obj.rhobar;
             s.mrot   = obj.mrot;
             s.qrot   = obj.qrot;
@@ -692,13 +744,15 @@ classdef CMSPlanet < handle
             s.J4     = obj.J4;
             s.J6     = obj.J6;
             s.J8     = obj.J8;
+            s.J10    = obj.Js(6);
+            s.J12    = obj.Js(7);
+            s.J14    = obj.Js(8);
             s.NMoI   = obj.NMoI;
             s.si     = obj.si;
             s.ai     = obj.ai;
             s.rhoi   = obj.rhoi;
             s.Pi     = obj.Pi;
             s.mi     = obj.mi;
-            s.zi     = obj.zi;
             
             if rdc > 0
                 s = structfun(@double, s, 'UniformOutput', false);
@@ -714,7 +768,6 @@ classdef CMSPlanet < handle
                 s.rhoi   = [];
                 s.Pi     = [];
                 s.mi     = [];
-                s.zi     = [];
             end
             
             try
@@ -749,9 +802,6 @@ classdef CMSPlanet < handle
             T.rhoi = double(obj.rhoi);
             T.Pi = double(obj.Pi);
             T.mi = double(obj.mi);
-            if ~isempty(obj.zi)
-                T.zi = double(obj.zi);
-            end
         end
         
         function to_ascii(obj, fname)
@@ -775,11 +825,12 @@ classdef CMSPlanet < handle
             fprintf(fid,'#\n');
             fprintf(fid,'# Scalar quantities:\n');
             fprintf(fid,'# N layers = %d\n',obj.N);
-            fprintf(fid,'# Mass M = %g kg\n', double(obj.M));
-            fprintf(fid,'# Mean radius       s0 = %0.6e m\n', double(obj.s0));
-            fprintf(fid,'# Equatorial radius a0 = %0.6e m\n', double(obj.a0));
-            fprintf(fid,'# Rotation parameter m = %0.6f\n', double(obj.mrot));
-            fprintf(fid,'# Rotation parameter q = %0.6f\n', double(obj.qrot));
+            fprintf(fid,'# Mass M = %g kg\n', obj.M);
+            fprintf(fid,'# Mean radius       s0 = %0.6e m\n', obj.s0);
+            fprintf(fid,'# Equatorial radius a0 = %0.6e m\n', obj.a0);
+            fprintf(fid,'# Rotation period P = %0.6g s\n', obj.period);
+            fprintf(fid,'# Rotation parameter m = %0.6f\n', obj.mrot);
+            fprintf(fid,'# Rotation parameter q = %0.6f\n', obj.qrot);
             fprintf(fid,'#\n');
             fprintf(fid,'# Calculated gravity zonal harmonics (x 10^6):\n');
             fprintf(fid,'# J2  = %12.6f\n', obj.J2*1e6);
@@ -805,16 +856,16 @@ classdef CMSPlanet < handle
             fprintf(fid,'\n');
             for k=1:obj.N
                 fprintf(fid,'  %-4d  ',k);
-                fprintf(fid,'%10.4e  ', double(obj.si(k)));
-                fprintf(fid,'%10.4e  ', double(obj.ai(k)));
-                fprintf(fid,'%7.1f  ', double(obj.rhoi(k)));
-                fprintf(fid,'%10.4e  ', double(obj.Pi(k)), double(obj.mi(k)));
+                fprintf(fid,'%10.4e  ', obj.si(k));
+                fprintf(fid,'%10.4e  ', obj.ai(k));
+                fprintf(fid,'%7.1f  ', obj.rhoi(k));
+                fprintf(fid,'%10.4e  ', obj.Pi(k), obj.mi(k));
                 fprintf(fid,'\n');
             end
         end
     end % End of reporters/exporters block
-
-    %% Private methods
+    
+    %% Private (or obsolete) methods
     methods (Access = private)
         function Upu = calc_equipotential_Upu(obj)
             % See ./notes/cms.pdf eqs. 49 and 51
@@ -845,130 +896,6 @@ classdef CMSPlanet < handle
                 U = U*(-1/(lam(j)*zet(j)));
                 U = U + (1/3)*q*lam(j)^2*zet(j)^2*(1 - P2k(3)); % add rotation
                 Upu(j) = U;
-            end
-        end
-    end
-    
-    %% Access and pseudo-access methods
-    methods
-        function set.name(obj,val)
-            if ~isempty(val)
-                validateattributes(val, {'char'}, {'row'})
-            end
-            obj.name = val;
-        end
-        
-        function set.ai(obj, val)
-            assert(isnumeric(val) && isvector(val) && ~any(val<0),...
-                'obj.si must be a nonnegative vector.')
-            assert(all(diff(val)<=0),'obj.si must be non-ascending.')
-            obj.ai = val(:);
-        end
-        
-        function set.rhoi(obj, val)
-            assert(isnumeric(val) && isvector(val),...
-                'obj.rhoi must be a nonnegative vector.')
-            if any(val<0)
-                warning('TOFPLANET:assertion','negative density. Is this on purpose?')
-            end
-            obj.rhoi = val(:);
-        end
-        
-        function val = Pi(obj, ind)
-            try
-                U = obj.Ui;
-                rho = obj.rhoi;
-                val = zeros(obj.N,1);
-                val(1) = obj.P0;
-                val(2:end) = val(1) + cumsum(rho(1:end-1).*diff(U));
-                if nargin > 1
-                    val = val(ind);
-                end
-            catch
-                val = [];
-            end
-        end
-        
-        function val = Ui(obj, ind)
-            try
-                val = (obj.G*obj.mass/obj.radius)*obj.calc_equipotential_Upu();
-                if nargin > 1
-                    val = val(ind);
-                end
-            catch
-                val = [];
-            end
-        end
-        
-        function set.eos(obj,val)
-            if isempty(val)
-                obj.eos = [];
-                return
-            end
-            if ~isa(val,'barotropes.Barotrope')
-                error('eos must be a valid instance of class Barotrope')
-            end
-            obj.eos = val(:);
-        end
-        
-        function set.bgeos(obj,val)
-            if isempty(val)
-                obj.bgeos = [];
-                return
-            end
-            if ~isa(val,'barotropes.Barotrope')
-                error('bgeos must be a valid instance of class Barotrope')
-            end
-            obj.bgeos = val;
-        end
-
-        function set.fgeos(obj,val)
-            if isempty(val)
-                obj.fgeos = [];
-                return
-            end
-            if ~isa(val,'barotropes.Barotrope')
-                error('fgeos must be a valid instance of class Barotrope')
-            end
-            obj.fgeos = val;
-        end
-        
-        function val = get.M(obj)
-            try
-                drho = [obj.rhoi(1); diff(obj.rhoi)];
-                if isempty(obj.si)
-                    val = (4*pi/3)*sum(drho.*obj.ai.^3);
-                else
-                    val = (4*pi/3)*sum(drho.*obj.si.^3);
-                end
-            catch
-                val = [];
-            end
-        end
-        
-        function set.mass(obj,val)
-            validateattributes(val,{'numeric'},{'positive','scalar'})
-            obj.mass = val;
-        end
-        
-        function set.radius(obj,val)
-            validateattributes(val,{'numeric'},{'positive','scalar'})
-            obj.radius = val;
-        end
-        
-        function val = get.mi(obj)
-            % mass _below_ level i
-            if isempty(obj.ai) || isempty(obj.rhoi)
-                val = [];
-            else
-                rho = obj.rhoi;
-                s = obj.si;
-                n = obj.N;
-                val(n) = 4*pi/3*rho(n)*s(n)^3;
-                for k=n-1:-1:1
-                    val(k) = val(k+1) + 4*pi/3*rho(k)*(s(k)^3 - s(k+1)^3);
-                end
-                val = val';
             end
         end
         
@@ -1003,6 +930,83 @@ classdef CMSPlanet < handle
                 val = [];
             end
         end
+    end
+    
+    %% Access and pseudo-access methods
+    methods
+        function set.name(obj,val)
+            if ~isempty(val)
+                validateattributes(val, {'char'}, {'row'})
+            end
+            obj.name = val;
+        end
+        
+        function set.mass(obj,val)
+            validateattributes(val,{'numeric'},{'positive','scalar'})
+            obj.mass = val;
+        end
+        
+        function set.radius(obj,val)
+            validateattributes(val,{'numeric'},{'positive','scalar'})
+            obj.radius = val;
+        end
+        
+        function set.ai(obj, val)
+            assert(isnumeric(val) && isvector(val) && ~any(val<0),...
+                'obj.ai must be a nonnegative vector.')
+            assert(all(diff(val)<=0),'obj.ai must be non-ascending.')
+            obj.ai = val(:);
+        end
+        
+        function set.rhoi(obj, val)
+            assert(isnumeric(val) && isvector(val),...
+                'obj.rhoi must be a nonnegative vector.')
+            if any(val<0)
+                warning('CMSPLANET:assertion','negative density. Is this on purpose?')
+            end
+            obj.rhoi = val(:);
+        end
+        
+        function set.eos(obj,val)
+            if isempty(val)
+                obj.eos = [];
+                return
+            end
+            if ~isa(val,'barotropes.Barotrope')
+                error('eos must be a valid instance of class Barotrope')
+            end
+            obj.eos = val(:);
+        end
+        
+        function set.bgeos(obj,val)
+            if isempty(val)
+                obj.bgeos = [];
+                return
+            end
+            if ~isa(val,'barotropes.Barotrope')
+                error('bgeos must be a valid instance of class Barotrope')
+            end
+            obj.bgeos = val;
+        end
+        
+        function set.fgeos(obj,val)
+            if isempty(val)
+                obj.fgeos = [];
+                return
+            end
+            if ~isa(val,'barotropes.Barotrope')
+                error('fgeos must be a valid instance of class Barotrope')
+            end
+            obj.fgeos = val;
+        end
+        
+        function val = get.a0(obj)
+            if isempty(obj.ai)
+                val = [];
+            else
+                val = obj.ai(1);
+            end
+        end
         
         function val = get.N(obj)
             if isempty(obj.ai) || isempty(obj.rhoi)
@@ -1015,22 +1019,108 @@ classdef CMSPlanet < handle
             end
         end
         
+        function val = Ui(obj, ind)
+            try
+                val = (obj.G*obj.mass/obj.radius)*obj.calc_equipotential_Upu();
+                if nargin > 1
+                    val = val(ind);
+                end
+            catch
+                val = [];
+            end
+        end
+        
+        function val = Pi(obj, ind)
+            try
+                U = obj.Ui;
+                rho = obj.rhoi;
+                val = zeros(obj.N,1);
+                val(1) = obj.P0;
+                val(2:end) = val(1) + cumsum(rho(1:end-1).*diff(U));
+                if nargin > 1
+                    val = val(ind);
+                end
+            catch
+                val = [];
+            end
+        end
+        
+        function val = get.M(obj)
+            try
+                drho = [obj.rhoi(1); diff(obj.rhoi)];
+                if isempty(obj.si)
+                    val = (4*pi/3)*sum(drho.*obj.ai.^3);
+                else
+                    val = (4*pi/3)*sum(drho.*obj.si.^3);
+                end
+            catch
+                val = [];
+            end
+        end
+        
+        function val = get.mi(obj)
+            % mass _below_ level i
+            if isempty(obj.ai) || isempty(obj.rhoi)
+                val = [];
+            else
+                rho = obj.rhoi;
+                s = obj.si;
+                n = obj.N;
+                val(n) = 4*pi/3*rho(n)*s(n)^3;
+                for k=n-1:-1:1
+                    val(k) = val(k+1) + 4*pi/3*rho(k)*(s(k)^3 - s(k+1)^3);
+                end
+                val = val';
+            end
+        end
+        
         function val = get.rhobar(obj)
-            if isempty(obj.M) || isempty(obj.s0)
+            if isempty(obj.M) || isempty(obj.si)
                 val = [];
             else
                 val = obj.M/(4*pi/3*obj.s0^3);
             end
         end
         
-        function val = get.a0(obj)
-            if isempty(obj.ai)
+        function val = get.wrot(obj)
+            val = 2*pi./obj.period;
+        end
+        
+        function val = get.qrot(obj)
+            GM = obj.G*obj.mass;
+            val = obj.wrot^2.*obj.radius^3./GM;
+        end
+        
+        function val = get.mrot(obj)
+            GM = obj.G*obj.mass;
+            val = obj.wrot^2.*obj.s0^3./GM;
+        end
+        
+        function set.qrot(~,~)
+            error('CMSPLANET:deprecation',...
+                'Setting qrot is deprecated; set a reference period instead.')
+        end
+        
+        function val = get.si(obj)
+            try
+                Vs = NaN(size(obj.CMS.lambdas));
+                for j=1:obj.N
+                    Vs(j) = obj.CMS.lambdas(j)^3*(obj.CMS.zetas(j,:).^3)*(obj.CMS.gws');
+                end
+                val = obj.a0*Vs.^(1/3);
+            catch
                 val = [];
-            else
-                val = obj.ai(1);
             end
         end
         
+        function val = get.s0(obj)
+            try
+                val = obj.si(1);
+            catch
+                val = [];
+            end
+        end
+
         function val = get.J2(obj)
             if isempty(obj.Js)
                 val = 0;
@@ -1061,64 +1151,6 @@ classdef CMSPlanet < handle
             else
                 val = obj.Js(5);
             end
-        end
-        
-        function val = get.si(obj)
-            try
-                Vs = NaN(size(obj.CMS.lambdas));
-                for j=1:obj.N
-                    Vs(j) = obj.CMS.lambdas(j)^3*(obj.CMS.zetas(j,:).^3)*(obj.CMS.gws');
-                end
-                val = obj.a0*Vs.^(1/3);
-            catch
-                val = [];
-            end
-        end
-        
-        function val = get.s0(obj)
-            try
-                val = obj.si(1);
-            catch
-                val = [];
-            end
-        end
-        
-        function val = get.mrot(obj)
-            try
-                val = obj.qrot*(obj.s0/obj.a0)^3;
-            catch
-                val = [];
-            end
-        end
-        
-        function val = NMoI(obj, reduce)
-            % C/Ma^2, see eq. 5 in Hubbard & Militzer 2016
-            
-            if nargin < 2 || isempty(reduce), reduce = 'sum'; end
-            reduce = validatestring(reduce, {'sum', 'csum', 'none'});
-            
-            if isempty(obj.CMS)
-                deltas = [obj.rhoi(1); diff(obj.rhoi)];
-                lambdas = obj.ai/obj.a0;
-                zetas = ones(obj.N, obj.opts.nangles);
-            else
-                deltas = obj.CMS.deltas;
-                lambdas = obj.CMS.lambdas;
-                zetas = obj.CMS.zetas;
-            end
-            [mus, gws] = gauleg(0, 1, obj.opts.nangles); % Abscissas and weights for Gauss-quad
-            p2term = 1 - Pn(2, mus);
-            num(obj.N) = 0;
-            den = 0;
-            for j=1:obj.N
-                fun1 = deltas(j)*((zetas(j,:)*lambdas(j)).^5).*p2term;
-                fun2 = deltas(j)*((zetas(j,:)*lambdas(j)).^3);
-                num(j) = fun1*gws';
-                den = den + fun2*gws';
-            end
-            if isequal(reduce, 'none'), val = (2/5)*(num/den); end
-            if isequal(reduce, 'sum'), val = (2/5)*sum(num)/den; end
-            if isequal(reduce, 'csum'), val = (2/5)*cumsum(num)/den; end
         end
     end % End of access methods block
     
