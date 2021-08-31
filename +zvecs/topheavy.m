@@ -17,10 +17,6 @@ function zvec = topheavy(N, skew, I, halftop)
 %    the first layer be exactly half that of the other layers in the upper
 %    zone. The default is halftop=true.
 
-if nargin == 0
-    help('lambdas.topheavy')
-    return
-end
 narginchk(1,4)
 if nargin < 2 || isempty(skew), skew = [3/4, 1/2]; end
 if nargin < 3 || isempty(I), I = [1/N,1]; end
