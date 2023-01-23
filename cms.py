@@ -13,21 +13,23 @@ from numba import jit
 def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
     """Return gravity coefficients of density profile in hydrostatic equilibrium.
 
-    Js,out = cms(zvec, dvec, qrot) returns the even harmonic gravity coefficients
-    from J0 to J30 in the vector Js, so that Js[0] is J0, Js[1] is J2, Js[2] is
-    J4, etc. The mandatory inputs are a vector of equatorial radii zvec, vector of
-    corresponding layer densities dvec, and rotation parameter qrot. The struct
-    out holds diagnostic values and the full hydrostatic spheroid shapes.
+    Js,out = cms(zvec, dvec, qrot) returns the even harmonic gravity
+    coefficients from J0 to J30 in the vector Js, so that Js[0] is J0, Js[1] is
+    J2, Js[2] is J4, etc. The mandatory inputs are a vector of equatorial radii
+    zvec, vector of corresponding layer densities dvec, and rotation parameter
+    qrot. The struct out holds diagnostic values and the full hydrostatic
+    spheroid shapes.
 
     Required inputs
     ----------
     zvec : ndarray, 1d, positive
-        Equatorial radii of constant density layers, indexed from the outside in,
-        i.e., zvec[0]=a0 is the outer radius of the outermost layer, zvec[1] is
-        the inner radius of the outermost layer as well as the outer radius of the
-        next layer, etc. The innermost layer extends all the way to the center, so
-        that zvec[-1] is the outer radius of a central spheroid layer. Units of
-        zvec are unimportant as values will be normalized to outer radius.
+        Equatorial radii of constant density layers, indexed from the outside
+        in, i.e., zvec[0]=a0 is the outer radius of the outermost layer,
+        zvec[1] is the inner radius of the outermost layer as well as the outer
+        radius of the next layer, etc. The innermost layer extends all the way
+        to the center, so that zvec[-1] is the outer radius of a central
+        spheroid layer. Units of zvec are unimportant as values will be
+        normalized to outer radius.
     dvec : ndarray, 1d, positive
         Layer densities. The layer lying between zvec[i] and zvec[i+1] has
         constant density dvec[i]. Units are unimportant as values will be
@@ -41,7 +43,8 @@ def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
     Optional parameters
     ----------
     dJtol : scalar, positive (dJtol=1e-6)
-        Convergence tolerance on fractional change in Js in successive iterations.
+        Convergence tolerance on fractional change in Js in successive
+        iterations.
     maxiter : scalar, positive, integer, (maxiter=100)
         Limit iterations of CMS algorithm.
     xlayers : scalar or vector, nonnegative, integer (xlayers=64)
@@ -49,8 +52,8 @@ def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
         (zetas) will be explicitly calculated for these layers and
         spline-interpolated in between. This can result in significant speedup
         with minimal loss of precision, if the xlayers are chosen by trial and
-        error to fit the required precision and the spacing of density layers. A
-        scalar value is interpreted as a number of xlayers to be uniformaly
+        error to fit the required precision and the spacing of density layers.
+        A scalar value is interpreted as a number of xlayers to be uniformaly
         distributed among the density layers. For example, a smooth-density,
         1024-layer model can benefit from almost 16x-speedup by specifying
         xlayers=64 while retaining a 10^-6 relative precision on J2. A vector
@@ -58,18 +61,18 @@ def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
         negative value is a shortcut to flag a full calculation instead of
         skip-n-spline, useful for debugging.)
     J0s : struct
-       J-like values representing initial state. This is not just for speeding up
-       convergence. Mostly it's a mechanism to preserve state between calls.
+       J-like values representing initial state. This is not just for speeding
+       up convergence. Mostly it's a mechanism to preserve state between calls.
 
     Outputs
     -------
     Js : 1-by-16 vector, real
-        Even harmonic gravity coefficients J0 to J30. Typically only J2 to J10 are
-        helpful. J0 is included as a sanity check and test of convergence.
+        Even harmonic gravity coefficients J0 to J30. Typically only J2 to J10
+        are helpful. J0 is included as a sanity check and test of convergence.
     out : struct
-        A structure holding other quantities calculated in the course of running
-        cms. Including out.zetas and out.JLike that together define the converged
-        hydrostatic shape.
+        A structure holding other quantities calculated in the course of
+        running cms. Including out.zetas and out.JLike that together define the
+        converged hydrostatic shape.
     """
 
     # Minimal input control
@@ -188,7 +191,6 @@ def cms(zvec, dvec, qrot, dJtol=1e-6, maxiter=100, xlayers=64, J0s=None):
 @jit(nopython=True)
 def _powers_of_ratios(xlam, kmax):
     """Return array of powers of ratios of spheroid radii."""
-
     nx = len(xlam)
     lamrat = np.zeros((kmax+2,nx,nx))
     for ii in range(nx):
@@ -198,8 +200,7 @@ def _powers_of_ratios(xlam, kmax):
     return lamrat
 
 def _allocate_spherical_Js(nlay,nmom,lambdas,deltas):
-    """Return a struct of J-like quantities initialized to a spherical planet."""
-
+    """Return a struct of J-like quantities representing a spherical planet."""
     class Js:
         pass
     Js.tilde = np.zeros((nlay,(nmom+1)))
@@ -215,10 +216,10 @@ def _allocate_spherical_Js(nlay,nmom,lambdas,deltas):
 def _gauleg(x1, x2, n):
     """Return abscissas and weights for Gauss-Legendre n-point quadrature.
 
-    x,w = GAULEG(x1,x2,n) returns the abscissas x and weights w that can be used
-    to evaluate the definite integral, I, of a function well approximated by an
-    (2n - 1) degree polynomial in the interval [x1,x2] using the Gauss-Legendre
-    formula:
+    x,w = GAULEG(x1,x2,n) returns the abscissas x and weights w that can be
+    used to evaluate the definite integral, I, of a function well approximated
+    by an (2n - 1) degree polynomial in the interval [x1,x2] using the
+    Gauss-Legendre formula:
         I = sum(w.*f(x))
 
     Algorithm:
@@ -235,8 +236,9 @@ def _gauleg(x1, x2, n):
       I_gaussleg = sum(w*fun(x))
 
     Reference: William H. Press, Saul A. Teukolsky, William T. Vetterling, and
-    Brian P. Flannery. 2007. Numerical Recipes 3rd Edition: The Art of Scientific
-    Computing (3 ed.). Cambridge University Press, New York, NY, USA.
+    Brian P. Flannery. 2007. Numerical Recipes 3rd Edition: The Art of
+    Scientific Computing (3 ed.). Cambridge University Press, New York, NY,
+    USA.
     """
 
     # Minimal assertions
@@ -290,15 +292,14 @@ def _gauleg(x1, x2, n):
 def _Pn(n, x):
     """Fast implementation of ordinary Legendre polynomials of low degree.
 
-    y = Pn(n,x) returns the ordinary Legendre polynomial of degree n evaulated at
-    x. For n <= 12 the polynomials are implemented explicitly resutling in faster
-    calculation compared with the recursion formula. For n > 12 we fall back on
-    scipy.special.eval_legendre(n,x).
+    y = Pn(n,x) returns the ordinary Legendre polynomial of degree n evaulated
+    at x. For n <= 12 the polynomials are implemented explicitly resutling in
+    faster calculation compared with the recursion formula. For n > 12 we fall
+    back on scipy.special.eval_legendre(n,x).
 
-    Note: in keeping with the premise of an optimized implementation this function
-    performs no input checks at all. Use with care.
+    Note: in keeping with the premise of an optimized implementation this
+    function performs no input checks at all. Use with care.
     """
-
     x = np.array(x, dtype=float)
 
     if n == 0:
