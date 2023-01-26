@@ -36,7 +36,7 @@ function [Js, out] = cms(zvec, dvec, qrot, varargin)
 % Inputs, NAME/VALUE pairs
 % tol : scalar, positive, (tol=1e-6)
 %     Convergence tolerance on fractional change in Js in successive iterations.
-% maxiter : scalar, positive, integer, (maxiter=100)
+% maxiter : scalar, positive, integer, (maxiter=60)
 %     Maximum number of iterations of CMS algorithm.
 % xlayers : scalar or vector, nonnegative, integer (xlayers=-1)
 %     Layers whose shape will be explicitly calculated. The shape functions
@@ -52,14 +52,14 @@ function [Js, out] = cms(zvec, dvec, qrot, varargin)
 %     negative value is a shortcut to flag a full calculation instead of
 %     skip-n-spline.)
 % J0s : struct
-%     J-like values representing initial state. This is not just for speeding up
-%     convergence. Mostly it's a mechanism to preserve state between calls.
+%     J-like values representing initial state. This is not just for speeding
+%     up convergence. Mostly it's a mechanism to preserve state between calls.
 %
 % Outputs
 % -------
 % Js : 1-by-16 vector, real
-%     Even harmonic gravity coefficients J0 to J30. Typically only J2 to J10 are
-%     helpful. J0 is included as a sanity check and test of convergence.
+%     Even harmonic gravity coefficients J0 to J30. Typically only J2 to J10
+%     are helpful. J0 is included as a sanity check and test of convergence.
 % out : struct
 %     A structure holding other quantities calculated in the course of running
 %     cms. Including out.zetas and out.JLike that together define the converged
