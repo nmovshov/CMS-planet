@@ -97,7 +97,17 @@ classdef CMSPlanet < handle
             catch
             end
         end
-        
+
+        function optimize_lambdas(obj)
+            % Redistribute density using Militzer et al. 2019 prescription
+            if obj.rhoi(1) > 0
+                q = (obj.rhoi(end)/obj.rhoi(1))^(1/(obj.N-1));
+            else
+                q = (obj.rhoi(end)/obj.rhoi(2))^(1/(obj.N-1));
+            end
+
+        end
+
         function ET = relax_to_barotrope(obj)
             % Relax equilibrium shape, Js, and density simultaneously.
             
