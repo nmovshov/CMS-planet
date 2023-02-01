@@ -100,12 +100,18 @@ classdef CMSPlanet < handle
 
         function optimize_lambdas(obj)
             % Redistribute density using Militzer et al. 2019 prescription
+            x = obj.rhoi;
+            y = obj.ai/obj.a0;
             if obj.rhoi(1) > 0
                 q = (obj.rhoi(end)/obj.rhoi(1))^(1/(obj.N-1));
+                xq = obj.rhoi(1)*q.^(0:obj.N-1)';
             else
-                q = (obj.rhoi(end)/obj.rhoi(2))^(1/(obj.N-1));
+                q = (obj.rhoi(end)/obj.rhoi(2))^(1/(obj.N-2));
+                xq = [0, obj.rhoi(2)*q.^(0:obj.N-2)]';
             end
-
+            yq = interp1(x,y,xq);
+            obj.rhoi = xq;
+            obj.ai = yq*obj.a0;
         end
 
         function ET = relax_to_barotrope(obj)
