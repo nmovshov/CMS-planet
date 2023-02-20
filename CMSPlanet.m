@@ -110,6 +110,7 @@ classdef CMSPlanet < handle
                 xq = [0, obj.rhoi(2)*q.^(0:obj.N-2)]';
             end
             yq = interp1(x,y,xq);
+            yq(end) = y(end); % since xq(end) could be > x(end)
             obj.rhoi = xq;
             obj.ai = yq*obj.a0;
         end
@@ -1172,6 +1173,15 @@ classdef CMSPlanet < handle
     
     %% Static methods
     methods (Static)
+        function cp = default_planet()
+            % prefill important fields with reasonable values, for testing
+            cp = CMSPlanet();
+            cp.name = 'planet';
+            cp.mass = 1898.187e24;
+            cp.radius = 71492e3;
+            cp.P0 = 1e5;
+            cp.period = 0.41354*24*3600;
+        end
     end % End of static methods block
 end % End of classdef
 
