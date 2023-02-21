@@ -148,6 +148,7 @@ classdef CMSPlanet < handle
             
             % Ready, set,...
             warning('off','CMS:maxiter')
+            obj.opts.MaxIterHE = 6;
             t_rlx = tic;
             
             % Main loop
@@ -157,6 +158,11 @@ classdef CMSPlanet < handle
                 if (verb > 0)
                     fprintf('Baropass %d (of max %d)...\n',...
                         iter, obj.opts.MaxIterBar)
+                end
+
+                % Optimize lambda grid as in Militzer et al. 2019
+                if obj.opts.lamopt
+                    obj.optimize_lambdas();
                 end
                 
                 old_Js = obj.Js;

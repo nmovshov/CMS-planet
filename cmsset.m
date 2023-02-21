@@ -17,6 +17,7 @@ function options = cmsset(varargin)
 %xlayers - Solve shape functions on xlayers and spline the rest [ integer scalar or vector (-1 to disable) {-1} ]
 %verbosity - Level of runtime messages [0 {1} 2 3 4]
 %prerat - Precalculate powers of ratios of lambdas (trades memory for speed) [ {true} | false ]
+%lamopt - Optimize lambda grid as in Militzer et al. 2019 [ {true} | false ]
 
 % If no arguments print usage and return.
 if (nargin == 0) && (nargout == 0)
@@ -35,6 +36,7 @@ p.addParameter('MaxIterHE',60,@isposintscalar)
 p.addParameter('xlayers',-1,@(x)validateattributes(x,{'numeric'},{'vector','integer'}))
 p.addParameter('verbosity',1,@isnonnegintscalar)
 p.addParameter('prerat',true,@islogicalscalar)
+p.addParameter('lamopt',true,@islogicalscalar)
 
 % undocumented or obsolete options
 p.addParameter('prsmeth','linear'); % undocumented pressure interpolation method

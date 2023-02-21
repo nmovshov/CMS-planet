@@ -43,30 +43,33 @@ eos.name = '$P\propto\rho^2$';
 %% Set up CMSPlanet
 N = 128;
 nx = 64;
+zvec = linspace(1, 1/N, N);
+a = 15*M/8/pi/Re^3;
+dvec = -a*zvec.^2 + a;
 
-cmp = CMSPlanet();
-cmp.name = [int2str(N),'-point CMS'];
-cmp.G = G; % undocumented CMSPlanet property
-cmp.mass = M;
-cmp.radius = Re;
-cmp.period = Prot; % trying to match WH16 qrot
-cmp.ai = Re*linspace(1, 1/N, N)'; % will be renormalized
-cmp.rhoi = ones(N,1)*M/(4*pi/3*Re^3); % will be renormalized
-cmp.P0 = 0; % added to surface pressure
-cmp.eos = eos;
+cp = CMSPlanet();
+cp.name = [int2str(N),'-point CMS'];
+cp.G = G; % undocumented CMSPlanet property
+cp.mass = M;
+cp.radius = Re;
+cp.period = Prot; % trying to match WH16 qrot
+cp.ai = Re*linspace(1, 1/N, N)'; % will be renormalized
+cp.rhoi = dvec; % will be renormalized
+cp.P0 = 0; % added to surface pressure
+cp.eos = eos;
 
 %% Relax to desired barotrope
-cmp.opts.drhotol = 1e-6;
-cmp.opts.dJtol = 1e-10;
-cmp.opts.MaxIterBar = 60;
-cmp.opts.MaxIterHE = 60;
-cmp.opts.xlayers = nx;
-cmp.relax_to_barotrope();
+cp.opts.drhotol = 1e-6;
+cp.opts.dJtol = 1e-10;
+cp.opts.MaxIterBar = 60;
+cp.opts.MaxIterHE = 60;
+cp.opts.xlayers = nx;
+cp.relax_to_barotrope();
 
 %% Construct the benchmarking table
 % The variables to compare are [Re/R, J2, J4, ..., J14]
 % With CMSPlanet
-CMP = [cmp.a0/cmp.s0, cmp.Js(2:8)];
+CMP = [cp.a0/cp.s0, cp.Js(2:8)];
 % Wisdom and Hubbard (2016) Table 3
 CLC = [1.022875431133185, 1.398851089834637e-2, -5.318281001092471e-4,...
                           3.011832290533577e-5, -2.132115710726158e-6,...
@@ -82,7 +85,7 @@ H13 =    [nan, 1.3989253e-2, -5.3187997e-4, 3.0122356e-5, -2.1324628e-6,...
                1.7409925e-7, -1.5685327e-8, 1.5184156e-9];
 
 % Zharkov & Trubistyn (1978) eq. 34.12
-q = cmp.qrot;
+q = cp.qrot;
 ZT3 = [nan, (0.173273*q - 0.197027*q^2 + 0.15*q^3),...
             (-0.081092*q^2 + 0.15*q^3),...
             (0.056329*q^3), nan, nan, nan, nan];
