@@ -111,8 +111,12 @@ classdef CMSPlanet < handle
             end
             yq = interp1(x,y,xq);
             yq(end) = y(end); % since xq(end) could be > x(end)
-            obj.rhoi = xq;
-            obj.ai = yq*obj.a0;
+            if min(abs(diff(yq))) > 1e-6
+                obj.rhoi = xq;
+                obj.ai = yq*obj.a0;
+            else
+                obj.opts.lamopt = false; % that's enough already...
+            end
         end
 
         function ET = relax_to_barotrope(obj)
@@ -184,8 +188,9 @@ classdef CMSPlanet < handle
                 obj.renormalize();
                 
                 % Calculate changes in shape/density
-                dJs = abs((obj.Js - old_Js)./old_Js);
-                dJs = max(dJs(isfinite(dJs(1:6))));
+%                 dJs = abs((obj.Js - old_Js)./old_Js);
+%                 dJs = max(dJs(isfinite(dJs(1:6))));
+                dJs = abs(obj.Js(2) - old_Js(2));
                 dro = obj.rhoi./old_ro;
                 dro = var(dro(isfinite(dro)));
                 

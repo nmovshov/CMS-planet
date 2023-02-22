@@ -41,8 +41,8 @@ eos = barotropes.Polytrope(K, n);
 eos.name = '$P\propto\rho^2$';
 
 %% Set up CMSPlanet
-N = 128;
-nx = 64;
+N = 512;
+nx = 32;
 zvec = linspace(1, 1/N, N);
 a = 15*M/8/pi/Re^3;
 dvec = -a*zvec.^2 + a;
